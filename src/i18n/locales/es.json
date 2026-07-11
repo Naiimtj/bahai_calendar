@@ -156,24 +156,8 @@
     "alert": "Alerta",
     "none": "Ninguna"
   },
-  "weekdaysShort": [
-    "Lun",
-    "Mar",
-    "Mié",
-    "Jue",
-    "Vie",
-    "Sáb",
-    "Dom"
-  ],
-  "weekdaysMin": [
-    "L",
-    "M",
-    "X",
-    "J",
-    "V",
-    "S",
-    "D"
-  ],
+  "weekdaysShort": ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"],
+  "weekdaysMin": ["L", "M", "X", "J", "V", "S", "D"],
   "events": {
     "all": "Todos",
     "f19": "F19",
@@ -231,7 +215,7 @@
     "navigationDesc": "Usa las flechas para cambiar de mes/año. Toca \"Hoy\" para volver a la fecha actual. Abre el menú lateral para acceder a eventos, ayuno y ajustes."
   },
   "toast": {
-    "apiError": "No se pudo conectar con la API. Las fechas bahá'ís no están disponibles."
+    "apiError": "No se pudieron cargar los datos del calendario bahá'í."
   },
   "offline": {
     "banner": "Sin conexión a internet. Algunas funciones pueden no estar disponibles."
@@ -243,7 +227,7 @@
     "localStorageTitle": "Almacenamiento local",
     "localStorageBody": "Tus preferencias (idioma, tema, vista de calendario) se guardan localmente en tu dispositivo mediante localStorage. Estos datos nunca salen de tu dispositivo.",
     "apiTitle": "Llamadas a la API",
-    "apiBody": "La app se conecta a una API de fechas bahá'ís únicamente para calcular fechas del calendario y días sagrados. No se envían datos personales en estas solicitudes.",
+    "apiBody": "Las fechas del calendario bahá'í se calculan completamente en tu dispositivo. La app solo contacta servicios externos para las horas de salida y puesta del sol y la búsqueda de ubicaciones; no se envían datos personales en estas solicitudes.",
     "thirdPartyTitle": "Terceros",
     "thirdPartyBody": "No se utilizan servicios de análisis, publicidad ni rastreo de terceros.",
     "contactTitle": "Contacto",

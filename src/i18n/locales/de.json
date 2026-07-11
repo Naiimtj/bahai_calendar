@@ -156,24 +156,8 @@
     "alert": "Alarm",
     "none": "Keine"
   },
-  "weekdaysShort": [
-    "Mo",
-    "Di",
-    "Mi",
-    "Do",
-    "Fr",
-    "Sa",
-    "So"
-  ],
-  "weekdaysMin": [
-    "M",
-    "D",
-    "M",
-    "D",
-    "F",
-    "S",
-    "S"
-  ],
+  "weekdaysShort": ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"],
+  "weekdaysMin": ["M", "D", "M", "D", "F", "S", "S"],
   "events": {
     "all": "Alle",
     "f19": "F19",
@@ -231,7 +215,7 @@
     "navigationDesc": "Verwenden Sie die Pfeile, um den Monat/das Jahr zu ändern. Tippen Sie auf \"Heute\", um zum aktuellen Datum zurückzukehren. Öffnen Sie das Seitenmenü, um auf Ereignisse, Fasten und Einstellungen zuzugreifen."
   },
   "toast": {
-    "apiError": "Verbindung zur API nicht möglich. Bahá'í-Daten sind nicht verfügbar."
+    "apiError": "Bahá'í-Kalenderdaten konnten nicht geladen werden."
   },
   "offline": {
     "banner": "Keine Internetverbindung. Einige Funktionen sind möglicherweise nicht verfügbar."
@@ -243,7 +227,7 @@
     "localStorageTitle": "Lokaler Speicher",
     "localStorageBody": "Ihre Einstellungen werden lokal auf Ihrem Gerät gespeichert. Diese Daten verlassen Ihr Gerät nie.",
     "apiTitle": "API-Aufrufe",
-    "apiBody": "Die App verbindet sich ausschließlich mit einer Bahá'í-Datums-API zur Datumsberechnung. Es werden keine persönlichen Daten übertragen.",
+    "apiBody": "Die Daten des Bahá'í-Kalenders werden vollständig auf Ihrem Gerät berechnet. Die App kontaktiert externe Dienste nur für Sonnenauf- und -untergangszeiten sowie die Ortssuche; dabei werden keine personenbezogenen Daten gesendet.",
     "thirdPartyTitle": "Dritte",
     "thirdPartyBody": "Es werden keine Analyse-, Werbe- oder Tracking-Dienste Dritter verwendet.",
     "contactTitle": "Kontakt",

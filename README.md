@@ -26,7 +26,7 @@ Multilingual **Badí' (Bahá'í) calendar** with holy days, 19-day feasts, and t
 | Styling         | TailwindCSS v4 (`@theme` tokens in `src/index.css`) |
 | State           | React Context API                                   |
 | i18n            | i18next + react-i18next                             |
-| HTTP            | axios / fetch                                       |
+| HTTP            | fetch                                               |
 | Native shell    | Capacitor 8 (iOS — Android planned)                 |
 | Package manager | pnpm                                                |
 
@@ -64,13 +64,8 @@ pnpm preview   # preview the production build
 
 ## Configuration
 
-The app fetches Badí' calendar data from a backend API. Configure its URL with an environment variable:
-
-| Variable            | Description                          | Default |
-| ------------------- | ------------------------------------ | ------- |
-| `VITE_URL_BADI_API` | Base URL of the Bahá'í calendar API. | `/api`  |
-
-In development, requests to `/api` are proxied to `http://127.0.0.1:8000` (see [vite.config.js](vite.config.js)). Set `VITE_URL_BADI_API` in a `.env` file to point at a different backend.
+Badí' calendar data (Naw-Rúz, holy days, feast months) is computed locally in the
+browser — no backend or API key is required.
 
 Other data sources (no configuration needed):
 
@@ -99,7 +94,7 @@ src/
 ├── context/           # Global state (Settings, BadiYear, PersonalEvents)
 ├── hooks/             # Reusable reactive logic (useSwipe, useOnlineStatus)
 ├── services/          # Data access (badiApi, sunTimesApi, geocodingApi, …)
-├── lib/               # Badí' date conversion (badiDate.jsx)
+├── lib/               # Badí' calendar engine + date helpers (badiCalendar.js, badiDate.jsx)
 ├── utils/             # Pure helpers
 ├── i18n/              # i18next config + locale files (en, es, ar, de, fa, fr)
 └── index.css          # Tailwind entry + @theme tokens

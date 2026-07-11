@@ -156,24 +156,8 @@
     "alert": "Alert",
     "none": "None"
   },
-  "weekdaysShort": [
-    "Mon",
-    "Tue",
-    "Wed",
-    "Thu",
-    "Fri",
-    "Sat",
-    "Sun"
-  ],
-  "weekdaysMin": [
-    "M",
-    "T",
-    "W",
-    "T",
-    "F",
-    "S",
-    "S"
-  ],
+  "weekdaysShort": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+  "weekdaysMin": ["M", "T", "W", "T", "F", "S", "S"],
   "events": {
     "all": "All",
     "f19": "F19",
@@ -231,7 +215,7 @@
     "navigationDesc": "Use arrows to change month/year. Tap \"Today\" to return to current date. Open the side menu to access events, fasting, and settings."
   },
   "toast": {
-    "apiError": "Could not connect to API. Bahá'í dates are unavailable."
+    "apiError": "Could not load Bahá'í calendar data."
   },
   "offline": {
     "banner": "No internet connection. Some features may be unavailable."
@@ -243,7 +227,7 @@
     "localStorageTitle": "Local Storage",
     "localStorageBody": "Your preferences (language, theme, calendar view) are saved locally on your device using localStorage. This data never leaves your device.",
     "apiTitle": "API Calls",
-    "apiBody": "The app connects to a Bahá'í date API solely to calculate calendar dates and holy days. No personal data is sent in these requests.",
+    "apiBody": "Bahá'í calendar dates are calculated entirely on your device. The app only contacts external services for sunrise/sunset times and location search; no personal data is sent in these requests.",
     "thirdPartyTitle": "Third Parties",
     "thirdPartyBody": "No third-party analytics, advertising, or tracking services are used.",
     "contactTitle": "Contact",

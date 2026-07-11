@@ -8,14 +8,15 @@
     "network": "vite dev --port=4100 --host=0.0.0.0",
     "build": "vite build",
     "preview": "vite preview",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@capacitor/core": "^8.4.1",
     "@capacitor/geolocation": "^8.2.0",
     "@capacitor/ios": "^8.4.1",
     "@capacitor/splash-screen": "^8.0.1",
-    "axios": "^1.16.1",
     "i18next": "^26.2.0",
     "i18next-browser-languagedetector": "^8.2.1",
     "react": "^19.1.0",
@@ -41,6 +42,7 @@
     "sharp": "^0.34.5",
     "tailwindcss": "^4.1.7",
     "typescript": "^6.0.3",
-    "vite": "^6.3.5"
+    "vite": "^6.3.5",
+    "vitest": "^4.1.10"
   }
 }

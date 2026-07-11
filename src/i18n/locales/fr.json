@@ -156,24 +156,8 @@
     "alert": "Alerte",
     "none": "Aucune"
   },
-  "weekdaysShort": [
-    "Lun",
-    "Mar",
-    "Mer",
-    "Jeu",
-    "Ven",
-    "Sam",
-    "Dim"
-  ],
-  "weekdaysMin": [
-    "L",
-    "M",
-    "M",
-    "J",
-    "V",
-    "S",
-    "D"
-  ],
+  "weekdaysShort": ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"],
+  "weekdaysMin": ["L", "M", "M", "J", "V", "S", "D"],
   "events": {
     "all": "Tous",
     "f19": "F19",
@@ -231,7 +215,7 @@
     "navigationDesc": "Utilisez les flèches pour changer de mois/année. Appuyez sur \"Aujourd'hui\" pour revenir à la date actuelle. Ouvrez le menu latéral pour accéder aux événements, au jeûne et aux paramètres."
   },
   "toast": {
-    "apiError": "Impossible de se connecter à l'API. Les dates bahá'íes ne sont pas disponibles."
+    "apiError": "Impossible de charger les données du calendrier bahá'í."
   },
   "offline": {
     "banner": "Pas de connexion internet. Certaines fonctionnalités peuvent être indisponibles."
@@ -243,7 +227,7 @@
     "localStorageTitle": "Stockage local",
     "localStorageBody": "Vos préférences sont enregistrées localement sur votre appareil. Ces données ne quittent jamais votre appareil.",
     "apiTitle": "Appels API",
-    "apiBody": "L'application se connecte à une API de dates bahá'íes uniquement pour calculer les dates. Aucune donnée personnelle n'est envoyée.",
+    "apiBody": "Les dates du calendrier bahá'í sont entièrement calculées sur votre appareil. L'application ne contacte des services externes que pour les heures de lever/coucher du soleil et la recherche de lieux ; aucune donnée personnelle n'est envoyée dans ces requêtes.",
     "thirdPartyTitle": "Tiers",
     "thirdPartyBody": "Aucun service d'analyse, de publicité ou de suivi tiers n'est utilisé.",
     "contactTitle": "Contact",

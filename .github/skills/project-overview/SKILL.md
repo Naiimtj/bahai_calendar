@@ -44,7 +44,7 @@ bahai_calendar/
     ├── context/              ← SettingsContext.jsx · BadiYearContext.jsx · PersonalEventsContext.jsx
     ├── hooks/                ← useSwipe.js · useOnlineStatus.js
     ├── i18n/                 ← index.js + locales/ (en, es, ar, de, fa, fr .json)
-    ├── lib/                  ← badiDate.jsx (Badíʿ ↔ Gregorian conversion)
+    ├── lib/                  ← badiDate.jsx (formatting) · badiCalendar.js + badiCalendarData.js (local Badíʿ compute)
     ├── services/             ← badiApi.js · sunTimesApi.js · geocodingApi.js · calendarSync.js · personalCalendar.js
     └── utils/                ← searchEvents.js · sizeIcon.js · timeFormat.js · weekNumber.js
 ```
@@ -80,23 +80,25 @@ pnpm run preview      # preview production build
 
 ## Services
 
-| Service               | Purpose                    |
-| --------------------- | -------------------------- |
-| `badiApi.js`          | Badíʿ calendar API calls   |
-| `sunTimesApi.js`      | Sunrise/sunset times       |
-| `geocodingApi.js`     | Location geocoding         |
-| `calendarSync.js`     | Device calendar sync       |
-| `personalCalendar.js` | Personal calendar / events |
+| Service               | Purpose                                       |
+| --------------------- | --------------------------------------------- |
+| `badiApi.js`          | Badíʿ calendar data (local compute, memoised) |
+| `sunTimesApi.js`      | Sunrise/sunset times                          |
+| `geocodingApi.js`     | Location geocoding                            |
+| `calendarSync.js`     | Device calendar sync                          |
+| `personalCalendar.js` | Personal calendar / events                    |
 
 ## Utilities & lib
 
-| File                    | Purpose                           |
-| ----------------------- | --------------------------------- |
-| `utils/weekNumber.js`   | ISO week number helpers           |
-| `utils/sizeIcon.js`     | Icon sizing helper                |
-| `utils/timeFormat.js`   | Time formatting                   |
-| `utils/searchEvents.js` | Event search                      |
-| `lib/badiDate.jsx`      | Badíʿ ↔ Gregorian date conversion |
+| File                      | Purpose                                                  |
+| ------------------------- | -------------------------------------------------------- |
+| `utils/weekNumber.js`     | ISO week number helpers                                  |
+| `utils/sizeIcon.js`       | Icon sizing helper                                       |
+| `utils/timeFormat.js`     | Time formatting                                          |
+| `utils/searchEvents.js`   | Event search                                             |
+| `lib/badiDate.jsx`        | Badíʿ month/weekday data + date formatting               |
+| `lib/badiCalendar.js`     | Local Badíʿ calendar engine (Naw-Rúz, holy days, months) |
+| `lib/badiCalendarData.js` | Event/month translation data (en/es) for the engine      |
 
 ## Component Hierarchy
 
