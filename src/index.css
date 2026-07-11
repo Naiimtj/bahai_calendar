@@ -1,0 +1,102 @@
+@import 'tailwindcss';
+
+@custom-variant dark (&:where(.dark *));
+
+@utility touch-callout-none {
+  -webkit-touch-callout: none;
+}
+
+@theme {
+  /* Brand */
+  --color-primary-light: #cff6f8;
+  --color-primary: #96dce0;
+  --color-primary-text: #4bbdc2;
+  --color-primary-dark: #4b8ea1;
+  --color-primary-xdark: #255773;
+  --color-gold-400: #d4a843;
+  --color-gold-500: #c9952a;
+  --color-gold-600: #b8841f;
+
+  /* Semantic – base components */
+  --color-btn-primary: #96dce0;
+  --color-btn-primary-dark: #4b8ea1;
+  --color-btn-primary-hover: #4bbdc2;
+  --color-btn-primary-active: #255773;
+  --color-btn-secondary: #4b5563;
+  --color-btn-secondary-dark: #b1c1d0;
+  --color-btn-secondary-hover: #374151;
+  --color-btn-secondary-active: #1f2937;
+  --color-success: #22c55e;
+  --color-success-hover: #16a34a;
+  --color-success-active: #15803d;
+  --color-warning: #f59e0b;
+  --color-warning-hover: #d97706;
+  --color-warning-active: #b45309;
+  --color-error: #ef4444;
+  --color-error-hover: #dc2626;
+  --color-error-active: #b91c1c;
+  --color-info: #2563eb;
+  --color-info-hover: #1d4ed8;
+  --color-info-active: #1e40af;
+
+  /* Semantic – form inputs */
+  --color-input-border: #d1d5db;
+  --color-input-focus: #2563eb;
+  --color-input-error: #ef4444;
+  --color-input-label: #374151;
+  --color-input-label-error: #dc2626;
+  --color-input-helper: #6b7280;
+}
+
+@utility pt-safe {
+  padding-top: env(safe-area-inset-top);
+}
+
+@utility pb-safe {
+  padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
+#root {
+  height: 100dvh;
+}
+
+html {
+  background-color: white;
+}
+
+html.dark {
+  background-color: #030712;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+/* Date / time picker indicators */
+input[type='date']::-webkit-calendar-picker-indicator,
+input[type='time']::-webkit-calendar-picker-indicator {
+  opacity: 0.45;
+  cursor: pointer;
+}
+html.dark input[type='date']::-webkit-calendar-picker-indicator,
+html.dark input[type='time']::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+  opacity: 0.55;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #444;
+  border-radius: 3px;
+}
