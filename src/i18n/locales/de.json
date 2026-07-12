@@ -156,8 +156,24 @@
     "alert": "Alarm",
     "none": "Keine"
   },
-  "weekdaysShort": ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"],
-  "weekdaysMin": ["M", "D", "M", "D", "F", "S", "S"],
+  "weekdaysShort": [
+    "Mo",
+    "Di",
+    "Mi",
+    "Do",
+    "Fr",
+    "Sa",
+    "So"
+  ],
+  "weekdaysMin": [
+    "M",
+    "D",
+    "M",
+    "D",
+    "F",
+    "S",
+    "S"
+  ],
   "events": {
     "all": "Alle",
     "f19": "F19",
@@ -232,7 +248,7 @@
     "thirdPartyBody": "Es werden keine Analyse-, Werbe- oder Tracking-Dienste Dritter verwendet.",
     "contactTitle": "Kontakt",
     "contactBody": "Bei Fragen zur Datenschutzrichtlinie wenden Sie sich über den App Store an den Entwickler.",
-    "lastUpdated": "Zuletzt aktualisiert: Mai 2026"
+    "lastUpdated": "Letzte Aktualisierung: Juli 2026"
   },
   "bahaiQuotes": {
     "quote1": "Die Erde ist ein einziges Land, und die Menschheit seine Bürger.",

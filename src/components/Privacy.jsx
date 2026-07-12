@@ -1,20 +1,12 @@
 import { useTranslation } from 'react-i18next';
-import ArrowLeftIcon from './base/icons/ArrowLeftIcon';
 
-export default function Privacy({ onClose }) {
+export default function Privacy() {
   const { t } = useTranslation();
 
   return (
     <div className="flex flex-col h-full bg-gray-50 dark:bg-gray-950">
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-800">
-        <button
-          onClick={onClose}
-          className="text-primary-text font-semibold text-sm inline-flex items-center gap-1"
-        >
-          <ArrowLeftIcon size="small" color="currentColor" />
-          {t('settings.done')}
-        </button>
         <h2 className="text-lg font-semibold">{t('privacy.title')}</h2>
         <div className="w-12" />
       </div>

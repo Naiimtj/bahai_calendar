@@ -8,19 +8,19 @@ Bahá'í Calendar is a web app for displaying and navigating the Badíʿ (Bahá'
 
 ## Tech Stack
 
-| Layer     | Technology                                                                                        |
-| --------- | ------------------------------------------------------------------------------------------------- |
-| Framework | React 19 + Vite 6 (SPA, no SSR)                                                                   |
-| Language  | JavaScript / JSX (TS available as devDep; source is `.jsx`/`.js`)                                 |
-| Styling   | TailwindCSS v4 (`@tailwindcss/vite`), `@theme` tokens in `src/index.css`                          |
-| State     | React Context API — `SettingsContext`, `BadiYearContext`, `PersonalEventsContext`                 |
-| i18n      | i18next + react-i18next + browser-languagedetector — `src/i18n/locales/` (en, es, ar, de, fa, fr) |
-| Testing   | None configured                                                                                   |
-| HTTP      | axios + custom services in `src/services/`                                                        |
-| Icons     | Custom `BaseIcon` + SVG registry (`src/components/base/icons/`)                                   |
-| Mobile    | Capacitor 8 (iOS shell in `ios/`)                                                                 |
-| Package   | pnpm (workspace-aware); dev server on port 4100                                                   |
-| Dev tools | @locator/runtime (click-to-source in dev mode)                                                    |
+| Layer     | Technology                                                                                                |
+| --------- | --------------------------------------------------------------------------------------------------------- |
+| Framework | React 19 + Vite 6 (SPA, no SSR)                                                                           |
+| Language  | JavaScript / JSX (TS available as devDep; source is `.jsx`/`.js`)                                         |
+| Styling   | TailwindCSS v4 (`@tailwindcss/vite`), `@theme` tokens in `src/index.css`                                  |
+| State     | React Context API — `SettingsContext`, `BadiYearContext`, `PersonalEventsContext`                         |
+| i18n      | i18next + react-i18next + browser-languagedetector — `src/i18n/locales/` (en, es, ar, de, fa, fr)         |
+| Testing   | None configured                                                                                           |
+| HTTP      | native `fetch` + custom services in `src/services/` (Badí' calendar data is computed locally, no network) |
+| Icons     | Custom `BaseIcon` + SVG registry (`src/components/base/icons/`)                                           |
+| Mobile    | Capacitor 8 (iOS shell in `ios/`)                                                                         |
+| Package   | pnpm (workspace-aware); dev server on port 4100                                                           |
+| Dev tools | @locator/runtime (click-to-source in dev mode)                                                            |
 
 ## Folder Map
 

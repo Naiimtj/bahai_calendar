@@ -12,7 +12,7 @@ Index of all available skill guides for this project. Each skill provides detail
 | **Accessibility (a11y)**       | `accessibility/SKILL.md`       | Semantic HTML, ARIA attributes, keyboard navigation, color contrast, headings                         |
 | **State Management**           | `state-management/SKILL.md`    | Context boundaries, provider actions, immutable updates, effect/memo dependencies                     |
 | **Architecture Documentation** | `arc42/SKILL.md`               | Creating arc42 architecture documentation, analyzing workspace structure, documenting design          |
-| **API Integration**            | `api/SKILL.md`                 | axios service modules in `src/services/`, error handling, offline, no fetch in components             |
+| **API Integration**            | `api/SKILL.md`                 | native `fetch` service modules in `src/services/`, error handling, offline, no fetch in components    |
 | **i18n**                       | `i18n/SKILL.md`                | react-i18next, six locales, dot-camelCase keys, `bahai.*` prefix, RTL for ar/fa                       |
 | **Project Overview**           | `project-overview/SKILL.md`    | Project map, folder purposes, file index, data flow, quick lookup reference                           |
 | **Caveman Mode**               | `caveman/SKILL.md`             | Ultra-compressed communication — drops filler ~75%, keeps full technical accuracy (always on)         |

@@ -47,6 +47,8 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>El Calendario Bahá'í usa tu ubicación para mostrar los horarios de amanecer y atardecer durante el período de ayuno.</string>
 	<key>NSCalendarsFullAccessUsageDescription</key>
@@ -57,13 +59,6 @@
 	<string>El Calendario Bahá'í accede a tus recordatorios para crear recordatorios directamente desde la app.</string>
 	<key>NSRemindersUsageDescription</key>
 	<string>El Calendario Bahá'í accede a tus recordatorios para crear recordatorios directamente desde la app.</string>
-	<key>NSContactsUsageDescription</key>
-	<string>El Calendario Bahá'í accede a tus contactos para añadir invitados a los eventos.</string>
-        <key>NSAppTransportSecurity</key>
-        <dict>
-            <key>NSAllowsLocalNetworking</key>
-            <true/>
-        </dict>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

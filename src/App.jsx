@@ -17,6 +17,7 @@ import Help from './components/Help';
 import Privacy from './components/Privacy';
 import BaseToastNotification from './components/base/BaseToastNotification';
 import { useOnlineStatus } from './hooks/useOnlineStatus';
+import { useUrlPage } from './hooks/useUrlPage';
 
 function CalendarView({ onMenuClick }) {
   const { settings } = useSettings();
@@ -46,7 +47,7 @@ const PAGE_TITLES = {
 
 function AppInner() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [page, setPage] = useState('today');
+  const [page, setPage] = useUrlPage();
   const { t } = useTranslation();
   const { error } = useBadiYear();
 

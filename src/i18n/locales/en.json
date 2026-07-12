@@ -156,8 +156,24 @@
     "alert": "Alert",
     "none": "None"
   },
-  "weekdaysShort": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
-  "weekdaysMin": ["M", "T", "W", "T", "F", "S", "S"],
+  "weekdaysShort": [
+    "Mon",
+    "Tue",
+    "Wed",
+    "Thu",
+    "Fri",
+    "Sat",
+    "Sun"
+  ],
+  "weekdaysMin": [
+    "M",
+    "T",
+    "W",
+    "T",
+    "F",
+    "S",
+    "S"
+  ],
   "events": {
     "all": "All",
     "f19": "F19",
@@ -232,7 +248,7 @@
     "thirdPartyBody": "No third-party analytics, advertising, or tracking services are used.",
     "contactTitle": "Contact",
     "contactBody": "For questions about this privacy policy, contact the developer through the App Store listing.",
-    "lastUpdated": "Last updated: May 2026"
+    "lastUpdated": "Last updated: July 2026"
   },
   "bahaiQuotes": {
     "quote1": "The earth is but one country, and mankind its citizens.",

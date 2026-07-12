@@ -156,8 +156,24 @@
     "alert": "Alerta",
     "none": "Ninguna"
   },
-  "weekdaysShort": ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"],
-  "weekdaysMin": ["L", "M", "X", "J", "V", "S", "D"],
+  "weekdaysShort": [
+    "Lun",
+    "Mar",
+    "Mié",
+    "Jue",
+    "Vie",
+    "Sáb",
+    "Dom"
+  ],
+  "weekdaysMin": [
+    "L",
+    "M",
+    "X",
+    "J",
+    "V",
+    "S",
+    "D"
+  ],
   "events": {
     "all": "Todos",
     "f19": "F19",
@@ -232,7 +248,7 @@
     "thirdPartyBody": "No se utilizan servicios de análisis, publicidad ni rastreo de terceros.",
     "contactTitle": "Contacto",
     "contactBody": "Para preguntas sobre esta política de privacidad, contacta al desarrollador a través de la ficha de la App Store.",
-    "lastUpdated": "Última actualización: Mayo 2026"
+    "lastUpdated": "Última actualización: julio de 2026"
   },
   "bahaiQuotes": {
     "quote1": "La tierra es un solo país, y la humanidad sus ciudadanos.",

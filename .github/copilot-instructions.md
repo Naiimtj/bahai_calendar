@@ -61,7 +61,7 @@ Load and follow `.github/skills/ponytail/SKILL.md` for every response. Before wr
 - **Accessibility/a11y/ARIA/keyboard navigation/contrast/headings** → use `.github/skills/accessibility/SKILL.md`
 - **State/Context/hooks/reactive data** → use `.github/skills/state-management/SKILL.md`
 - **Architecture documentation/arc42/design decisions** → use `.github/skills/arc42/SKILL.md`
-- **API calls/services/HTTP requests (axios)** → use `.github/skills/api/SKILL.md`
+- **API calls/services/HTTP requests (fetch)** → use `.github/skills/api/SKILL.md`
 - **Translations/i18n/locale keys** → use `.github/skills/i18n/SKILL.md`
 - **Project structure/file locations/folder purposes/orientation** → use `.github/skills/project-overview/SKILL.md`
 - **Hard bug/debug/perf regression/"why is this failing?"** → use `.github/skills/diagnose/SKILL.md`
@@ -217,7 +217,7 @@ function MyComponent() {
 
 ### Services (`src/services/`)
 
-- Data access / API calls (axios). Examples: `badiApi.js`, `sunTimesApi.js`, `geocodingApi.js`, `calendarSync.js`, `personalCalendar.js`.
+- Data access / API calls (native `fetch`). Examples: `sunTimesApi.js`, `geocodingApi.js`, `calendarSync.js`, `personalCalendar.js`. `badiApi.js` is a local compute wrapper (no network) around `src/lib/badiCalendar.js`.
 
 ### Utils (`src/utils/`) & lib (`src/lib/`)
 

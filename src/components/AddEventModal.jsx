@@ -314,6 +314,7 @@ export default function AddEventModal({
         setCalendars(full);
         setCalendarId((prev) => prev || full[0]?.id || '');
       })
+      .catch((err) => console.error('[getAvailableCalendars]', err))
       .finally(() => active && setLoading(false));
     return () => {
       active = false;
@@ -323,9 +324,11 @@ export default function AddEventModal({
   // Auto-request Reminders access when switching to reminder mode.
   useEffect(() => {
     if (!visible || mode !== 'reminder' || !supportsNativeReminders()) return;
-    requestRemindersAccess().then((granted) => {
-      if (!granted) setError(t('addEvent.remindersAccessDenied'));
-    });
+    requestRemindersAccess()
+      .then((granted) => {
+        if (!granted) setError(t('addEvent.remindersAccessDenied'));
+      })
+      .catch((err) => console.error('[requestRemindersAccess]', err));
   }, [visible, mode, t]);
 
   const selectedCalendar = calendars.find((c) => c.id === calendarId);

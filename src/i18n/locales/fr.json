@@ -156,8 +156,24 @@
     "alert": "Alerte",
     "none": "Aucune"
   },
-  "weekdaysShort": ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"],
-  "weekdaysMin": ["L", "M", "M", "J", "V", "S", "D"],
+  "weekdaysShort": [
+    "Lun",
+    "Mar",
+    "Mer",
+    "Jeu",
+    "Ven",
+    "Sam",
+    "Dim"
+  ],
+  "weekdaysMin": [
+    "L",
+    "M",
+    "M",
+    "J",
+    "V",
+    "S",
+    "D"
+  ],
   "events": {
     "all": "Tous",
     "f19": "F19",
@@ -232,7 +248,7 @@
     "thirdPartyBody": "Aucun service d'analyse, de publicité ou de suivi tiers n'est utilisé.",
     "contactTitle": "Contact",
     "contactBody": "Pour toute question sur cette politique, contactez le développeur via la fiche App Store.",
-    "lastUpdated": "Dernière mise à jour : mai 2026"
+    "lastUpdated": "Dernière mise à jour : juillet 2026"
   },
   "bahaiQuotes": {
     "quote1": "La terre n'est qu'un seul pays, et l'humanité en est les citoyens.",
