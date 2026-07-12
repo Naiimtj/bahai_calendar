@@ -10,6 +10,7 @@ import {
   SOURCE_COLORS,
   colorForIndex,
 } from '../services/personalCalendar';
+import { reverseGeocode } from '../services/geocodingApi';
 import ArrowLeftIcon from './base/icons/ArrowLeftIcon';
 import BaseSelectInput from './base/BaseSelectInput';
 import { BaseIcon, BaseSegmentedControl } from './base';
@@ -400,11 +401,14 @@ export default function Settings({ onClose }) {
   const handleLocationGPS = () => {
     setLocationError(null);
     setLoadingLocationGPS(true);
-    const onSuccess = (coords) => {
+    const onSuccess = async (coords) => {
+      const name =
+        (await reverseGeocode(coords.latitude, coords.longitude, lang)) ||
+        t('fasting.myLocation');
       saveLocationToStorage({
         lat: coords.latitude,
         lon: coords.longitude,
-        name: t('fasting.myLocation'),
+        name,
       });
       setLoadingLocationGPS(false);
     };

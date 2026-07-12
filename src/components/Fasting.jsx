@@ -8,6 +8,7 @@ import BaseSpinner from './base/BaseSpinner';
 import { BaseIcon } from './base';
 import BaseButton from './base/BaseButton';
 import { fetchFastingSunTimes } from '../services/sunTimesApi';
+import { reverseGeocode } from '../services/geocodingApi';
 
 export default function Fasting() {
   const { lang } = useSettings();
@@ -208,10 +209,13 @@ export default function Fasting() {
           ),
         );
       }
+      const name =
+        (await reverseGeocode(coords.latitude, coords.longitude, lang)) ||
+        t('fasting.myLocation');
       saveLocation({
         lat: coords.latitude,
         lon: coords.longitude,
-        name: t('fasting.myLocation'),
+        name,
       });
     } catch {
       setLocError(t('fasting.locationError'));
