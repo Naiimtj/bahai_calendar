@@ -566,7 +566,7 @@ export function getBahaiMonths(year, lang = 'es') {
     badi_month_name: `${MONTHNAMES[monthNum]} (${monthNames[monthNum]})`,
     gregorian_date: toISODate(badiToGregorian(badiYear, monthNum, 1)),
     desc: monthDescriptions[monthNum],
-    info: 'Comienza en el atardecer del día anterior',
+    info: bundle.month.info,
   });
 
   const months = [];

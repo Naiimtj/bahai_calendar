@@ -100,7 +100,7 @@ export default function Sidebar({ open, onClose, currentPage, onNavigate }) {
   return (
     <>
       {/* ── Desktop: permanent left sidebar ── */}
-      <aside className="hidden md:flex md:flex-col md:w-64 md:shrink-0 h-full border-r bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-800">
+      <aside className="hidden md:flex md:flex-col md:w-64 md:shrink-0 h-full border-r bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-800 pt-safe">
         {/* Header */}
         <div className="h-16 flex items-center gap-3 px-5 border-b border-gray-200 dark:border-gray-800">
           <img src="/favicon.svg" alt="" className="h-8 w-8" />

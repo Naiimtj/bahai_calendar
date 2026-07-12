@@ -10,7 +10,10 @@ async function generateIcons() {
 
   // Render full SVG with white background at 1024×1024
   const rendered1024 = await sharp(svgBuf, { density: 144 })
-    .resize(1024, 1024, { fit: 'contain', background: { r: 255, g: 255, b: 255 } })
+    .resize(1024, 1024, {
+      fit: 'contain',
+      background: { r: 255, g: 255, b: 255 },
+    })
     .flatten({ background: { r: 255, g: 255, b: 255 } })
     .png()
     .toBuffer();
@@ -22,15 +25,6 @@ async function generateIcons() {
       .resize(size, size, { fit: 'fill' })
       .toFile(outPath);
     console.log(`Generated icon-${size}.png`);
-  }
-
-  // Also update v2 copies used by apple-touch-icon links
-  for (const size of [180, 152, 120]) {
-    fs.copyFileSync(
-      path.join(outDir, `icon-${size}.png`),
-      path.join(outDir, `icon-${size}v2.png`)
-    );
-    console.log(`Copied icon-${size}v2.png`);
   }
 }
 
