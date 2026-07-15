@@ -9,7 +9,7 @@ import CalendarHeader from './CalendarHeader';
 import CalendarBottomBar from './CalendarBottomBar';
 import { useSwipe } from '../hooks/useSwipe';
 import { getWeekNumber } from '../utils/weekNumber';
-import CellEventDetails from './CellEventDetails';
+import WeekEventLanes from './WeekEventLanes';
 import SelectedDayEvents from './SelectedDayEvents';
 import {
   getMonthName,
@@ -23,7 +23,11 @@ function getDaysInMonth(year, month) {
   return new Date(year, month + 1, 0).getDate();
 }
 
-export default function CompactCalendar({ onMenuClick }) {
+export default function CompactCalendar({
+  onMenuClick,
+  selectedDate,
+  onSelectDate,
+}) {
   const { settings, lang, effectiveToday } = useSettings();
   const { t } = useTranslation();
   const {
@@ -44,9 +48,6 @@ export default function CompactCalendar({ onMenuClick }) {
   const [userMonth, setUserMonth] = useState(null);
   const viewYear = userYear ?? today.getFullYear();
   const viewMonth = userMonth ?? today.getMonth();
-  const [selectedDate, setSelectedDate] = useState(
-    density === 'lista' ? today : null,
-  );
   const [showYear, setShowYear] = useState(false);
   const [yearViewMode, setYearViewMode] = useState('gregorian');
   const [showSearch, setShowSearch] = useState(false);
@@ -82,7 +83,7 @@ export default function CompactCalendar({ onMenuClick }) {
   const goToday = () => {
     setUserYear(null);
     setUserMonth(null);
-    setSelectedDate(today);
+    onSelectDate(today);
   };
 
   const cells = useMemo(() => {
@@ -243,18 +244,13 @@ export default function CompactCalendar({ onMenuClick }) {
       return (
         <BadiYearView
           badiYear={badiYearForView}
-          onSelectMonth={(monthNum) => {
-            const gregDate = badiToGregorian(badiYearForView, monthNum, 1);
+          onSelectMonth={(selectedYear, monthNum) => {
+            const gregDate = badiToGregorian(selectedYear, monthNum, 1);
             setUserYear(gregDate.getFullYear());
             setUserMonth(gregDate.getMonth());
             setShowYear(false);
           }}
-          onBack={() => setShowYear(false)}
           onToggle={() => setYearViewMode('gregorian')}
-          onYearChange={(y) => {
-            const g = badiToGregorian(y, 1, 1);
-            setUserYear(g.getFullYear());
-          }}
           onToday={() => setUserYear(null)}
         />
       );
@@ -262,13 +258,12 @@ export default function CompactCalendar({ onMenuClick }) {
     return (
       <YearView
         year={viewYear}
-        onSelectMonth={(m) => {
-          setUserMonth(m);
+        onSelectMonth={(selectedYear, month) => {
+          setUserYear(selectedYear);
+          setUserMonth(month);
           setShowYear(false);
         }}
-        onBack={() => setShowYear(false)}
         onToggle={() => setYearViewMode('badi')}
-        onYearChange={(y) => setUserYear(y)}
         onToday={() => setUserYear(null)}
       />
     );
@@ -295,10 +290,11 @@ export default function CompactCalendar({ onMenuClick }) {
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
         onMenuClick={onMenuClick}
+        selectedDate={selectedDate}
         onSelectDate={(date) => {
           setUserYear(date.getFullYear());
           setUserMonth(date.getMonth());
-          setSelectedDate(date);
+          onSelectDate(date);
         }}
       />
 
@@ -337,13 +333,12 @@ export default function CompactCalendar({ onMenuClick }) {
               if (!cell) return <div key={`e-${ci}`} />;
               const isSelected =
                 selectedDate?.getTime() === cell.date.getTime();
-              const cellEvents = getCellEvents(cell);
 
               return (
                 <button
                   key={cell.day}
                   onClick={() =>
-                    setSelectedDate((prev) =>
+                    onSelectDate((prev) =>
                       prev?.getTime() === cell.date.getTime() &&
                       density !== 'lista'
                         ? null
@@ -351,17 +346,11 @@ export default function CompactCalendar({ onMenuClick }) {
                     )
                   }
                   className={`relative flex flex-col items-center cursor-pointer md:hover:bg-gray-100 md:dark:hover:bg-gray-800 ${
-                    density === 'detalles'
-                      ? 'py-0.5 min-h-18 overflow-hidden min-w-0 w-full'
-                      : 'py-1.5'
+                    density === 'detalles' ? 'py-1 min-w-0 w-full' : 'py-1.5'
                   }`}
                 >
                   <span
-                    className={`w-8 h-8 flex items-center justify-center rounded-full text-sm font-medium transition-colors
-                      ${cell.isToday ? 'bg-red-500 text-white' : ''}
-                      ${isSelected && !cell.isToday ? 'bg-gray-200 dark:bg-gray-700' : ''}
-                      ${cell.holyDay && !cell.isToday && !isSelected ? 'text-gold-500' : ''}
-                    `}
+                    className={`w-8 h-8 flex items-center justify-center rounded-full text-sm font-medium transition-colors ${cell.isToday ? 'bg-red-500 text-white' : ''} ${isSelected && !cell.isToday ? 'bg-gray-200 dark:bg-gray-700' : ''}${cell.holyDay && !cell.isToday && !isSelected ? 'text-gold-500' : ''}`}
                   >
                     {cell.day}
                   </span>
@@ -388,13 +377,23 @@ export default function CompactCalendar({ onMenuClick }) {
                     </div>
                   )}
 
-                  {/* Detalles: event text */}
-                  {density === 'detalles' && (
-                    <CellEventDetails events={cellEvents} />
-                  )}
+                  {/* Detalles: events handled by WeekEventLanes below */}
                 </button>
               );
             })}
+            {density === 'detalles' && (
+              <div
+                className={
+                  showWeekNums ? 'col-span-7 col-start-2' : 'col-span-7'
+                }
+              >
+                <WeekEventLanes
+                  cells={week.cells}
+                  getCellEvents={getCellEvents}
+                  getCellDate={(cell) => cell.date}
+                />
+              </div>
+            )}
           </div>
         ))}
         {/* Selected day events */}

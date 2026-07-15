@@ -42,26 +42,26 @@ export function getEventStyle(
 export default function MiniMonthGrid({ cells, headers, keyPrefix = '' }) {
   return (
     <>
-      <div className="grid grid-cols-7 gap-0">
+      <div className="grid grid-cols-7 gap-0 w-full">
         {headers.map((h, i) => (
           <div
             key={`${keyPrefix}hdr-${i}`}
-            className="text-center text-[8px] text-gray-400 dark:text-gray-600"
+            className="text-center lg:text-base md:text-sm text-[8px] text-gray-400 dark:text-gray-600"
           >
             {h}
           </div>
         ))}
       </div>
-      <div className="grid grid-cols-7 gap-0">
+      <div className="grid grid-cols-7 gap-0 w-full">
         {cells.map((cell, i) => (
           <div
             key={cell ? `${keyPrefix}d-${cell.day}` : `${keyPrefix}e-${i}`}
             className="flex flex-col items-center justify-center"
           >
             {cell && (
-              <div className="flex flex-col items-center h-5.5">
+              <div className="flex flex-col items-center h-5.5 md:h-7">
                 <span
-                  className={`text-[10px] leading-none w-4 h-4 flex items-center justify-center rounded-full
+                  className={`lg:text-lg md:text-sm text-[10px] leading-none w-4 h-4 md:w-6 md:h-6 flex items-center justify-center rounded-full
                     ${cell.isToday ? 'bg-red-500 text-white' : cell.evStyle ? cell.evStyle.text : 'text-gray-700 dark:text-gray-300'}
                   `}
                 >

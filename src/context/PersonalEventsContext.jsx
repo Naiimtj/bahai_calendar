@@ -37,6 +37,18 @@ function formatTimeNote(ev) {
   return ev.location ? `${timeRange} · ${ev.location}` : timeRange;
 }
 
+function eventDurationMs(ev) {
+  return ev.end && ev.start ? ev.end.getTime() - ev.start.getTime() : 0;
+}
+
+/** Longer (multi-day) events first, then earlier start time, for a stable
+ *  display order across day cells regardless of source-fetch order. */
+function byDurationThenStart(a, b) {
+  const durDiff = eventDurationMs(b) - eventDurationMs(a);
+  if (durDiff !== 0) return durDiff;
+  return (a.start?.getTime() || 0) - (b.start?.getTime() || 0);
+}
+
 /** Build a Map<dayKey, event[]> by spreading each event across the days it spans. */
 function buildEventsByDay(events) {
   const map = new Map();
@@ -280,7 +292,7 @@ export function PersonalEventsProvider({ children }) {
       const opt = optimisticEvents.filter(
         (ev) => ev.end >= dayStart && ev.start <= dayEnd,
       );
-      return [...real, ...opt].map((ev) => ({
+      return [...real, ...opt].sort(byDurationThenStart).map((ev) => ({
         color: ev.color,
         name: ev.title,
         location: ev.location,

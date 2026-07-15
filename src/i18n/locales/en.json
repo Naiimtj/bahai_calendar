@@ -59,7 +59,8 @@
     "invalidDates": "The end must be after the start",
     "saveError": "Could not save the event",
     "remindersAccessDenied": "Access to Reminders was denied. Please enable it in Settings.",
-    "localCalendar": "Local"
+    "localCalendar": "Local",
+    "list": "List"
   },
   "app": {
     "calendar": "Calendar",
@@ -133,7 +134,10 @@
     "calendarSourceName": "Name (optional)",
     "calendarSourceUrl": "iCal / ICS URL",
     "addCalendarSource": "Add subscription",
-    "calendarSourcesHint": "Subscribe to a public iCal/ICS calendar URL (Google, Outlook, etc.) to see its events here."
+    "calendarSourcesHint": "Subscribe to a public iCal/ICS calendar URL (Google, Outlook, etc.) to see its events here.",
+    "reminders": "Reminders",
+    "noReminderLists": "No reminder lists found",
+    "remindersHint": "Choose which Reminders lists appear in the calendar and pick their color."
   },
   "calendar": {
     "today": "Today",
@@ -156,24 +160,8 @@
     "alert": "Alert",
     "none": "None"
   },
-  "weekdaysShort": [
-    "Mon",
-    "Tue",
-    "Wed",
-    "Thu",
-    "Fri",
-    "Sat",
-    "Sun"
-  ],
-  "weekdaysMin": [
-    "M",
-    "T",
-    "W",
-    "T",
-    "F",
-    "S",
-    "S"
-  ],
+  "weekdaysShort": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+  "weekdaysMin": ["M", "T", "W", "T", "F", "S", "S"],
   "events": {
     "all": "All",
     "f19": "F19",

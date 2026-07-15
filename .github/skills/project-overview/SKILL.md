@@ -38,7 +38,7 @@ bahai_calendar/
     │   ├── {Badi,Compact,Gregorian,Mixed}Calendar.jsx · BadiYearView.jsx · YearView.jsx
     │   ├── CalendarBottomBar.jsx · CalendarHeader.jsx · CalendarViewSwitcher.jsx · DensitySwitcher.jsx
     │   ├── Header.jsx · Sidebar.jsx · Settings.jsx · Help.jsx · About.jsx · Privacy.jsx
-    │   ├── Fasting.jsx · UpcomingEvents.jsx · SelectedDayEvents.jsx · CellEventDetails.jsx · MiniMonthGrid.jsx
+    │   ├── Fasting.jsx · UpcomingEvents.jsx · SelectedDayEvents.jsx · CellEventDetails.jsx · WeekEventDetails.jsx · MiniMonthGrid.jsx
     │   ├── AddEventModal.jsx · EventDetailModal.jsx · BadiEventDetailModal.jsx
     │   └── base/             ← reusable base components (Base*.jsx) + icons/ (SVG registry) + index.js barrel
     ├── context/              ← SettingsContext.jsx · BadiYearContext.jsx · PersonalEventsContext.jsx

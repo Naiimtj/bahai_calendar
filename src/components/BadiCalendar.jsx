@@ -9,7 +9,7 @@ import BadiYearView from './BadiYearView';
 import YearView from './YearView';
 import { useSwipe } from '../hooks/useSwipe';
 import { getWeekNumber } from '../utils/weekNumber';
-import CellEventDetails from './CellEventDetails';
+import WeekEventLanes from './WeekEventLanes';
 import SelectedDayEvents from './SelectedDayEvents';
 import {
   getMonthName,
@@ -71,7 +71,11 @@ function buildMonthCells(
   return cells;
 }
 
-export default function BadiCalendar({ onMenuClick }) {
+export default function BadiCalendar({
+  onMenuClick,
+  selectedDate,
+  onSelectDate,
+}) {
   const { t } = useTranslation();
   const { settings, lang, effectiveToday } = useSettings();
   const {
@@ -96,7 +100,6 @@ export default function BadiCalendar({ onMenuClick }) {
   const viewYear = userYear ?? todayBadi?.year ?? 183;
   const viewMonthIdx =
     userMonthIdx ?? (todayBadi ? MONTH_ORDER.indexOf(todayBadi.month) : 0);
-  const [selectedDate, setSelectedDate] = useState(today);
   const [showYear, setShowYear] = useState(false);
   const [yearViewMode, setYearViewMode] = useState('badi');
   const [showSearch, setShowSearch] = useState(false);
@@ -133,7 +136,7 @@ export default function BadiCalendar({ onMenuClick }) {
   const goToday = () => {
     setUserYear(null);
     setUserMonthIdx(null);
-    setSelectedDate(today);
+    onSelectDate(today);
   };
 
   const apiFns = useMemo(
@@ -261,20 +264,15 @@ export default function BadiCalendar({ onMenuClick }) {
       return (
         <YearView
           year={gregYearForView}
-          onSelectMonth={(m) => {
-            const badi = gregorianToBadi(new Date(gregYearForView, m, 15));
+          onSelectMonth={(selectedYear, month) => {
+            const badi = gregorianToBadi(new Date(selectedYear, month, 15));
             if (badi) {
               setUserYear(badi.year);
               setUserMonthIdx(MONTH_ORDER.indexOf(badi.month));
             }
             setShowYear(false);
           }}
-          onBack={() => setShowYear(false)}
           onToggle={() => setYearViewMode('badi')}
-          onYearChange={(y) => {
-            const badi = gregorianToBadi(new Date(y, 5, 1));
-            if (badi) setUserYear(badi.year);
-          }}
           onToday={() => setUserYear(null)}
         />
       );
@@ -282,13 +280,12 @@ export default function BadiCalendar({ onMenuClick }) {
     return (
       <BadiYearView
         badiYear={viewYear}
-        onSelectMonth={(monthNum) => {
+        onSelectMonth={(selectedYear, monthNum) => {
           setShowYear(false);
+          setUserYear(selectedYear);
           setUserMonthIdx(MONTH_ORDER.indexOf(monthNum));
         }}
-        onBack={() => setShowYear(false)}
         onToggle={() => setYearViewMode('gregorian')}
-        onYearChange={(y) => setUserYear(y)}
         onToday={() => setUserYear(null)}
       />
     );
@@ -308,12 +305,13 @@ export default function BadiCalendar({ onMenuClick }) {
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
         onMenuClick={onMenuClick}
+        selectedDate={selectedDate}
         onSelectDate={(date) => {
           const badi = gregorianToBadi(date);
           if (badi) {
             setUserYear(badi.year);
             setUserMonthIdx(MONTH_ORDER.indexOf(badi.month));
-            setSelectedDate(date);
+            onSelectDate(date);
           }
         }}
       />
@@ -345,7 +343,6 @@ export default function BadiCalendar({ onMenuClick }) {
             {week.cells.map((cell, ci) => {
               if (!cell) return <div key={ci} />;
 
-              const cellEvents = getCellEvents(cell);
               const isSelected =
                 selectedDate?.getTime() === cell.gregDate.getTime();
 
@@ -353,7 +350,7 @@ export default function BadiCalendar({ onMenuClick }) {
                 <button
                   key={ci}
                   onClick={() =>
-                    setSelectedDate((prev) =>
+                    onSelectDate((prev) =>
                       prev?.getTime() === cell.gregDate.getTime() &&
                       density !== 'lista'
                         ? null
@@ -361,17 +358,11 @@ export default function BadiCalendar({ onMenuClick }) {
                     )
                   }
                   className={`flex flex-col items-center cursor-pointer md:hover:bg-gray-100 md:dark:hover:bg-gray-800 ${
-                    density === 'detalles'
-                      ? 'py-0.5 min-h-18 overflow-hidden min-w-0 w-full'
-                      : 'py-1'
+                    density === 'detalles' ? 'py-1 min-w-0 w-full' : 'py-1'
                   }`}
                 >
                   <span
-                    className={`w-8 h-8 flex items-center justify-center rounded-full text-sm font-semibold
-                      ${cell.isToday ? 'bg-red-500 text-white' : ''}
-                      ${isSelected && !cell.isToday ? 'bg-gray-200 dark:bg-gray-700' : ''}
-                      ${cell.holyDay && !cell.isToday && !isSelected ? 'text-gold-500' : ''}
-                    `}
+                    className={`w-8 h-8 flex items-center justify-center rounded-full text-sm font-semibold ${cell.isToday ? 'bg-red-500 text-white' : ''} ${isSelected && !cell.isToday ? 'bg-gray-200 dark:bg-gray-700' : ''}${cell.holyDay && !cell.isToday && !isSelected ? 'text-gold-500' : ''}`}
                   >
                     {cell.day}
                   </span>
@@ -403,17 +394,22 @@ export default function BadiCalendar({ onMenuClick }) {
                       ))}
                     </div>
                   )}
-
-                  {/* Detalles: event text */}
-                  {density === 'detalles' && (
-                    <CellEventDetails
-                      events={cellEvents}
-                      fontSize="text-[7px]"
-                    />
-                  )}
                 </button>
               );
             })}
+            {density === 'detalles' && (
+              <div
+                className={
+                  showWeekNums ? 'col-span-7 col-start-2' : 'col-span-7'
+                }
+              >
+                <WeekEventLanes
+                  cells={week.cells}
+                  getCellEvents={getCellEvents}
+                  getCellDate={(cell) => cell.gregDate}
+                />
+              </div>
+            )}
           </div>
         ))}
         {/* Selected day details */}

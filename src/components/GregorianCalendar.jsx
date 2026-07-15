@@ -6,7 +6,7 @@ import { usePersonalEvents } from '../context/PersonalEventsContext';
 import ArrowLeftIcon from './base/icons/ArrowLeftIcon';
 import ArrowRightIcon from './base/icons/ArrowRightIcon';
 import CalendarBottomBar from './CalendarBottomBar';
-import CellEventDetails from './CellEventDetails';
+import WeekEventLanes from './WeekEventLanes';
 import SelectedDayEvents from './SelectedDayEvents';
 import {
   getMonthName,
@@ -95,6 +95,16 @@ export default function GregorianCalendar() {
     getHolyDayForDate,
     isRidvanPeriod,
   ]);
+
+  const weeks = useMemo(() => {
+    const rows = [];
+    for (let i = 0; i < cells.length; i += 7) {
+      const row = cells.slice(i, i + 7);
+      while (row.length < 7) row.push(null);
+      rows.push(row);
+    }
+    return rows;
+  }, [cells]);
 
   const selectedInfo = selectedDate
     ? (() => {
@@ -237,69 +247,78 @@ export default function GregorianCalendar() {
       </div>
 
       {/* Day grid */}
-      <div className="grid grid-cols-7 px-2 gap-y-1 flex-1">
-        {cells.map((cell, i) => {
-          if (!cell) return <div key={`empty-${i}`} />;
-          const isSelected = selectedDate?.getTime() === cell.date.getTime();
-          const cellEvents = getCellEvents(cell);
-          return (
-            <button
-              key={cell.day}
-              onClick={() =>
-                setSelectedDate((prev) =>
-                  prev?.getTime() === cell.date.getTime() && density !== 'lista'
-                    ? null
-                    : cell.date,
-                )
-              }
-              className={`relative flex flex-col items-center transition-colors ${
-                density === 'detalles'
-                  ? 'py-0.5 min-h-[4.5rem] overflow-hidden min-w-0 w-full'
-                  : 'py-1'
-              }`}
-            >
-              <span
-                className={`w-8 h-8 flex items-center justify-center rounded-full text-sm font-medium
-                  ${cell.isToday ? 'bg-red-500 text-white' : ''}
-                  ${isSelected && !cell.isToday ? 'bg-gray-300 dark:bg-gray-600' : ''}
-                  ${cell.holyDay && !cell.isToday && !isSelected ? 'text-gold-500' : ''}
-                `}
-              >
-                {cell.day}
-              </span>
+      <div className="flex-1 px-2">
+        {weeks.map((week, weekIndex) => (
+          <div key={weekIndex} className="grid grid-cols-7 gap-y-1">
+            {week.map((cell, cellIndex) => {
+              if (!cell) return <div key={`empty-${cellIndex}`} />;
+              const isSelected =
+                selectedDate?.getTime() === cell.date.getTime();
+              return (
+                <button
+                  key={cell.day}
+                  onClick={() =>
+                    setSelectedDate((prev) =>
+                      prev?.getTime() === cell.date.getTime() &&
+                      density !== 'lista'
+                        ? null
+                        : cell.date,
+                    )
+                  }
+                  className={`relative flex flex-col items-center transition-colors ${
+                    density === 'detalles' ? 'py-1 min-w-0 w-full' : 'py-1'
+                  }`}
+                >
+                  <span
+                    className={`w-8 h-8 flex items-center justify-center rounded-full text-sm font-medium
+                      ${cell.isToday ? 'bg-red-500 text-white' : ''}
+                      ${isSelected && !cell.isToday ? 'bg-gray-300 dark:bg-gray-600' : ''}
+                      ${cell.holyDay && !cell.isToday && !isSelected ? 'text-gold-500' : ''}
+                    `}
+                  >
+                    {cell.day}
+                  </span>
 
-              {/* Compacta & Lista: dots */}
-              {(density === 'compacta' || density === 'lista') && (
-                <div className="flex gap-0.5 mt-0.5">
-                  {cell.holyDay && (
-                    <span className="w-1.5 h-1.5 rounded-full bg-gold-500" />
+                  {/* Compacta & Lista: dots */}
+                  {(density === 'compacta' || density === 'lista') && (
+                    <div className="flex gap-0.5 mt-0.5">
+                      {cell.holyDay && (
+                        <span className="w-1.5 h-1.5 rounded-full bg-gold-500" />
+                      )}
+                      {cell.ridvan && !cell.holyDay && (
+                        <span className="w-1.5 h-1.5 rounded-full bg-primary" />
+                      )}
+                      {cell.badi &&
+                        cell.badi.day === 1 &&
+                        cell.badi.month >= 1 &&
+                        cell.badi.month <= 19 && (
+                          <span className="w-1.5 h-1.5 rounded-full bg-blue-400" />
+                        )}
+                      {eventsForDate(cell.date).map((ev, pi) => (
+                        <span
+                          key={`p-${pi}`}
+                          className="w-1.5 h-1.5 rounded-full"
+                          style={{ backgroundColor: ev.color }}
+                        />
+                      ))}
+                    </div>
                   )}
-                  {cell.ridvan && !cell.holyDay && (
-                    <span className="w-1.5 h-1.5 rounded-full bg-primary" />
-                  )}
-                  {cell.badi &&
-                    cell.badi.day === 1 &&
-                    cell.badi.month >= 1 &&
-                    cell.badi.month <= 19 && (
-                      <span className="w-1.5 h-1.5 rounded-full bg-blue-400" />
-                    )}
-                  {eventsForDate(cell.date).map((ev, pi) => (
-                    <span
-                      key={`p-${pi}`}
-                      className="w-1.5 h-1.5 rounded-full"
-                      style={{ backgroundColor: ev.color }}
-                    />
-                  ))}
-                </div>
-              )}
 
-              {/* Detalles: event text */}
-              {density === 'detalles' && (
-                <CellEventDetails events={cellEvents} />
-              )}
-            </button>
-          );
-        })}
+                  {/* Detalles: events handled by WeekEventLanes below */}
+                </button>
+              );
+            })}
+            {density === 'detalles' && (
+              <div className="col-span-7">
+                <WeekEventLanes
+                  cells={week}
+                  getCellEvents={getCellEvents}
+                  getCellDate={(cell) => cell.date}
+                />
+              </div>
+            )}
+          </div>
+        ))}
       </div>
 
       {/* Selected day events */}

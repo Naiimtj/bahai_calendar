@@ -7,9 +7,11 @@ import {
   isNativePlatform,
   requestDeviceCalendarAccess,
   getDeviceCalendars,
+  getReminderLists,
   SOURCE_COLORS,
   colorForIndex,
 } from '../services/personalCalendar';
+import { supportsNativeReminders } from '../services/calendarSync';
 import { reverseGeocode } from '../services/geocodingApi';
 import ArrowLeftIcon from './base/icons/ArrowLeftIcon';
 import BaseSelectInput from './base/BaseSelectInput';
@@ -200,6 +202,7 @@ function CalendarSourcesSection() {
   } = usePersonalEvents();
   const [name, setName] = useState('');
   const [url, setUrl] = useState('');
+  const [showAddModal, setShowAddModal] = useState(false);
   const [confirmPending, setConfirmPending] = useState(null); // null | true | false
 
   const handleDeviceToggle = (enabled) => {
@@ -224,6 +227,13 @@ function CalendarSourcesSection() {
     const trimmed = url.trim();
     if (!trimmed) return;
     addIcsSource({ name: name.trim(), url: trimmed });
+    setName('');
+    setUrl('');
+    setShowAddModal(false);
+  };
+
+  const handleAddModalClose = () => {
+    setShowAddModal(false);
     setName('');
     setUrl('');
   };
@@ -297,29 +307,36 @@ function CalendarSourcesSection() {
         )}
       </div>
 
-      <div className="space-y-2">
-        <input
-          type="text"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder={t('settings.calendarSourceName')}
-          className="w-full rounded-lg px-3 py-2 text-sm bg-gray-200 dark:bg-gray-800 text-gray-900 dark:text-gray-100 outline-none placeholder-gray-400 dark:placeholder-gray-500"
-        />
-        <input
-          type="url"
-          value={url}
-          onChange={(e) => setUrl(e.target.value)}
-          placeholder={t('settings.calendarSourceUrl')}
-          className="w-full rounded-lg px-3 py-2 text-sm bg-gray-200 dark:bg-gray-800 text-gray-900 dark:text-gray-100 outline-none placeholder-gray-400 dark:placeholder-gray-500"
-        />
-        <BaseButton onClick={handleAdd} disabled={!url.trim()}>
-          {t('settings.addCalendarSource')}
-        </BaseButton>
-      </div>
+      <BaseButton onClick={() => setShowAddModal(true)} className="w-full">
+        {t('settings.addCalendarSource')}
+      </BaseButton>
 
       <p className="text-xs mt-2 text-gray-400 dark:text-gray-500">
         {t('settings.calendarSourcesHint')}
       </p>
+
+      <BaseModal
+        visible={showAddModal}
+        title={t('settings.addCalendarSource')}
+        onClose={handleAddModalClose}
+      >
+        <div className="flex flex-col gap-3">
+          <BaseTextInput
+            value={name}
+            onChange={setName}
+            placeholder={t('settings.calendarSourceName')}
+          />
+          <BaseTextInput
+            value={url}
+            onChange={setUrl}
+            placeholder={t('settings.calendarSourceUrl')}
+            type="url"
+          />
+          <BaseButton onClick={handleAdd} disabled={!url.trim()}>
+            {t('settings.addCalendarSource')}
+          </BaseButton>
+        </div>
+      </BaseModal>
 
       <BaseModal
         visible={confirmPending !== null}
@@ -345,6 +362,96 @@ function CalendarSourcesSection() {
           </BaseButton>
         </div>
       </BaseModal>
+    </div>
+  );
+}
+
+function RemindersListItems({ lists, loading }) {
+  const { t } = useTranslation();
+  const { config, setDeviceCalendarPref } = usePersonalEvents();
+  const prefs = config.deviceCalendars || {};
+
+  if (loading) {
+    return (
+      <div className="flex justify-center py-3">
+        <BaseSpinner />
+      </div>
+    );
+  }
+
+  if (lists.length === 0) {
+    return (
+      <p className="text-xs px-1 py-2 text-gray-400 dark:text-gray-500">
+        {t('settings.noReminderLists')}
+      </p>
+    );
+  }
+
+  return (
+    <div className="space-y-2">
+      {lists.map((list) => (
+        <div
+          key={list.id}
+          className="rounded-lg px-3 py-2 bg-gray-200 dark:bg-gray-800"
+        >
+          <div className="flex items-center justify-between gap-2">
+            <span className="min-w-0 flex-1 truncate text-sm text-gray-900 dark:text-gray-100">
+              {list.title}
+            </span>
+            <BaseToggleSwitch
+              value={prefs[list.id]?.enabled !== false}
+              onChange={(listEnabled) =>
+                setDeviceCalendarPref(list.id, { enabled: listEnabled })
+              }
+            />
+          </div>
+          {prefs[list.id]?.enabled !== false && (
+            <div className="mt-2">
+              <ColorPicker
+                value={prefs[list.id]?.color ?? list.color ?? null}
+                onChange={(color) => setDeviceCalendarPref(list.id, { color })}
+              />
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function RemindersListSection() {
+  const { t } = useTranslation();
+  const { config } = usePersonalEvents();
+  const [lists, setLists] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const enabled = supportsNativeReminders() && config.deviceCalendarEnabled;
+
+  useEffect(() => {
+    if (!enabled) return undefined;
+    let active = true;
+    setLoading(true);
+    getReminderLists().then((result) => {
+      if (active) {
+        setLists(result);
+        setLoading(false);
+      }
+    });
+    return () => {
+      active = false;
+    };
+  }, [enabled]);
+
+  if (!enabled) return null;
+
+  return (
+    <div className="px-4 pt-6 pb-3 border-t border-gray-200 dark:border-gray-800">
+      <label className="text-xs font-semibold tracking-wider block mb-2 text-gray-400 dark:text-gray-500">
+        {t('settings.reminders')}
+      </label>
+      <RemindersListItems lists={lists} loading={loading} />
+      <p className="text-xs mt-2 text-gray-400 dark:text-gray-500">
+        {t('settings.remindersHint')}
+      </p>
     </div>
   );
 }
@@ -399,6 +506,7 @@ export default function Settings({ onClose }) {
   };
 
   const handleLocationGPS = () => {
+    if (loadingLocationGPS) return;
     setLocationError(null);
     setLoadingLocationGPS(true);
     const onSuccess = async (coords) => {
@@ -432,6 +540,10 @@ export default function Settings({ onClose }) {
       );
     }
   };
+
+  const gpsAvailable =
+    Capacitor.isNativePlatform() ||
+    (window.isSecureContext && 'geolocation' in navigator);
 
   const handleSelectLocationCity = (city) => {
     saveLocationToStorage({
@@ -695,13 +807,15 @@ export default function Settings({ onClose }) {
             </div>
           ) : !showLocationSearch && !loadingLocationGPS ? (
             <div className="flex gap-2">
-              <BaseButton
-                label={t('fasting.useMyLocation')}
-                icon="locationOn"
-                outlined
-                onClick={handleLocationGPS}
-                className="flex-1 text-xs"
-              />
+              {gpsAvailable && (
+                <BaseButton
+                  label={t('fasting.useMyLocation')}
+                  icon="locationOn"
+                  outlined
+                  onClick={handleLocationGPS}
+                  className="flex-1 text-xs"
+                />
+              )}
               <BaseButton
                 label={t('fasting.searchCity')}
                 icon="search"
@@ -777,6 +891,7 @@ export default function Settings({ onClose }) {
         </div>
 
         <CalendarSourcesSection />
+        <RemindersListSection />
       </div>
     </div>
   );

@@ -1,4 +1,4 @@
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useLayoutEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSettings } from '../context/SettingsContext';
 import { useBadiYear } from '../context/BadiYearContext';
@@ -9,6 +9,16 @@ import MiniMonthGrid, { getEventStyle } from './MiniMonthGrid';
 
 const WEEKDAYS_ES = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
 const WEEKDAYS_EN = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+const PAST_YEARS = 5;
+const FUTURE_YEARS = 5;
+
+function buildYears(focus) {
+  const list = [];
+  for (let offset = -PAST_YEARS; offset <= FUTURE_YEARS; offset++) {
+    list.push(focus + offset);
+  }
+  return list;
+}
 
 function getDaysInMonth(year, month) {
   return new Date(year, month + 1, 0).getDate();
@@ -25,7 +35,7 @@ function MiniMonth({
   isCurrent,
   today,
   lang,
-  onClick,
+  onSelect,
   getHolyDayForDate,
   gregorianToBadi,
   eventsForDate,
@@ -52,9 +62,13 @@ function MiniMonth({
   }
 
   return (
-    <button onClick={() => onClick(month)} className="flex flex-col text-left">
+    <BaseButton
+      text
+      onClick={() => onSelect(year, month)}
+      className="!flex !flex-col items-start !w-full text-left"
+    >
       <h3
-        className={`text-sm font-bold capitalize mb-1 ${isCurrent ? 'text-primary-text' : ''}`}
+        className={`lg:text-lg text-sm font-bold capitalize mb-1 ${isCurrent ? 'text-primary-text' : ''}`}
       >
         {monthName}
       </h3>
@@ -63,133 +77,98 @@ function MiniMonth({
         headers={headers}
         keyPrefix={`g-${year}-${month}-`}
       />
-    </button>
+    </BaseButton>
   );
 }
 
-export default function YearView({
-  year,
-  onSelectMonth,
-  onBack,
-  onToggle,
-  onYearChange,
-  onToday,
-}) {
+export default function YearView({ year, onSelectMonth, onToggle, onToday }) {
   const { lang, effectiveToday } = useSettings();
   const { t } = useTranslation();
-  const { getHolyDayForDate, gregorianToBadi } = useBadiYear();
+  const { getHolyDayForDate, gregorianToBadi, loadYearsAround } = useBadiYear();
   const { eventsForDate } = usePersonalEvents();
   const today = effectiveToday;
   const currentMonth = today.getMonth();
   const currentYear = today.getFullYear();
   const containerRef = useRef(null);
-  const touchStartYRef = useRef(0);
+  const focusRef = useRef(null);
+  const [focusYear, setFocusYear] = useState(year);
+  const [years, setYears] = useState(() => buildYears(year));
+  const [scrollNudge, setScrollNudge] = useState(0);
 
   useEffect(() => {
-    const el = containerRef.current;
-    if (!el) return;
+    setFocusYear(year);
+    setYears(buildYears(year));
+  }, [year]);
 
-    const onWheel = (e) => {
-      if (!onYearChange) return;
-      if (e.deltaY < 0 && el.scrollTop === 0) {
-        e.preventDefault();
-        onYearChange(year - 1);
-      } else if (
-        e.deltaY > 0 &&
-        el.scrollTop + el.clientHeight >= el.scrollHeight - 1
-      ) {
-        e.preventDefault();
-        onYearChange(year + 1);
-      }
-    };
+  useLayoutEffect(() => {
+    focusRef.current?.scrollIntoView({ block: 'start' });
+  }, [focusYear, scrollNudge]);
 
-    const onTouchStart = (e) => {
-      touchStartYRef.current = e.touches[0].clientY;
-    };
+  useEffect(() => {
+    years.forEach(loadYearsAround);
+  }, [years, loadYearsAround]);
 
-    const onTouchEnd = (e) => {
-      if (!onYearChange) return;
-      const delta = touchStartYRef.current - e.changedTouches[0].clientY;
-      if (delta < -50 && el.scrollTop === 0) {
-        onYearChange(year - 1);
-      } else if (
-        delta > 50 &&
-        el.scrollTop + el.clientHeight >= el.scrollHeight - 1
-      ) {
-        onYearChange(year + 1);
-      }
-    };
-
-    el.addEventListener('wheel', onWheel, { passive: false });
-    el.addEventListener('touchstart', onTouchStart, { passive: true });
-    el.addEventListener('touchend', onTouchEnd, { passive: true });
-
-    return () => {
-      el.removeEventListener('wheel', onWheel);
-      el.removeEventListener('touchstart', onTouchStart);
-      el.removeEventListener('touchend', onTouchEnd);
-    };
-  }, [year, onYearChange]);
+  const handleToday = () => {
+    setFocusYear(currentYear);
+    setYears(buildYears(currentYear));
+    setScrollNudge((n) => n + 1);
+    onToday?.();
+  };
 
   return (
-    <div ref={containerRef} className="flex flex-col h-full overflow-y-auto">
-      {/* Year header */}
-      <div className="relative px-4 pt-[max(0.75rem,env(safe-area-inset-top))] pb-4 flex items-start w-full">
-        <div className="absolute left-4 flex items-center w-fit">
-          <BaseButton
-            onClick={onBack}
-            outlined
-            icon="arrowLeft"
-            label={t('calendar.back')}
-          />
-          {onToday && year !== currentYear && (
-            <BaseButton
-              onClick={onToday}
-              outlined
-              label={t('calendar.today')}
-            />
-          )}
-        </div>
-        <div className="flex items-center gap-2 w-full justify-end md:justify-center">
-          <h2
-            className={`text-3xl font-bold ${year === currentYear ? 'text-primary-text' : ''}`}
-          >
-            {year}
-          </h2>
+    <div className="relative h-full">
+      <div ref={containerRef} className="flex flex-col h-full overflow-y-auto">
+        <div className="sticky top-0 z-10 flex justify-end px-4 pt-[max(0.5rem,env(safe-area-inset-top))]  bg-white/90 dark:bg-gray-950/90">
           {onToggle && (
-            <BaseIcon
-              icon="change"
-              size="md"
+            <BaseButton
+              icon="calendarBadi"
+              color="currentColor"
               onClick={onToggle}
-              className="cursor-pointer fill-gray-500 dark:fill-gray-400"
+              outlined
+              className="fixed top-[max(0.5rem,env(safe-area-inset-top))] right-8 z-40 md:absolute md:top-4 md:right-4"
             />
           )}
-          <h2
-            className="text-xl font-bold text-gray-400 dark:text-gray-500 cursor-pointer md:hover:text-gray-900 md:dark:hover:text-gray-100"
-            onClick={onToggle}
-          >
-            {gregorianToBadi(new Date(year, 5, 1))?.year} B.E.
-          </h2>
         </div>
-      </div>
 
-      {/* 12 months in 3-column grid */}
-      <div className="grid grid-cols-3 gap-x-4 gap-y-2 md:gap-y-4 px-4 pb-6">
-        {Array.from({ length: 12 }, (_, m) => (
-          <MiniMonth
-            key={m}
-            year={year}
-            month={m}
-            isCurrent={year === currentYear && m === currentMonth}
-            today={today}
-            lang={lang}
-            onClick={onSelectMonth}
-            getHolyDayForDate={getHolyDayForDate}
-            gregorianToBadi={gregorianToBadi}
-            eventsForDate={eventsForDate}
-          />
+        {years.map((displayYear) => (
+          <section
+            key={displayYear}
+            ref={displayYear === focusYear ? focusRef : null}
+            className="px-4 pb-8 scroll-mt-16"
+          >
+            <h2
+              className={`mb-4 text-center text-3xl font-bold ${displayYear === currentYear ? 'text-primary-text' : ''}`}
+            >
+              {displayYear}
+            </h2>
+            <div className="grid grid-cols-3 gap-x-4 gap-y-4 w-full">
+              {Array.from({ length: 12 }, (_, month) => (
+                <MiniMonth
+                  key={month}
+                  year={displayYear}
+                  month={month}
+                  isCurrent={
+                    displayYear === currentYear && month === currentMonth
+                  }
+                  today={today}
+                  lang={lang}
+                  onSelect={onSelectMonth}
+                  getHolyDayForDate={getHolyDayForDate}
+                  gregorianToBadi={gregorianToBadi}
+                  eventsForDate={eventsForDate}
+                />
+              ))}
+            </div>
+          </section>
         ))}
+        <div className="h-20" />
       </div>
+      <BaseButton
+        label={t('calendar.today')}
+        onClick={handleToday}
+        outlined
+        className="fixed z-40 md:absolute bottom-4 left-4"
+      />
     </div>
   );
 }

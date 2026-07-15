@@ -51,6 +51,8 @@
 	<false/>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>El Calendario Bahá'í usa tu ubicación para mostrar los horarios de amanecer y atardecer durante el período de ayuno.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>El Calendario Bahá'í usa tu ubicación para mostrar los horarios de amanecer y atardecer durante el período de ayuno.</string>
 	<key>NSCalendarsFullAccessUsageDescription</key>
 	<string>El Calendario Bahá'í accede a tus calendarios para mostrar tus eventos personales junto a las fechas bahá'ís.</string>
 	<key>NSCalendarsUsageDescription</key>

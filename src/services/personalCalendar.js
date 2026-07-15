@@ -552,6 +552,29 @@ async function getDeviceReminders(windowStart, windowEnd, config) {
   }
 }
 
+/**
+ * Lists the iOS Reminders lists (EKCalendars of type reminder) so the user can
+ * pick where to add a reminder and choose which lists appear in the app.
+ * @returns {Promise<Array<{id:string,title:string,color:?string}>>}
+ */
+export async function getReminderLists() {
+  if (!isNativePlatform()) return [];
+  if (typeof CapacitorCalendar.getRemindersLists !== 'function') return [];
+  try {
+    const granted = await ensureRemindersReadAccess();
+    if (!granted) return [];
+    const { result } = await CapacitorCalendar.getRemindersLists();
+    const list = Array.isArray(result) ? result : [];
+    return list.map((l) => ({
+      id: l.id,
+      title: l.title || '(sin nombre)',
+      color: l.color || null,
+    }));
+  } catch {
+    return [];
+  }
+}
+
 /** Marks a native iOS reminder as completed / not completed. */
 export async function setDeviceReminderCompleted(id, completed) {
   if (!isNativePlatform()) return false;
@@ -579,6 +602,7 @@ export async function updateDeviceReminder(id, updates) {
     if (updates.url !== undefined) options.url = updates.url || '';
     if (updates.location !== undefined)
       options.location = updates.location || '';
+    if (updates.listId) options.listId = updates.listId;
     if (updates.priority && updates.priority !== 'none') {
       options.priority = priorityToNative(updates.priority);
     }

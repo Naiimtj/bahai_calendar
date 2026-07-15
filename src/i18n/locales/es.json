@@ -59,7 +59,8 @@
     "invalidDates": "El fin debe ser posterior al inicio",
     "saveError": "No se pudo guardar el evento",
     "remindersAccessDenied": "Se denegó el acceso a Recordatorios. Actívalo en Ajustes.",
-    "localCalendar": "Local"
+    "localCalendar": "Local",
+    "list": "Lista"
   },
   "app": {
     "calendar": "Calendario",
@@ -133,7 +134,10 @@
     "calendarSourceName": "Nombre (opcional)",
     "calendarSourceUrl": "URL de iCal / ICS",
     "addCalendarSource": "Añadir suscripción",
-    "calendarSourcesHint": "Suscríbete a una URL pública de calendario iCal/ICS (Google, Outlook, etc.) para ver sus eventos aquí."
+    "calendarSourcesHint": "Suscríbete a una URL pública de calendario iCal/ICS (Google, Outlook, etc.) para ver sus eventos aquí.",
+    "reminders": "Recordatorios",
+    "noReminderLists": "No se encontraron listas de recordatorios",
+    "remindersHint": "Elige qué listas de Recordatorios aparecen en el calendario y su color."
   },
   "calendar": {
     "today": "Hoy",
@@ -208,7 +212,7 @@
   },
   "about": {
     "title": "Calendario Bahá'í",
-    "description1": "El calendario Badí' (bahá'í) fue creado por el Báb y adoptado por Bahá'u'lláh. Consiste en 19 meses de 19 días cada uno, con 4 o 5 días intercalarios (Ayyám-i-Há) antes del último mes.",
+    "description1": "El calendario Badí' (bahá'í) fue creado por el Báb y adoptado por Bahá'u'lláh. Consiste en 19 meses de 19 días cada uno, con 4 o 5 días intercalares (Ayyám-i-Há) antes del último mes.",
     "description2": "El año bahá'í comienza en Naw-Rúz (Año Nuevo), que coincide con el equinoccio vernal (alrededor del 20 de marzo).",
     "description3": "Esta aplicación muestra tres vistas de calendario — gregoriano, Badí', y mixta — junto con los días sagrados, las fiestas de los 19 días y el período de ayuno.",
     "structureTitle": "Estructura del Calendario",

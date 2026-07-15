@@ -27,7 +27,7 @@ const BaseModal = ({
         open
         aria-modal="true"
         aria-labelledby={title ? titleId : undefined}
-        className={`bg-white dark:bg-gray-900 shadow-lg relative max-h-[88vh] md:max-h-[90vh] md:max-w-[90%] overflow-y-auto p-0 rounded-lg ${
+        className={`bg-white dark:bg-gray-900 shadow-lg relative max-h-[88vh] md:max-h-[90vh] md:max-w-[90%] overflow-y-auto pb-[var(--kb-height)] p-0 rounded-lg ${
           fullscreen
             ? 'w-full h-full md:h-auto md:w-[90%] md:max-w-2xl'
             : 'w-[90%] max-w-2xl'

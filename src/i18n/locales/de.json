@@ -59,7 +59,8 @@
     "invalidDates": "Das Ende muss nach dem Beginn liegen",
     "saveError": "Der Termin konnte nicht gespeichert werden",
     "remindersAccessDenied": "Zugriff auf Erinnerungen wurde verweigert. Bitte in den Einstellungen aktivieren.",
-    "localCalendar": "Lokal"
+    "localCalendar": "Lokal",
+    "list": "Liste"
   },
   "app": {
     "calendar": "Kalender",
@@ -133,7 +134,10 @@
     "calendarSourceName": "Name (optional)",
     "calendarSourceUrl": "iCal- / ICS-URL",
     "addCalendarSource": "Abonnement hinzufügen",
-    "calendarSourcesHint": "Abonniere eine öffentliche iCal/ICS-Kalender-URL (Google, Outlook usw.), um ihre Termine hier zu sehen."
+    "calendarSourcesHint": "Abonniere eine öffentliche iCal/ICS-Kalender-URL (Google, Outlook usw.), um ihre Termine hier zu sehen.",
+    "reminders": "Erinnerungen",
+    "noReminderLists": "Keine Erinnerungslisten gefunden",
+    "remindersHint": "Wähle, welche Erinnerungslisten im Kalender erscheinen, und lege ihre Farbe fest."
   },
   "calendar": {
     "today": "Heute",
@@ -156,24 +160,8 @@
     "alert": "Alarm",
     "none": "Keine"
   },
-  "weekdaysShort": [
-    "Mo",
-    "Di",
-    "Mi",
-    "Do",
-    "Fr",
-    "Sa",
-    "So"
-  ],
-  "weekdaysMin": [
-    "M",
-    "D",
-    "M",
-    "D",
-    "F",
-    "S",
-    "S"
-  ],
+  "weekdaysShort": ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"],
+  "weekdaysMin": ["M", "D", "M", "D", "F", "S", "S"],
   "events": {
     "all": "Alle",
     "f19": "F19",

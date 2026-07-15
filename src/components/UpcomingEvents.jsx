@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useBadiYear } from '../context/BadiYearContext';
 import { useSettings } from '../context/SettingsContext';
 import { formatGregorianDate } from '../lib/badiDate';
+import { isWorkSuspendedHolyDay } from '../lib/badiCalendar';
 import BaseSpinner from './base/BaseSpinner';
 import { BaseIcon } from './base';
 
@@ -19,6 +20,11 @@ export default function UpcomingEvents() {
   const { lang, effectiveToday } = useSettings();
   const { allEvents, allMonthStarts, loading } = useBadiYear();
   const today = effectiveToday;
+  const nextYear = useMemo(() => {
+    const date = new Date(today);
+    date.setFullYear(date.getFullYear() + 1);
+    return date;
+  }, [today]);
   const [tab, setTab] = useState('all');
   const [expandedKey, setExpandedKey] = useState(null);
 
@@ -28,8 +34,12 @@ export default function UpcomingEvents() {
 
   const holyList = useMemo(() => {
     const todayMs = today.getTime();
+    const nextYearMs = nextYear.getTime();
     return allEvents
-      .filter((ev) => ev.gregDate.getTime() > todayMs)
+      .filter((ev) => {
+        const eventTime = ev.gregDate.getTime();
+        return eventTime >= todayMs && eventTime <= nextYearMs;
+      })
       .map((ev) => {
         const monthEntry = allMonthStarts.find(
           (m) => m.badiMonth === ev.badi_month,
@@ -39,24 +49,25 @@ export default function UpcomingEvents() {
           type: 'holy',
           name: ev.event,
           gregDate: ev.gregDate,
-          suspend:
-            /Naw-Rúz|Riḍván|Declaración|Ascensión|Martirio|Nacimiento/.test(
-              ev.event,
-            ),
+          suspend: isWorkSuspendedHolyDay(ev),
           badiDate: `${ev.badi_day} ${monthName}`,
           desc: ev.desc,
           url: ev.url,
           time_note: ev.time_note,
         };
       });
-  }, [allEvents, allMonthStarts, today]);
+  }, [allEvents, allMonthStarts, nextYear, today]);
 
   const feastList = useMemo(() => {
     const todayMs = today.getTime();
+    const nextYearMs = nextYear.getTime();
     return allMonthStarts
       .filter(
         (m) =>
-          m.badiMonth >= 1 && m.badiMonth <= 19 && m.start.getTime() > todayMs,
+          m.badiMonth >= 1 &&
+          m.badiMonth <= 19 &&
+          m.start.getTime() >= todayMs &&
+          m.start.getTime() <= nextYearMs,
       )
       .map((m) => ({
         type: 'feast',
@@ -66,7 +77,7 @@ export default function UpcomingEvents() {
         badiDate: `1 ${m.name}`,
         desc: m.desc,
       }));
-  }, [allMonthStarts, t, today]);
+  }, [allMonthStarts, nextYear, t, today]);
 
   const allList = useMemo(() => {
     return [...holyList, ...feastList].sort((a, b) => a.gregDate - b.gregDate);
@@ -151,7 +162,7 @@ export default function UpcomingEvents() {
 
       {/* Event list */}
       <div className="flex-1 overflow-y-auto px-4 py-2">
-        {filtered.slice(0, 30).map((ev) => {
+        {filtered.map((ev) => {
           const key = ev.gregDate.getTime() + ev.name;
           const isExpanded = expandedKey === key;
           const hasDetail = ev.desc || ev.url;

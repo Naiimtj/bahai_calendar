@@ -276,6 +276,10 @@ public class BahaiCalendarNativePlugin: CAPPlugin, CAPBridgedPlugin {
     }
 
     private func applyReminderFields(_ reminder: EKReminder, call: CAPPluginCall) {
+        if let listId = call.getString("listId"),
+           let list = store.calendar(withIdentifier: listId) {
+            reminder.calendar = list
+        }
         if let title = call.getString("title") { reminder.title = title }
         if let notes = call.getString("notes") { reminder.notes = notes }
         if let url = call.getString("url"), !url.isEmpty { reminder.url = URL(string: url) }

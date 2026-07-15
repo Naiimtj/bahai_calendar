@@ -9,7 +9,7 @@ import CalendarHeader from './CalendarHeader';
 import CalendarBottomBar from './CalendarBottomBar';
 import { useSwipe } from '../hooks/useSwipe';
 import { getWeekNumber } from '../utils/weekNumber';
-import CellEventDetails from './CellEventDetails';
+import WeekEventLanes from './WeekEventLanes';
 import SelectedDayEvents from './SelectedDayEvents';
 import {
   getMonthName,
@@ -24,7 +24,66 @@ function getDaysInMonth(year, month) {
   return new Date(year, month + 1, 0).getDate();
 }
 
-export default function MixedCalendar({ onMenuClick }) {
+const GRID_START_CLASSES = [
+  'col-start-1',
+  'col-start-2',
+  'col-start-3',
+  'col-start-4',
+  'col-start-5',
+  'col-start-6',
+  'col-start-7',
+  'col-start-8',
+];
+
+const GRID_SPAN_CLASSES = [
+  '',
+  'col-span-1',
+  'col-span-2',
+  'col-span-3',
+  'col-span-4',
+  'col-span-5',
+  'col-span-6',
+  'col-span-7',
+];
+
+const GRID_COLUMN_CLASSES = [
+  '',
+  'grid-cols-1',
+  'grid-cols-2',
+  'grid-cols-3',
+  'grid-cols-4',
+  'grid-cols-5',
+  'grid-cols-6',
+  'grid-cols-7',
+];
+
+function isSameBadiMonth(firstCell, secondCell) {
+  return (
+    firstCell?.badi?.month === secondCell?.badi?.month &&
+    firstCell?.badi?.year === secondCell?.badi?.year
+  );
+}
+
+function getBadiMonthEdges(cells, column, gregorianToBadi) {
+  const cell = cells[column];
+  if (!cell?.badi) return { isFirstInGroup: false, isLastInGroup: false };
+
+  const nextCell = cells[column + 1];
+  const dayAfter = new Date(cell.date);
+  dayAfter.setDate(dayAfter.getDate() + 1);
+  const nextBadi = nextCell?.badi ?? gregorianToBadi(dayAfter);
+
+  return {
+    isFirstInGroup: cell.badi.day === 1,
+    isLastInGroup: !isSameBadiMonth(cell, { badi: nextBadi }),
+  };
+}
+
+export default function MixedCalendar({
+  onMenuClick,
+  selectedDate,
+  onSelectDate,
+}) {
   const { settings, lang, effectiveToday } = useSettings();
   const { t } = useTranslation();
   const {
@@ -45,7 +104,6 @@ export default function MixedCalendar({ onMenuClick }) {
   const [userMonth, setUserMonth] = useState(null);
   const viewYear = userYear ?? today.getFullYear();
   const viewMonth = userMonth ?? today.getMonth();
-  const [selectedDate, setSelectedDate] = useState(today);
   const [showYear, setShowYear] = useState(false);
   const [yearViewMode, setYearViewMode] = useState('gregorian');
   const [showSearch, setShowSearch] = useState(false);
@@ -81,7 +139,7 @@ export default function MixedCalendar({ onMenuClick }) {
   const goToday = () => {
     setUserYear(null);
     setUserMonth(null);
-    setSelectedDate(today);
+    onSelectDate(today);
   };
 
   const cells = useMemo(() => {
@@ -234,18 +292,13 @@ export default function MixedCalendar({ onMenuClick }) {
       return (
         <BadiYearView
           badiYear={badiYearForView}
-          onSelectMonth={(monthNum) => {
-            const gregDate = badiToGregorian(badiYearForView, monthNum, 1);
+          onSelectMonth={(selectedYear, monthNum) => {
+            const gregDate = badiToGregorian(selectedYear, monthNum, 1);
             setUserYear(gregDate.getFullYear());
             setUserMonth(gregDate.getMonth());
             setShowYear(false);
           }}
-          onBack={() => setShowYear(false)}
           onToggle={() => setYearViewMode('gregorian')}
-          onYearChange={(y) => {
-            const g = badiToGregorian(y, 1, 1);
-            setUserYear(g.getFullYear());
-          }}
           onToday={() => setUserYear(null)}
         />
       );
@@ -253,20 +306,16 @@ export default function MixedCalendar({ onMenuClick }) {
     return (
       <YearView
         year={viewYear}
-        onSelectMonth={(m) => {
-          setUserMonth(m);
+        onSelectMonth={(selectedYear, month) => {
+          setUserYear(selectedYear);
+          setUserMonth(month);
           setShowYear(false);
         }}
-        onBack={() => setShowYear(false)}
         onToggle={() => setYearViewMode('badi')}
-        onYearChange={(y) => setUserYear(y)}
         onToday={() => setUserYear(null)}
       />
     );
   }
-
-  // Flat list of all cells (for border logic)
-  const flatCells = weeks.flatMap((w) => w.cells);
 
   return (
     <div className="relative flex flex-col h-full">
@@ -282,10 +331,11 @@ export default function MixedCalendar({ onMenuClick }) {
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
         onMenuClick={onMenuClick}
+        selectedDate={selectedDate}
         onSelectDate={(date) => {
           setUserYear(date.getFullYear());
           setUserMonth(date.getMonth());
-          setSelectedDate(date);
+          onSelectDate(date);
         }}
       />
 
@@ -305,11 +355,26 @@ export default function MixedCalendar({ onMenuClick }) {
       {/* Day grid — swipeable on mobile */}
       <div className="flex-1" {...swipeHandlers}>
         {weeks.map((week, wi) => {
-          const rowStartIdx = wi * 7;
+          const selectedBadi = gregorianToBadi(selectedDate || today);
+          const firstVisibleColumn = week.cells.findIndex(Boolean);
+          const lastVisibleColumn = week.cells.reduce(
+            (lastColumn, cell, column) => (cell ? column : lastColumn),
+            0,
+          );
+          const visibleColumnCount = lastVisibleColumn - firstVisibleColumn + 1;
+          const displayedCells =
+            density === 'detalles'
+              ? week.cells.slice(firstVisibleColumn, lastVisibleColumn + 1)
+              : week.cells;
+          const columnOffset = density === 'detalles' ? firstVisibleColumn : 0;
           return (
             <div
               key={wi}
-              className={`grid ${gridCols} px-2 border-t border-gray-100 dark:border-gray-800/50`}
+              className={`grid ${gridCols} px-2 ${
+                density === 'detalles'
+                  ? ''
+                  : 'border-t border-gray-100 dark:border-gray-800/50'
+              }`}
             >
               {showWeekNums && (
                 <div
@@ -318,139 +383,140 @@ export default function MixedCalendar({ onMenuClick }) {
                   {week.weekNum}
                 </div>
               )}
+              <div
+                className={
+                  density === 'detalles'
+                    ? `${GRID_START_CLASSES[firstVisibleColumn + (showWeekNums ? 1 : 0)]} ${GRID_SPAN_CLASSES[visibleColumnCount]} grid ${GRID_COLUMN_CLASSES[visibleColumnCount]}`
+                    : `${showWeekNums ? 'col-start-2' : 'col-start-1'} col-span-7 grid grid-cols-7`
+                }
+              >
+                {displayedCells.map((cell, ci) => {
+                  if (!cell) return <div key={`e-${ci}`} />;
+                  const isSelected =
+                    selectedDate?.getTime() === cell.date.getTime();
+                  const isMonthStart =
+                    cell.badi &&
+                    cell.badi.day === 1 &&
+                    cell.badi.month >= 1 &&
+                    cell.badi.month <= 19;
 
-              {week.cells.map((cell, ci) => {
-                if (!cell) return <div key={`e-${ci}`} />;
-                const flatIdx = rowStartIdx + ci;
-                const isSelected =
-                  selectedDate?.getTime() === cell.date.getTime();
-                const isMonthStart =
-                  cell.badi &&
-                  cell.badi.day === 1 &&
-                  cell.badi.month >= 1 &&
-                  cell.badi.month <= 19;
-
-                // Badí' month border
-                const refDate = selectedDate || today;
-                const refBadi = gregorianToBadi(refDate);
-                const isCurrentBadiMonth =
-                  cell.badi?.month === refBadi?.month &&
-                  cell.badi?.year === refBadi?.year;
-
-                const prev = flatIdx > 0 ? flatCells[flatIdx - 1] : null;
-                const next =
-                  flatIdx < flatCells.length - 1
-                    ? flatCells[flatIdx + 1]
-                    : null;
-                const isFirstInGroup =
-                  (!prev && cell.badi?.day === 1) ||
-                  (prev != null &&
-                    (prev.badi?.month !== cell.badi?.month ||
-                      prev.badi?.year !== cell.badi?.year));
-                const isLastInGroup = (() => {
-                  if (next != null) {
-                    return (
-                      next.badi?.month !== cell.badi?.month ||
-                      next.badi?.year !== cell.badi?.year
-                    );
-                  }
-                  const dayAfter = new Date(cell.date);
-                  dayAfter.setDate(dayAfter.getDate() + 1);
-                  const dayAfterBadi = gregorianToBadi(dayAfter);
-                  return (
-                    dayAfterBadi?.month !== cell.badi?.month ||
-                    dayAfterBadi?.year !== cell.badi?.year
+                  // Badí' month border
+                  const refDate = selectedDate || today;
+                  const refBadi = gregorianToBadi(refDate);
+                  const isCurrentBadiMonth =
+                    cell.badi?.month === refBadi?.month &&
+                    cell.badi?.year === refBadi?.year;
+                  const { isFirstInGroup, isLastInGroup } = getBadiMonthEdges(
+                    week.cells,
+                    columnOffset + ci,
+                    gregorianToBadi,
                   );
-                })();
+                  const badiMonthBorderColor = isCurrentBadiMonth
+                    ? 'border-primary bg-primary/5'
+                    : 'border-gray-300 dark:border-gray-600';
+                  const isDetalles = density === 'detalles';
+                  const bottomLeftRounded = isDetalles ? '' : ' rounded-bl-lg';
+                  const bottomRightRounded = isDetalles ? '' : ' rounded-br-lg';
+                  const firstGroupClass = isFirstInGroup
+                    ? `border-l rounded-tl-lg ${bottomLeftRounded}`
+                    : '';
+                  const lastGroupClass = isLastInGroup
+                    ? `border-r rounded-tr-lg ${bottomRightRounded}`
+                    : '';
+                  const borderClasses = cell.badi
+                    ? [
+                        density === 'detalles'
+                          ? 'border-t'
+                          : 'border-t border-b',
+                        badiMonthBorderColor,
+                        firstGroupClass,
+                        lastGroupClass,
+                      ]
+                        .filter(Boolean)
+                        .join(' ')
+                    : '';
 
-                const borderColor = isCurrentBadiMonth
-                  ? 'border-primary bg-primary/5'
-                  : 'border-gray-300 dark:border-gray-600';
-
-                const borderClasses =
-                  cell.badi &&
-                  [
-                    'border-t',
-                    'border-b',
-                    borderColor,
-                    isFirstInGroup ? 'border-l rounded-l-lg' : '',
-                    isLastInGroup ? 'border-r rounded-r-lg' : '',
-                  ]
-                    .filter(Boolean)
-                    .join(' ');
-
-                return (
-                  <button
-                    key={cell.day}
-                    onClick={() =>
-                      setSelectedDate((prev) =>
-                        prev?.getTime() === cell.date.getTime() &&
-                        density !== 'lista'
-                          ? null
-                          : cell.date,
-                      )
-                    }
-                    className={`relative flex flex-col items-center transition-colors cursor-pointer md:hover:bg-gray-100 md:dark:hover:bg-gray-800 ${borderClasses} ${
-                      density === 'detalles'
-                        ? 'py-0.5 min-h-18 overflow-hidden min-w-0 w-full'
-                        : 'py-0.5'
-                    }`}
-                  >
-                    {/* NUMBER */}
-                    <span
-                      className={`md:w-8 md:h-8 h-6 w-6 flex items-center justify-center rounded-full text-sm font-medium
+                  return (
+                    <button
+                      key={cell.day}
+                      onClick={() =>
+                        onSelectDate((prev) =>
+                          prev?.getTime() === cell.date.getTime() &&
+                          density !== 'lista'
+                            ? null
+                            : cell.date,
+                        )
+                      }
+                      className={`group relative flex flex-col items-center transition-colors cursor-pointer mt-[1px] ${borderClasses} ${
+                        density === 'detalles'
+                          ? 'py-1 min-w-0 w-full'
+                          : 'py-0.5'
+                      }`}
+                    >
+                      {/* NUMBER */}
+                      <span
+                        className={`md:w-8 md:h-8 h-6 w-6 flex items-center justify-center rounded-full text-sm font-medium md:group-hover:bg-gray-100 dark:md:group-hover:bg-gray-800
                         ${cell.isToday ? 'bg-red-500 text-white' : ''}
                         ${isSelected && !cell.isToday ? 'bg-gray-300 dark:bg-gray-600' : ''}
                         ${cell.holyDay && !cell.isToday && !isSelected ? 'text-gold-500' : ''}
                       `}
-                    >
-                      {cell.day}
-                    </span>
-                    {cell.badi && (
-                      <span
-                        className={`text-[9px] leading-tight ${cell.holyDay ? 'text-gold-500' : 'text-gray-400 dark:text-gray-500'}`}
                       >
-                        {formatBadiSecondaryDate(
-                          cell.badi.month,
-                          cell.badi.day,
-                          settings.secondaryFormat,
-                        )}
+                        {cell.day}
                       </span>
-                    )}
-
-                    {/* Compacta & Lista: dots */}
-                    {cell.badi &&
-                      (density === 'compacta' || density === 'lista') && (
-                        <div className="flex gap-0.5 mb-1">
-                          {cell.holyDay && (
-                            <span className="w-1 h-1 rounded-full bg-gold-500" />
+                      {cell.badi && (
+                        <span
+                          className={`text-[9px] leading-tight ${cell.holyDay ? 'text-gold-500' : 'text-gray-400 dark:text-gray-500'}`}
+                        >
+                          {formatBadiSecondaryDate(
+                            cell.badi.month,
+                            cell.badi.day,
+                            settings.secondaryFormat,
                           )}
-                          {cell.ridvan && !cell.holyDay && (
-                            <span className="w-1 h-1 rounded-full bg-primary" />
-                          )}
-                          {isMonthStart && (
-                            <span className="w-1 h-1 rounded-full bg-blue-400" />
-                          )}
-                          {eventsForDate(cell.date).map((ev, pi) => (
-                            <span
-                              key={`p-${pi}`}
-                              className="w-1 h-1 rounded-full"
-                              style={{ backgroundColor: ev.color }}
-                            />
-                          ))}
-                        </div>
+                        </span>
                       )}
 
-                    {/* Detalles: event text */}
-                    {density === 'detalles' && (
-                      <CellEventDetails
-                        events={getCellEvents(cell)}
-                        fontSize="text-[7px] md:text-xs mt-1"
-                      />
-                    )}
-                  </button>
-                );
-              })}
+                      {/* Compacta & Lista: dots */}
+                      {cell.badi &&
+                        (density === 'compacta' || density === 'lista') && (
+                          <div className="flex gap-0.5 mb-1">
+                            {cell.holyDay && (
+                              <span className="w-1 h-1 rounded-full bg-gold-500" />
+                            )}
+                            {cell.ridvan && !cell.holyDay && (
+                              <span className="w-1 h-1 rounded-full bg-primary" />
+                            )}
+                            {isMonthStart && (
+                              <span className="w-1 h-1 rounded-full bg-blue-400" />
+                            )}
+                            {eventsForDate(cell.date).map((ev, pi) => (
+                              <span
+                                key={`p-${pi}`}
+                                className="w-1 h-1 rounded-full"
+                                style={{ backgroundColor: ev.color }}
+                              />
+                            ))}
+                          </div>
+                        )}
+
+                      {/* Detalles: events handled by WeekEventLanes below */}
+                    </button>
+                  );
+                })}
+                {density === 'detalles' && (
+                  <div className="col-span-full">
+                    <WeekEventLanes
+                      cells={week.cells}
+                      getCellEvents={getCellEvents}
+                      getCellDate={(cell) => cell.date}
+                      visibleStartColumn={firstVisibleColumn}
+                      visibleColumnCount={visibleColumnCount}
+                      selectedBadi={selectedBadi}
+                      getBadiForDate={gregorianToBadi}
+                      showBadiMonthBorders
+                    />
+                  </div>
+                )}
+              </div>
             </div>
           );
         })}

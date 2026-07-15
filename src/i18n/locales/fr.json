@@ -59,7 +59,8 @@
     "invalidDates": "La fin doit être postérieure au début",
     "saveError": "Impossible d'enregistrer l'événement",
     "remindersAccessDenied": "L'accès aux rappels a été refusé. Veuillez l'activer dans les Réglages.",
-    "localCalendar": "Locale"
+    "localCalendar": "Locale",
+    "list": "Liste"
   },
   "app": {
     "calendar": "Calendrier",
@@ -133,7 +134,10 @@
     "calendarSourceName": "Nom (facultatif)",
     "calendarSourceUrl": "URL iCal / ICS",
     "addCalendarSource": "Ajouter un abonnement",
-    "calendarSourcesHint": "Abonnez-vous à une URL publique de calendrier iCal/ICS (Google, Outlook, etc.) pour voir ses événements ici."
+    "calendarSourcesHint": "Abonnez-vous à une URL publique de calendrier iCal/ICS (Google, Outlook, etc.) pour voir ses événements ici.",
+    "reminders": "Rappels",
+    "noReminderLists": "Aucune liste de rappels trouvée",
+    "remindersHint": "Choisissez les listes de Rappels affichées dans le calendrier et leur couleur."
   },
   "calendar": {
     "today": "Aujourd'hui",
@@ -156,24 +160,8 @@
     "alert": "Alerte",
     "none": "Aucune"
   },
-  "weekdaysShort": [
-    "Lun",
-    "Mar",
-    "Mer",
-    "Jeu",
-    "Ven",
-    "Sam",
-    "Dim"
-  ],
-  "weekdaysMin": [
-    "L",
-    "M",
-    "M",
-    "J",
-    "V",
-    "S",
-    "D"
-  ],
+  "weekdaysShort": ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"],
+  "weekdaysMin": ["L", "M", "M", "J", "V", "S", "D"],
   "events": {
     "all": "Tous",
     "f19": "F19",

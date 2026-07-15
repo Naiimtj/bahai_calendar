@@ -7,6 +7,7 @@ import {
   getBahaiMonths,
   getCompleteData,
   gregorianToBadi,
+  isWorkSuspendedHolyDay,
   nawRuzDate,
   toISODate,
 } from './badiCalendar';
@@ -99,6 +100,7 @@ describe('getCompleteData', () => {
   it('every event has the required fields', () => {
     for (const ev of getCompleteData(2025).events) {
       expect(ev).toHaveProperty('event');
+      expect(ev).toHaveProperty('event_type');
       expect(ev).toHaveProperty('gregorian_date');
       expect(ev).toHaveProperty('badi_month');
       expect(ev).toHaveProperty('badi_day');
@@ -113,6 +115,61 @@ describe('getCompleteData', () => {
   it('event dates are chronologically ordered', () => {
     const dates = getCompleteData(2025).events.map((e) => e.gregorian_date);
     expect(dates).toEqual([...dates].sort());
+  });
+  it('derives Twin Holy Day Badí dates and work suspension from event type', () => {
+    const events = getCompleteData(2026, 'es').events;
+    const twinHolyDays = events.filter((event) =>
+      ['Birth of the Báb', "Birth of Bahá'u'lláh"].includes(event.event_type),
+    );
+
+    for (const event of twinHolyDays) {
+      const badiDate = gregorianToBadi(
+        utc(...event.gregorian_date.split('-').map(Number)),
+      );
+      expect([event.badi_month, event.badi_day]).toEqual([
+        badiDate.month,
+        badiDate.day,
+      ]);
+      expect(isWorkSuspendedHolyDay(event)).toBe(true);
+    }
+  });
+  it('preserves configured Spanish holy-day time notes', () => {
+    const events = getCompleteData(2026, 'es').events;
+    const timedEventTypes = [
+      'First Day of Riḍván',
+      "Ascension of Bahá'u'lláh",
+      'Declaration of the Báb',
+      'Martyrdom of the Báb',
+      "Ascension of 'Abdu'l-Bahá",
+    ];
+
+    for (const event_type of timedEventTypes) {
+      const event = events.find((item) => item.event_type === event_type);
+      expect(event.time_note).toBeTruthy();
+    }
+  });
+});
+
+describe('isWorkSuspendedHolyDay', () => {
+  it('includes exactly the nine holy days with work suspension', () => {
+    const suspendedEventTypes = [
+      'Naw-Rúz',
+      'First Day of Riḍván',
+      'Ninth Day of Riḍván',
+      'Twelfth Day of Riḍván',
+      'Declaration of the Báb',
+      "Ascension of Bahá'u'lláh",
+      'Martyrdom of the Báb',
+      'Birth of the Báb',
+      "Birth of Bahá'u'lláh",
+    ];
+
+    for (const event_type of suspendedEventTypes) {
+      expect(isWorkSuspendedHolyDay({ event_type })).toBe(true);
+    }
+    expect(
+      isWorkSuspendedHolyDay({ event_type: "Ascension of 'Abdu'l-Bahá" }),
+    ).toBe(false);
   });
 });
 

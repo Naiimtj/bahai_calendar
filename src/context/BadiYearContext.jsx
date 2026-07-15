@@ -7,6 +7,7 @@ import {
   useMemo,
 } from 'react';
 import { fetchBadiYear } from '../services/badiApi';
+import { isWorkSuspendedHolyDay } from '../lib/badiCalendar';
 import { useSettings } from './SettingsContext';
 
 const BadiYearContext = createContext(null);
@@ -214,8 +215,7 @@ export function BadiYearProvider({ children }) {
         en: name,
         es: name,
         ar: name,
-        suspend:
-          /Naw-Rúz|Riḍván|Declaración|Ascensión|Martirio|Nacimiento/.test(name),
+        suspend: isWorkSuspendedHolyDay(ev),
         event: name,
         desc: ev.desc,
         url: ev.url,

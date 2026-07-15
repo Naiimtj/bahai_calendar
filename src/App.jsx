@@ -18,20 +18,47 @@ import Privacy from './components/Privacy';
 import BaseToastNotification from './components/base/BaseToastNotification';
 import { useOnlineStatus } from './hooks/useOnlineStatus';
 import { useUrlPage } from './hooks/useUrlPage';
+import { useKeyboardScrollFix } from './hooks/useKeyboardScrollFix';
 
 function CalendarView({ onMenuClick }) {
-  const { settings } = useSettings();
+  const { settings, effectiveToday } = useSettings();
   const { error } = useBadiYear();
+  const [selectedDate, setSelectedDate] = useState(effectiveToday);
 
-  if (error) return <CompactCalendar onMenuClick={onMenuClick} />;
+  if (error)
+    return (
+      <CompactCalendar
+        onMenuClick={onMenuClick}
+        selectedDate={selectedDate}
+        onSelectDate={setSelectedDate}
+      />
+    );
 
   switch (settings.calendarView) {
     case 'badi':
-      return <BadiCalendar onMenuClick={onMenuClick} />;
+      return (
+        <BadiCalendar
+          onMenuClick={onMenuClick}
+          selectedDate={selectedDate}
+          onSelectDate={setSelectedDate}
+        />
+      );
     case 'mixed':
-      return <MixedCalendar onMenuClick={onMenuClick} />;
+      return (
+        <MixedCalendar
+          onMenuClick={onMenuClick}
+          selectedDate={selectedDate}
+          onSelectDate={setSelectedDate}
+        />
+      );
     default:
-      return <CompactCalendar onMenuClick={onMenuClick} />;
+      return (
+        <CompactCalendar
+          onMenuClick={onMenuClick}
+          selectedDate={selectedDate}
+          onSelectDate={setSelectedDate}
+        />
+      );
   }
 }
 
@@ -56,6 +83,7 @@ function AppInner() {
   }, []);
   const [toastDismissed, setToastDismissed] = useState(false);
   const isOnline = useOnlineStatus();
+  useKeyboardScrollFix();
 
   useEffect(() => {
     if (error && page === 'fasting') setPage('today');
@@ -97,7 +125,9 @@ function AppInner() {
           />
         )}
 
-        <main className="flex-1 overflow-y-auto">{renderPage()}</main>
+        <main className="flex-1 overflow-y-auto pb-[var(--kb-height)]">
+          {renderPage()}
+        </main>
       </div>
 
       {!isOnline && (

@@ -19,6 +19,7 @@ import { searchEvents } from '../utils/searchEvents';
  *   searchQuery      – controlled input value
  *   onSearchChange   – input onChange handler
  *   onMenuClick      – opens sidebar (mobile)
+ *   selectedDate     – date used as the default for new events
  *   onSelectDate     – callback when user taps a search result (receives Date)
  */
 export default function CalendarHeader({
@@ -32,6 +33,7 @@ export default function CalendarHeader({
   searchQuery,
   onSearchChange,
   onMenuClick,
+  selectedDate,
   onSelectDate,
 }) {
   const { t } = useTranslation();
@@ -174,6 +176,7 @@ export default function CalendarHeader({
       <AddEventModal
         visible={showAddEvent}
         onClose={() => setShowAddEvent(false)}
+        initialDate={selectedDate}
       />
     </>
   );

@@ -185,7 +185,8 @@ export default function Fasting() {
   };
 
   const gpsAvailable =
-    Capacitor.isNativePlatform() || window.location.protocol === 'https:';
+    Capacitor.isNativePlatform() ||
+    (window.isSecureContext && 'geolocation' in navigator);
 
   const handleGPS = async () => {
     if (loadingGPS) return;

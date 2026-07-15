@@ -51,7 +51,7 @@ export function getMonthName(monthNum, lang = 'en', inline = false) {
   const meaning = i18n.t(`badiMonths.${monthNum}`);
   if (inline) return `${info.ar} (${meaning})`;
   return (
-    <span className="flex flex-col items-star leading-tight">
+    <span className="flex flex-col items-start leading-tight">
       <span>{info.ar}</span>
       <span className="text-xs">{meaning}</span>
     </span>

@@ -18,6 +18,7 @@ import {
   supportsNativeReminders,
 } from '../services/calendarSync';
 import { usePersonalEvents } from '../context/PersonalEventsContext';
+import { getReminderLists } from '../services/personalCalendar';
 import { searchLocations } from '../services/geocodingApi';
 
 function pad(n) {
@@ -63,6 +64,7 @@ function addMinutes(dateStr, timeStr, minutes) {
 }
 
 const DURATIONS = [15, 30, 60, 90, 120];
+const MIN_EVENT_DURATION_MINUTES = 60;
 
 function durationLabel(min) {
   if (min < 60) return `${min} min`;
@@ -168,7 +170,7 @@ export default function AddEventModal({
 
   const baseEnd = useMemo(() => {
     const d = new Date(baseStart);
-    d.setHours(d.getHours() + 1);
+    d.setMinutes(d.getMinutes() + MIN_EVENT_DURATION_MINUTES);
     return d;
   }, [baseStart]);
 
@@ -187,6 +189,9 @@ export default function AddEventModal({
   const [calendars, setCalendars] = useState([]);
   const [calendarId, setCalendarId] = useState('');
   const [showCalendarPicker, setShowCalendarPicker] = useState(false);
+  const [reminderLists, setReminderLists] = useState([]);
+  const [reminderListId, setReminderListId] = useState('');
+  const [showReminderListPicker, setShowReminderListPicker] = useState(false);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -251,6 +256,9 @@ export default function AddEventModal({
       if (editEvent.sourceType === 'device' && editEvent.calendarId) {
         setCalendarId(editEvent.calendarId);
       }
+      if (editEvent.sourceType === 'reminder' && editEvent.listId) {
+        setReminderListId(editEvent.listId);
+      }
       setRepeatValue(editEvent.repeat || 'none');
       setRepeatCustomInterval(editEvent.repeatCustomInterval || 1);
       setRepeatCustomUnit(editEvent.repeatCustomUnit || 'day');
@@ -288,6 +296,7 @@ export default function AddEventModal({
       setAlertCustomDate('');
       setAvailability('busy');
       setPriority('none');
+      setReminderListId('');
     }
     setError('');
   }, [visible, baseStart, baseEnd, editEvent]);
@@ -321,6 +330,22 @@ export default function AddEventModal({
     };
   }, [visible, t, config.deviceCalendars, config.localCalendarName]);
 
+  // Load available iOS Reminders lists (native only) for the list picker.
+  useEffect(() => {
+    if (!visible || !supportsNativeReminders()) return undefined;
+    let active = true;
+    getReminderLists()
+      .then((lists) => {
+        if (!active) return;
+        setReminderLists(lists);
+        setReminderListId((prev) => prev || lists[0]?.id || '');
+      })
+      .catch((err) => console.error('[getReminderLists]', err));
+    return () => {
+      active = false;
+    };
+  }, [visible]);
+
   // Auto-request Reminders access when switching to reminder mode.
   useEffect(() => {
     if (!visible || mode !== 'reminder' || !supportsNativeReminders()) return;
@@ -332,6 +357,43 @@ export default function AddEventModal({
   }, [visible, mode, t]);
 
   const selectedCalendar = calendars.find((c) => c.id === calendarId);
+  const selectedReminderList = reminderLists.find(
+    (l) => l.id === reminderListId,
+  );
+
+  const updateEndToMinimumDuration = (date, time) => {
+    const nextEnd = addMinutes(date, time, MIN_EVENT_DURATION_MINUTES);
+    setEndDate(nextEnd.date);
+    setEndTime(nextEnd.time);
+  };
+
+  const handleStartChange = (date) => {
+    const nextStartDate = toDateInput(date);
+    const nextStartTime = toTimeInput(date);
+    setStartDate(nextStartDate);
+    setStartTime(nextStartTime);
+
+    const nextStart = fromInputs(nextStartDate, nextStartTime);
+    const currentEnd = fromInputs(endDate, endTime);
+    if (currentEnd < nextStart) {
+      updateEndToMinimumDuration(nextStartDate, nextStartTime);
+    }
+  };
+
+  const handleEndChange = (date) => {
+    const nextEndDate = toDateInput(date);
+    const nextEndTime = toTimeInput(date);
+    const start = fromInputs(startDate, startTime);
+    const nextEnd = fromInputs(nextEndDate, nextEndTime);
+
+    if (nextEnd < start) {
+      updateEndToMinimumDuration(startDate, startTime);
+      return;
+    }
+
+    setEndDate(nextEndDate);
+    setEndTime(nextEndTime);
+  };
 
   const handleDuration = (minutes) => {
     const { date, time } = addMinutes(startDate, startTime, minutes);
@@ -449,6 +511,7 @@ export default function AddEventModal({
         await updateDeviceReminderAndRefresh(editEvent.id, {
           ...reminderData,
           start: dueStart || undefined,
+          listId: reminderListId || undefined,
         });
       } else if (editEvent?.id) {
         updateLocalEventAndRefresh(editEvent.id, {
@@ -467,6 +530,7 @@ export default function AddEventModal({
           ...reminderData,
           dueDate: dueStart,
           start: dueStart,
+          listId: reminderListId || undefined,
         });
         refresh();
       } else {
@@ -536,7 +600,7 @@ export default function AddEventModal({
         </div>
 
         {/* Scrollable content */}
-        <div className="flex-1 md:flex-none overflow-y-auto p-4 flex flex-col gap-5">
+        <div className="flex-1 md:flex-none overflow-y-auto pb-[var(--kb-height)] p-4 flex flex-col gap-5">
           {error && (
             <p className="text-sm text-error px-1" role="alert">
               {error}
@@ -647,8 +711,8 @@ export default function AddEventModal({
                               outlined
                               className={
                                 currentDuration === min
-                                  ? 'dark:bg-primary-dark bg-primary-light text-xs! py-1! px-1! w-15!'
-                                  : 'text-xs! py-1! px-1! w-15!'
+                                  ? 'dark:bg-primary-dark !justify-center bg-primary-light text-xs! py-1! px-1! w-15!'
+                                  : 'text-xs! py-1! px-1! w-15! !justify-center'
                               }
                             >
                               {durationLabel(min)}
@@ -827,6 +891,33 @@ export default function AddEventModal({
               </div>
             </div>
           )}
+
+          {/* Reminders list (reminder only, native iOS). */}
+          {mode === 'reminder' &&
+            supportsNativeReminders() &&
+            reminderLists.length > 0 && (
+              <div className={cardClass}>
+                <div className={rowClass}>
+                  <span className="text-gray-900 dark:text-gray-100 shrink-0">
+                    {t('addEvent.list')}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setShowReminderListPicker(true)}
+                    className="flex items-center gap-1 min-w-0 max-w-[65%] text-primary-dark dark:text-btn-primary text-sm"
+                  >
+                    <span className="truncate">
+                      {selectedReminderList?.title}
+                    </span>
+                    <BaseIcon
+                      icon="arrowDown"
+                      size="xs"
+                      className="shrink-0 stroke-primary-dark dark:stroke-btn-primary"
+                    />
+                  </button>
+                </div>
+              </div>
+            )}
 
           {/* Reminder-only: priority */}
           {mode === 'reminder' && (
@@ -1047,6 +1138,41 @@ export default function AddEventModal({
         </div>
       </BaseModal>
 
+      {/* Reminders list picker */}
+      <BaseModal
+        visible={showReminderListPicker}
+        onClose={() => setShowReminderListPicker(false)}
+        title={t('addEvent.list')}
+      >
+        <div className="flex flex-col gap-1">
+          {reminderLists.map((l) => (
+            <button
+              key={l.id}
+              type="button"
+              className="w-full flex items-center justify-between gap-2 text-left px-4 py-3 rounded-lg text-gray-900 dark:text-gray-100"
+              onClick={() => {
+                setReminderListId(l.id);
+                setShowReminderListPicker(false);
+              }}
+            >
+              <span className="flex items-center gap-2 min-w-0">
+                {l.color && (
+                  <BaseIcon icon="circle" size="xs" color={l.color} />
+                )}
+                <span className="truncate">{l.title}</span>
+              </span>
+              {l.id === reminderListId && (
+                <BaseIcon
+                  icon="check"
+                  size="small"
+                  className="shrink-0 stroke-primary-dark dark:stroke-btn-primary"
+                />
+              )}
+            </button>
+          ))}
+        </div>
+      </BaseModal>
+
       {/* Start date/time picker */}
       <BaseModal
         visible={showStartPicker}
@@ -1057,10 +1183,7 @@ export default function AddEventModal({
           <BaseWheelPicker
             mode={allDay ? 'date' : 'datetime'}
             value={fromInputs(startDate, startTime)}
-            onChange={(d) => {
-              setStartDate(toDateInput(d));
-              setStartTime(toTimeInput(d));
-            }}
+            onChange={handleStartChange}
           />
           <BaseButton onClick={() => setShowStartPicker(false)}>
             {t('settings.done')}
@@ -1078,10 +1201,7 @@ export default function AddEventModal({
           <BaseWheelPicker
             mode={allDay ? 'date' : 'datetime'}
             value={fromInputs(endDate, endTime)}
-            onChange={(d) => {
-              setEndDate(toDateInput(d));
-              setEndTime(toTimeInput(d));
-            }}
+            onChange={handleEndChange}
           />
           <BaseButton onClick={() => setShowEndPicker(false)}>
             {t('settings.done')}

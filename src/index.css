@@ -2,6 +2,13 @@
 
 @custom-variant dark (&:where(.dark *));
 
+:root {
+  /* Live iOS/Android keyboard height, set by useKeyboardScrollFix; used as
+     bottom padding on scrollable containers so content can scroll clear of
+     the on-screen keyboard instead of being trapped behind it. */
+  --kb-height: 0px;
+}
+
 @utility touch-callout-none {
   -webkit-touch-callout: none;
 }

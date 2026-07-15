@@ -41,6 +41,22 @@ export const BAHAI_EVENTS = [
   { name: "Ascension of 'Abdu'l-Bahá", month: 14, day: 6 },
 ];
 
+export const WORK_SUSPENDED_EVENT_TYPES = [
+  'Naw-Rúz',
+  'First Day of Riḍván',
+  'Ninth Day of Riḍván',
+  'Twelfth Day of Riḍván',
+  'Declaration of the Báb',
+  "Ascension of Bahá'u'lláh",
+  'Martyrdom of the Báb',
+  'Birth of the Báb',
+  "Birth of Bahá'u'lláh",
+];
+
+export function isWorkSuspendedHolyDay({ event_type }) {
+  return WORK_SUSPENDED_EVENT_TYPES.includes(event_type);
+}
+
 // ---------------------------------------------------------------------------
 //  Pre-computed Naw-Rúz (Western calendar) dates – Badí years 172–222
 //  Source: verified against official Bahá'í calendar
@@ -435,9 +451,19 @@ function translateEvent(bundle, eventName, { isFirstFast, isLastFast } = {}) {
   };
 }
 
-function createEventDict(name, desc, badiMonth, badiDay, date, url, timeNote) {
+function createEventDict(
+  eventType,
+  name,
+  desc,
+  badiMonth,
+  badiDay,
+  date,
+  url,
+  timeNote,
+) {
   return {
     event: name,
+    event_type: eventType,
     desc,
     time_note: timeNote,
     badi_month: badiMonth,
@@ -471,6 +497,7 @@ export function getBahaiEventsForGregorianYear(year, lang = 'es') {
       const t = translateEvent(bundle, event.name);
       events.push(
         createEventDict(
+          event.name,
           t.name,
           t.desc,
           event.month,
@@ -489,14 +516,34 @@ export function getBahaiEventsForGregorianYear(year, lang = 'es') {
   const bahaullahDate = fromISODate(bahaullahISO);
   if (inRange(babDate)) {
     const t = translateEvent(bundle, 'Birth of the Báb');
+    const badiDate = gregorianToBadi(babDate);
     events.push(
-      createEventDict(t.name, t.desc, 12, 5, babDate, t.url, t.time_note),
+      createEventDict(
+        'Birth of the Báb',
+        t.name,
+        t.desc,
+        badiDate.month,
+        badiDate.day,
+        babDate,
+        t.url,
+        t.time_note,
+      ),
     );
   }
   if (inRange(bahaullahDate)) {
     const t = translateEvent(bundle, "Birth of Bahá'u'lláh");
+    const badiDate = gregorianToBadi(bahaullahDate);
     events.push(
-      createEventDict(t.name, t.desc, 12, 6, bahaullahDate, t.url, t.time_note),
+      createEventDict(
+        "Birth of Bahá'u'lláh",
+        t.name,
+        t.desc,
+        badiDate.month,
+        badiDate.day,
+        bahaullahDate,
+        t.url,
+        t.time_note,
+      ),
     );
   }
 
@@ -509,6 +556,7 @@ export function getBahaiEventsForGregorianYear(year, lang = 'es') {
       const t = translateEvent(bundle, 'Ayyám-i-Há');
       events.push(
         createEventDict(
+          'Ayyám-i-Há',
           t.name || 'Ayyám-i-Há',
           t.desc || 'Días Intercalares',
           0,
@@ -526,14 +574,32 @@ export function getBahaiEventsForGregorianYear(year, lang = 'es') {
   if (inRange(fastStart)) {
     const t = translateEvent(bundle, 'Fast', { isFirstFast: true });
     events.push(
-      createEventDict(t.name, t.desc, 19, 1, fastStart, t.url, t.time_note),
+      createEventDict(
+        'Fast',
+        t.name,
+        t.desc,
+        19,
+        1,
+        fastStart,
+        t.url,
+        t.time_note,
+      ),
     );
   }
   const fastEnd = badiToGregorian(badiYear, 19, 19);
   if (inRange(fastEnd)) {
     const t = translateEvent(bundle, 'Fast', { isLastFast: true });
     events.push(
-      createEventDict(t.name, t.desc, 19, 19, fastEnd, t.url, t.time_note),
+      createEventDict(
+        'Fast',
+        t.name,
+        t.desc,
+        19,
+        19,
+        fastEnd,
+        t.url,
+        t.time_note,
+      ),
     );
   }
 

@@ -258,7 +258,7 @@ export const TRANSLATIONS = {
         7: 'Palabras',
         8: 'Perfección',
         9: 'Nombres',
-        10: 'Poderío',
+        10: 'Fuerza',
         11: 'Voluntad',
         12: 'Conocimiento',
         13: 'Poder',

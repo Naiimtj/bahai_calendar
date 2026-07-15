@@ -59,7 +59,8 @@
     "invalidDates": "يجب أن تكون النهاية بعد البداية",
     "saveError": "تعذّر حفظ الحدث",
     "remindersAccessDenied": "تم رفض الوصول إلى التذكيرات. يرجى تفعيله من الإعدادات.",
-    "localCalendar": "محلي"
+    "localCalendar": "محلي",
+    "list": "قائمة"
   },
   "app": {
     "calendar": "التقويم",
@@ -133,7 +134,10 @@
     "calendarSourceName": "الاسم (اختياري)",
     "calendarSourceUrl": "رابط iCal / ICS",
     "addCalendarSource": "إضافة اشتراك",
-    "calendarSourcesHint": "اشترك في رابط تقويم عام بصيغة iCal/ICS (Google وOutlook وغيرها) لعرض أحداثه هنا."
+    "calendarSourcesHint": "اشترك في رابط تقويم عام بصيغة iCal/ICS (Google وOutlook وغيرها) لعرض أحداثه هنا.",
+    "reminders": "التذكيرات",
+    "noReminderLists": "لم يتم العثور على قوائم تذكير",
+    "remindersHint": "اختر قوائم التذكيرات التي تظهر في التقويم واختر لونها."
   },
   "calendar": {
     "today": "اليوم",
@@ -165,15 +169,7 @@
     "السبت",
     "الأحد"
   ],
-  "weekdaysMin": [
-    "ن",
-    "ث",
-    "ر",
-    "خ",
-    "ج",
-    "س",
-    "ح"
-  ],
+  "weekdaysMin": ["ن", "ث", "ر", "خ", "ج", "س", "ح"],
   "events": {
     "all": "الكل",
     "f19": "F19",

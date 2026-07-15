@@ -180,6 +180,7 @@ export async function createNativeReminder(reminder) {
     url: reminder.url || undefined,
     isAllDay: !!reminder.allDay,
   };
+  if (reminder.listId) payload.listId = reminder.listId;
   if (reminder.dueDate) {
     payload.dueDate = reminder.dueDate.getTime();
   }
