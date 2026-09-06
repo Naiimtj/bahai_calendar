@@ -379,22 +379,16 @@ function downloadIcs(event) {
 /* ------------------------------------------------------------------ */
 
 /**
- * Returns the list of calendars the user can write to. On a native device this
- * enumerates every synced account (iCloud, Google, Outlook…). On the web it
- * returns the universal web shortcuts.
+ * Returns the list of writable device calendars. On a native device this
+ * enumerates every synced account (iCloud, Google, Outlook…). On the web — or
+ * when the device has no synced calendars — it returns an empty list, so the
+ * caller only offers its own "Local" calendar.
  *
  * @returns {Promise<Array<{id:string,name:string,provider:string,color?:string}>>}
  */
 export async function getAvailableCalendars() {
-  if (isNativePlatform()) {
-    const native = await listNativeCalendars();
-    if (native.length) return native;
-  }
-  return [
-    { id: PROVIDER.GOOGLE, name: 'Google Calendar', provider: PROVIDER.GOOGLE },
-    { id: PROVIDER.OUTLOOK, name: 'Outlook', provider: PROVIDER.OUTLOOK },
-    { id: PROVIDER.ICS, name: 'Apple / iCloud (.ics)', provider: PROVIDER.ICS },
-  ];
+  if (!isNativePlatform()) return [];
+  return listNativeCalendars();
 }
 
 /**

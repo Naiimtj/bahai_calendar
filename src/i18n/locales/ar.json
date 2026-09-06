@@ -117,6 +117,8 @@
     "timeFormatLabel": "تنسيق الوقت",
     "timeFormat24": "24 ساعة",
     "timeFormat12": "12 ساعة",
+    "hapticFeedbackLabel": "الاستجابة اللمسية",
+    "hapticFeedbackHint": "استشعر اهتزازًا خفيفًا أثناء التمرير عبر منتقيات العجلة.",
     "calendarViewLabel": "عرض التقويم",
     "gregorian": "ميلادي",
     "mixed": "مختلط",
@@ -158,6 +160,9 @@
     "deleteEvent": "حذف الحدث",
     "confirmDelete": "هل أنت متأكد أنك تريد حذف هذا الحدث؟",
     "alert": "تنبيه",
+    "location": "الموقع",
+    "openInAppleMaps": "فتح في خرائط Apple",
+    "openInGoogleMaps": "فتح في خرائط Google",
     "none": "لا شيء"
   },
   "weekdaysShort": [
@@ -203,7 +208,27 @@
     "locationError": "تعذّر الحصول على الموقع",
     "cancel": "إلغاء",
     "day": "اليوم",
-    "date": "تاريخ"
+    "date": "تاريخ",
+    "alarms": {
+      "title": "تنبيهات الصيام",
+      "subtitle": "احصل على تنبيه عند شروق وغروب الشمس لكل يوم من أيام الصيام.",
+      "activateAll": "تفعيل الكل",
+      "deactivateAll": "إلغاء تفعيل الكل",
+      "sunriseAlarm": "شروق الشمس",
+      "sunsetAlarm": "غروب الشمس",
+      "permissionDenied": "الإشعارات معطّلة. فعّلها من إعدادات جهازك لتلقي تنبيهات الصيام.",
+      "noLocation": "حدّد موقعك في قسم أوقات الشمس لجدولة تنبيهات الشروق/الغروب.",
+      "unsupported": "التنبيهات متاحة فقط في تطبيق الجوال.",
+      "notificationTitle": "الصيام",
+      "sunriseBody": "شروق الشمس — بدء يوم الصيام.",
+      "sunsetBody": "غروب الشمس — حان وقت الإفطار.",
+      "testTitle": "تنبيه تجريبي",
+      "testSubtitle": "اضغط على الزر لإرسال تنبيه تجريبي فوري والتأكد من أنه يعمل (وكيف يبدو صوته) على هذا الجهاز.",
+      "sendTest": "تجربة الآن",
+      "testSent": "تم إرسال التنبيه التجريبي",
+      "testNotificationTitle": "تنبيه تجريبي",
+      "testNotificationBody": "هذا اختبار — تنبيهات الصيام تعمل بشكل صحيح."
+    }
   },
   "about": {
     "title": "التقويم البهائي",

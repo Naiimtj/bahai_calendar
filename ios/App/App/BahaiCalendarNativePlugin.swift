@@ -1,6 +1,9 @@
 import Capacitor
+import CoreLocation
 import EventKit
 import Foundation
+import MapKit
+import UIKit
 
 /**
  * In-house replacement for `@ebarooni/capacitor-calendar` (iOS side).
@@ -19,6 +22,8 @@ public class BahaiCalendarNativePlugin: CAPPlugin, CAPBridgedPlugin {
         CAPPluginMethod(name: "checkAllPermissions", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "listCalendars", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "listEventsInRange", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "searchMapPlaces", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "appleMapsPreview", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "createEvent", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "modifyEvent", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "deleteEvent", returnType: CAPPluginReturnPromise),
@@ -133,6 +138,128 @@ public class BahaiCalendarNativePlugin: CAPPlugin, CAPBridgedPlugin {
         }
     }
 
+    @objc func searchMapPlaces(_ call: CAPPluginCall) {
+        let query = call.getString("query")?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        if query.isEmpty {
+            call.resolve(["result": []])
+            return
+        }
+
+        let count = max(1, min(call.getInt("count") ?? 5, 20))
+        let request = MKLocalSearch.Request()
+        request.naturalLanguageQuery = query
+        if #available(iOS 13.0, *) {
+            request.resultTypes = [.pointOfInterest, .address]
+        }
+
+        MKLocalSearch(request: request).start { response, error in
+            if let error {
+                call.reject("Failed to search places: \(error.localizedDescription)")
+                return
+            }
+            let items = Array((response?.mapItems ?? []).prefix(count))
+            let result = items.enumerated().map { idx, item -> [String: Any] in
+                let placemark = item.placemark
+                let name = item.name ?? placemark.name ?? query
+                let admin1 = placemark.administrativeArea ?? ""
+                let country = placemark.country ?? ""
+                let lat = placemark.coordinate.latitude
+                let lon = placemark.coordinate.longitude
+
+                return [
+                    "id": "\(idx)-\(lat)-\(lon)",
+                    "name": name,
+                    "admin1": admin1,
+                    "country": country,
+                    "latitude": lat,
+                    "longitude": lon,
+                ]
+            }
+            call.resolve(["result": result])
+        }
+    }
+
+    @objc func appleMapsPreview(_ call: CAPPluginCall) {
+        guard let rawQuery = call.getString("query")?.trimmingCharacters(in: .whitespacesAndNewlines),
+              !rawQuery.isEmpty else {
+            call.reject("Missing 'query'")
+            return
+        }
+
+        let width = max(240, min(call.getInt("width") ?? 768, 2048))
+        let height = max(160, min(call.getInt("height") ?? 320, 2048))
+
+        CLGeocoder().geocodeAddressString(rawQuery) { [weak self] placemarks, error in
+            if let error {
+                call.reject("Failed to geocode location: \(error.localizedDescription)")
+                return
+            }
+            guard let coordinate = placemarks?.first?.location?.coordinate else {
+                call.reject("Could not resolve location")
+                return
+            }
+            self?.renderAppleMapSnapshot(call: call, coordinate: coordinate, width: width, height: height)
+        }
+    }
+
+    private func renderAppleMapSnapshot(call: CAPPluginCall, coordinate: CLLocationCoordinate2D, width: Int, height: Int) {
+        let options = MKMapSnapshotter.Options()
+        options.size = CGSize(width: width, height: height)
+        options.scale = UIScreen.main.scale
+        options.mapType = .mutedStandard
+        options.region = MKCoordinateRegion(
+            center: coordinate,
+            latitudinalMeters: 1200,
+            longitudinalMeters: 1200
+        )
+
+        let snapshotter = MKMapSnapshotter(options: options)
+        snapshotter.start { [weak self] snapshot, error in
+            if let error {
+                call.reject("Failed to render map snapshot: \(error.localizedDescription)")
+                return
+            }
+            guard let snapshot else {
+                call.reject("Failed to render map snapshot")
+                return
+            }
+
+            DispatchQueue.main.async {
+                let image = self?.drawMapMarker(on: snapshot, coordinate: coordinate) ?? snapshot.image
+                guard let data = image.jpegData(compressionQuality: 0.88) else {
+                    call.reject("Failed to encode map snapshot")
+                    return
+                }
+                let payload: [String: Any] = [
+                    "imageDataUrl": "data:image/jpeg;base64,\(data.base64EncodedString())",
+                    "latitude": coordinate.latitude,
+                    "longitude": coordinate.longitude,
+                ]
+                call.resolve(["result": payload])
+            }
+        }
+    }
+
+    private func drawMapMarker(on snapshot: MKMapSnapshotter.Snapshot, coordinate: CLLocationCoordinate2D) -> UIImage {
+        let base = snapshot.image
+        let point = snapshot.point(for: coordinate)
+
+        UIGraphicsBeginImageContextWithOptions(base.size, true, base.scale)
+        base.draw(at: .zero)
+
+        let pin = UIImage(systemName: "mappin.circle.fill")?
+            .withTintColor(.systemRed, renderingMode: .alwaysOriginal)
+        if let pin {
+            let x = point.x - pin.size.width / 2
+            let y = point.y - pin.size.height
+            pin.draw(at: CGPoint(x: x, y: y))
+        }
+
+        let out = UIGraphicsGetImageFromCurrentImageContext()
+        UIGraphicsEndImageContext()
+        return out ?? base
+    }
+
     @objc func modifyEvent(_ call: CAPPluginCall) {
         guard let id = call.getString("id"), let event = store.event(withIdentifier: id) else {
             call.reject("Event not found")
@@ -220,6 +347,7 @@ public class BahaiCalendarNativePlugin: CAPPlugin, CAPBridgedPlugin {
                     "id": reminder.calendarItemIdentifier,
                     "listId": reminder.calendar.calendarIdentifier,
                     "title": reminder.title ?? "",
+                    "location": reminder.location ?? "",
                     "notes": reminder.notes ?? "",
                     "url": reminder.url?.absoluteString ?? "",
                     "dueDate": reminder.dueDateComponents?.date.map { $0.timeIntervalSince1970 * 1000 } as Any,

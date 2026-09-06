@@ -233,6 +233,7 @@ export default function MixedCalendar({
         desc: holyDay.desc || '',
         time_note: holyDay.time_note || '',
         url: holyDay.url || '',
+        gregDate: d,
       });
     }
     if (isRidvanPeriod(d) && !holyDay) {
@@ -244,6 +245,7 @@ export default function MixedCalendar({
         name: 'Riḍván',
         desc: ridvanEv?.desc || '',
         url: ridvanEv?.url || '',
+        gregDate: d,
       });
     }
     if (badi && badi.day === 1 && badi.month >= 1 && badi.month <= 19) {
@@ -256,6 +258,7 @@ export default function MixedCalendar({
         name: t('calendar.feast', { name: getMonthName(badi.month, 'ar') }),
         desc: monthEntry?.desc || '',
         time_note: monthEntry?.info || '',
+        gregDate: d,
       });
     }
     evs.push(...eventsForDate(d));
@@ -277,6 +280,12 @@ export default function MixedCalendar({
   const gridCols = showWeekNums
     ? 'grid-cols-[2rem_repeat(7,1fr)]'
     : 'grid-cols-7';
+
+  const handleSelectDate = (date) => {
+    onSelectDate((prev) =>
+      prev?.getTime() === date.getTime() && density !== 'lista' ? null : date,
+    );
+  };
 
   if (loading)
     return (
@@ -353,7 +362,7 @@ export default function MixedCalendar({
       </div>
 
       {/* Day grid — swipeable on mobile */}
-      <div className="flex-1" {...swipeHandlers}>
+      <div className="flex-1 md:pb-20" {...swipeHandlers}>
         {weeks.map((week, wi) => {
           const selectedBadi = gregorianToBadi(selectedDate || today);
           const firstVisibleColumn = week.cells.findIndex(Boolean);
@@ -439,15 +448,8 @@ export default function MixedCalendar({
                   return (
                     <button
                       key={cell.day}
-                      onClick={() =>
-                        onSelectDate((prev) =>
-                          prev?.getTime() === cell.date.getTime() &&
-                          density !== 'lista'
-                            ? null
-                            : cell.date,
-                        )
-                      }
-                      className={`group relative flex flex-col items-center transition-colors cursor-pointer mt-[1px] ${borderClasses} ${
+                      onClick={() => handleSelectDate(cell.date)}
+                      className={`z-40  group relative flex flex-col items-center transition-colors cursor-pointer mt-[1px] ${borderClasses} ${
                         density === 'detalles'
                           ? 'py-1 min-w-0 w-full'
                           : 'py-0.5'
@@ -513,6 +515,7 @@ export default function MixedCalendar({
                       selectedBadi={selectedBadi}
                       getBadiForDate={gregorianToBadi}
                       showBadiMonthBorders
+                      onColumnClick={(cell) => handleSelectDate(cell.date)}
                     />
                   </div>
                 )}

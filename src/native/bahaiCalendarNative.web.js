@@ -29,6 +29,16 @@ export class BahaiCalendarNativeWeb extends WebPlugin {
     return { result: [] };
   }
 
+  async searchMapPlaces() {
+    return { result: [] };
+  }
+
+  async appleMapsPreview() {
+    throw this.unimplemented(
+      'Apple Maps preview is only available on native iOS.',
+    );
+  }
+
   async createEvent() {
     throw this.unimplemented('Calendar access is not available on the web.');
   }

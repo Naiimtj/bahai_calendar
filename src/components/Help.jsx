@@ -4,7 +4,7 @@ export default function Help() {
   const { t } = useTranslation();
 
   return (
-    <div className="flex flex-col h-full px-4 py-6">
+    <div className="flex flex-col h-full px-4 md:pt-6 pb-6">
       <div className="text-center mb-6">
         <div className="text-4xl mb-2">❓</div>
         <h2 className="text-xl font-bold">{t('help.title')}</h2>

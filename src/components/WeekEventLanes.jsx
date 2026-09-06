@@ -238,6 +238,8 @@ export default function WeekEventLanes({
   selectedBadi,
   getBadiForDate,
   showBadiMonthBorders = false,
+  onColumnClick,
+  laneDayClassName = '',
   className = '',
 }) {
   const { lanes, occupied } = buildLaneGrid(cells, getCellEvents, cells.length);
@@ -253,6 +255,23 @@ export default function WeekEventLanes({
   const inRange = (column) =>
     column >= visibleStartColumn &&
     column < visibleStartColumn + visibleColumnCount;
+
+  const handleLaneClick = (event) => {
+    if (!onColumnClick || visibleColumnCount <= 0) return;
+    const rect = event.currentTarget.getBoundingClientRect();
+    if (rect.width <= 0) return;
+    const relativeX = Math.min(
+      Math.max(event.clientX - rect.left, 0),
+      rect.width - 1,
+    );
+    const columnOffset = Math.floor(
+      (relativeX / rect.width) * visibleColumnCount,
+    );
+    const column = visibleStartColumn + columnOffset;
+    const cell = cells[column];
+    if (!cell) return;
+    onColumnClick(cell, column);
+  };
 
   const borderCells = showBadiMonthBorders
     ? Array.from({ length: visibleColumnCount }, (_, i) => {
@@ -282,10 +301,27 @@ export default function WeekEventLanes({
       })
     : null;
 
+  const laneBackgroundCells = laneDayClassName
+    ? Array.from({ length: visibleColumnCount }, (_, i) => {
+        const column = visibleStartColumn + i;
+        if (!cells[column]) return <div key={`bg-${i}`} />;
+        return <div key={`bg-${i}`} className={laneDayClassName} />;
+      })
+    : null;
+
   return (
     <div
+      onClick={handleLaneClick}
       className={`relative flex flex-col gap-y-0.5 px-0.5 pb-0.5 ${className}`}
     >
+      {laneBackgroundCells && (
+        <div
+          className={`pointer-events-none absolute inset-0 grid ${gridColsClass}`}
+        >
+          {laneBackgroundCells}
+        </div>
+      )}
+
       {borderCells && (
         <div
           className={`pointer-events-none absolute inset-0 grid ${gridColsClass}`}

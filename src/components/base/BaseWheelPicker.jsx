@@ -1,7 +1,14 @@
 import { useEffect, useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useSettings } from '../../context/SettingsContext';
+import {
+  hapticSelectionStart,
+  hapticSelectionChanged,
+  hapticSelectionEnd,
+} from '../../services/haptics';
 
 const ITEM_H = 40; // px, matches h-10
+const LOOP_REPEAT = 9; // odd count of repeated blocks for seamless infinite scroll
 
 function pad2(n) {
   return String(n).padStart(2, '0');
@@ -20,13 +27,30 @@ function WheelColumn({
   onChange,
   align = 'center',
   flex = 'flex-1',
+  loop = false,
+  hapticFeedback = false,
 }) {
   const ref = useRef(null);
   const timer = useRef(null);
-  const index = Math.max(
+  const lastHapticIndex = useRef(null);
+  const hapticActive = useRef(false);
+  const isLooping = loop && items.length > 0;
+  const centerBlock = Math.floor(LOOP_REPEAT / 2);
+
+  const displayItems = useMemo(() => {
+    if (!isLooping) return items;
+    const repeated = [];
+    for (let r = 0; r < LOOP_REPEAT; r += 1) {
+      items.forEach((it, i) => repeated.push({ ...it, key: `${r}-${i}` }));
+    }
+    return repeated;
+  }, [items, isLooping]);
+
+  const baseIndex = Math.max(
     0,
     items.findIndex((it) => it.value === value),
   );
+  const index = isLooping ? centerBlock * items.length + baseIndex : baseIndex;
 
   useEffect(() => {
     const el = ref.current;
@@ -38,16 +62,43 @@ function WheelColumn({
   const handleScroll = () => {
     const el = ref.current;
     if (!el) return;
+
+    if (hapticFeedback) {
+      if (!hapticActive.current) {
+        hapticActive.current = true;
+        hapticSelectionStart();
+      }
+      const rawIndex = Math.round(el.scrollTop / ITEM_H);
+      if (
+        lastHapticIndex.current !== null &&
+        rawIndex !== lastHapticIndex.current
+      ) {
+        hapticSelectionChanged();
+      }
+      lastHapticIndex.current = rawIndex;
+    }
+
     clearTimeout(timer.current);
     timer.current = setTimeout(() => {
       const i = Math.min(
-        items.length - 1,
+        displayItems.length - 1,
         Math.max(0, Math.round(el.scrollTop / ITEM_H)),
       );
-      const it = items[i];
+      const it = displayItems[i];
       if (it && it.value !== value) onChange(it.value);
-      el.scrollTop = i * ITEM_H;
-    }, 90);
+
+      if (isLooping) {
+        const posInBlock = ((i % items.length) + items.length) % items.length;
+        el.scrollTop = (centerBlock * items.length + posInBlock) * ITEM_H;
+      } else {
+        el.scrollTop = i * ITEM_H;
+      }
+
+      if (hapticActive.current) {
+        hapticActive.current = false;
+        hapticSelectionEnd();
+      }
+    }, 50);
   };
 
   const alignMap = {
@@ -64,9 +115,9 @@ function WheelColumn({
       className={`${flex} relative z-10 h-44 overflow-y-auto snap-y snap-mandatory scrollbar-none`}
     >
       <div className="h-17" />
-      {items.map((it) => (
+      {displayItems.map((it) => (
         <button
-          key={it.value}
+          key={it.key ?? it.value}
           type="button"
           onClick={() => onChange(it.value)}
           className={`w-full h-10 flex items-center ${alignClass} snap-center text-lg transition-colors ${
@@ -109,6 +160,8 @@ export default function BaseWheelPicker({
 }) {
   const { i18n } = useTranslation();
   const locale = i18n.language || undefined;
+  const { settings } = useSettings();
+  const hapticFeedback = settings.hapticFeedback;
 
   const date = useMemo(
     () =>
@@ -189,7 +242,7 @@ export default function BaseWheelPicker({
 
   let cols = [];
   if (mode === 'number') {
-    cols = [{ key: 'num', items: numberItems, value, onChange }];
+    cols = [{ key: 'num', items: numberItems, value, onChange, loop: true }];
   } else if (mode === 'custom') {
     cols = columns || [];
   } else {
@@ -212,12 +265,14 @@ export default function BaseWheelPicker({
           items: hourItems,
           value: date.getHours(),
           onChange: (v) => emit({ hour: v }),
+          loop: true,
         },
         {
           key: 'minute',
           items: minuteItems,
           value: selMinute,
           onChange: (v) => emit({ minute: v }),
+          loop: true,
         },
       );
     }
@@ -244,9 +299,16 @@ export default function BaseWheelPicker({
       )}
       <div className="relative flex h-44 overflow-hidden rounded-xl bg-gray-100 dark:bg-gray-800">
         <div className="pointer-events-none absolute inset-x-0 top-1/2 -translate-y-1/2 h-10 bg-gray-200/80 dark:bg-gray-700/80 rounded-lg z-0" />
-        {cols.map((c, i) => (
-          <WheelColumn key={c.key ?? `col-${i}`} {...c} />
-        ))}
+        {cols.map((c, i) => {
+          const { key, ...colProps } = c;
+          return (
+            <WheelColumn
+              key={key ?? `col-${i}`}
+              {...colProps}
+              hapticFeedback={hapticFeedback}
+            />
+          );
+        })}
       </div>
     </div>
   );

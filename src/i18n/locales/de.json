@@ -117,6 +117,8 @@
     "timeFormatLabel": "ZEITFORMAT",
     "timeFormat24": "24-Stunden",
     "timeFormat12": "12-Stunden",
+    "hapticFeedbackLabel": "HAPTISCHES FEEDBACK",
+    "hapticFeedbackHint": "Spüre eine leichte Vibration beim Scrollen durch die Walzenauswahl.",
     "calendarViewLabel": "KALENDERANSICHT",
     "gregorian": "Gregorianisch",
     "mixed": "Gemischt",
@@ -158,6 +160,9 @@
     "deleteEvent": "Termin löschen",
     "confirmDelete": "Möchtest du diesen Termin wirklich löschen?",
     "alert": "Alarm",
+    "location": "Ort",
+    "openInAppleMaps": "In Apple Karten öffnen",
+    "openInGoogleMaps": "In Google Maps öffnen",
     "none": "Keine"
   },
   "weekdaysShort": ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"],
@@ -192,7 +197,27 @@
     "locationError": "Standort konnte nicht ermittelt werden",
     "cancel": "Abbrechen",
     "day": "Tag",
-    "date": "Datum"
+    "date": "Datum",
+    "alarms": {
+      "title": "Fasten-Alarme",
+      "subtitle": "Lass dich bei Sonnenaufgang und Sonnenuntergang jedes Fastentages benachrichtigen.",
+      "activateAll": "Alle aktivieren",
+      "deactivateAll": "Alle deaktivieren",
+      "sunriseAlarm": "Sonnenaufgang",
+      "sunsetAlarm": "Sonnenuntergang",
+      "permissionDenied": "Benachrichtigungen sind deaktiviert. Aktiviere sie in den Geräteeinstellungen, um Fasten-Alarme zu erhalten.",
+      "noLocation": "Lege deinen Standort im Bereich Sonnenzeiten fest, um Sonnenaufgangs-/Sonnenuntergangs-Alarme zu planen.",
+      "unsupported": "Alarme sind nur in der mobilen App verfügbar.",
+      "notificationTitle": "Das Fasten",
+      "sunriseBody": "Sonnenaufgang — der Fastentag beginnt.",
+      "sunsetBody": "Sonnenuntergang — Zeit, das Fasten zu brechen.",
+      "testTitle": "Test-Alarm",
+      "testSubtitle": "Tippe auf die Schaltfläche, um sofort eine Testbenachrichtigung zu senden und zu prüfen, ob (und wie) sie auf diesem Gerät funktioniert.",
+      "sendTest": "Jetzt testen",
+      "testSent": "Test-Alarm gesendet",
+      "testNotificationTitle": "Test-Alarm",
+      "testNotificationBody": "Dies ist ein Test — die Fasten-Alarme funktionieren korrekt."
+    }
   },
   "about": {
     "title": "Bahá'í-Kalender",

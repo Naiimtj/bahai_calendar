@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   BaseButton,
+  BaseCalendarPicker,
   BaseIcon,
   BaseModal,
   BaseSegmentedControl,
@@ -19,7 +20,7 @@ import {
 } from '../services/calendarSync';
 import { usePersonalEvents } from '../context/PersonalEventsContext';
 import { getReminderLists } from '../services/personalCalendar';
-import { searchLocations } from '../services/geocodingApi';
+import { searchEventLocations } from '../services/geocodingApi';
 
 function pad(n) {
   return String(n).padStart(2, '0');
@@ -61,6 +62,26 @@ function addMinutes(dateStr, timeStr, minutes) {
   const d = new Date(`${dateStr}T${timeStr || '00:00'}:00`);
   d.setMinutes(d.getMinutes() + minutes);
   return { date: toDateInput(d), time: toTimeInput(d) };
+}
+
+function eventLocationValue(event) {
+  if (!event) return '';
+  if (typeof event.location === 'string' && event.location) {
+    return event.location;
+  }
+  if (typeof event.eventLocation === 'string' && event.eventLocation) {
+    return event.eventLocation;
+  }
+  if (
+    typeof event.structuredLocation?.title === 'string' &&
+    event.structuredLocation.title
+  ) {
+    return event.structuredLocation.title;
+  }
+  if (typeof event.venue === 'string' && event.venue) {
+    return event.venue;
+  }
+  return '';
 }
 
 const DURATIONS = [15, 30, 60, 90, 120];
@@ -139,6 +160,8 @@ const fieldClass =
 const rowClass =
   'flex items-center justify-between gap-3 px-4 py-3 border-b border-gray-100 dark:border-gray-800 last:border-b-0';
 const cardClass = 'rounded-xl bg-white dark:bg-gray-800/60 overflow-hidden';
+const pillClass =
+  'bg-gray-100! dark:bg-gray-800! text-gray-900! dark:text-gray-100! md:hover:bg-gray-200! dark:md:hover:bg-gray-700! active:bg-gray-200! dark:active:bg-gray-700! px-3! py-1.5! rounded-lg! text-base! font-normal!';
 
 /**
  * Modal to create a calendar event or reminder.
@@ -219,9 +242,11 @@ export default function AddEventModal({
   const [pendingEndMode, setPendingEndMode] = useState('none');
   const [pendingEndDate, setPendingEndDate] = useState('');
   const [pendingEndCount, setPendingEndCount] = useState(1);
-  // Date/time wheel pickers
-  const [showStartPicker, setShowStartPicker] = useState(false);
-  const [showEndPicker, setShowEndPicker] = useState(false);
+  // Date (calendar) & time (wheel) pickers
+  const [showStartDate, setShowStartDate] = useState(false);
+  const [showStartTime, setShowStartTime] = useState(false);
+  const [showEndDate, setShowEndDate] = useState(false);
+  const [showEndTime, setShowEndTime] = useState(false);
   // Location autocomplete (debounced geocoding).
   useEffect(() => {
     if (!location || location.length < 2) {
@@ -229,12 +254,15 @@ export default function AddEventModal({
       return;
     }
     const timer = setTimeout(() => {
-      searchLocations(location)
+      searchEventLocations(location, {
+        count: 5,
+        language: (i18n.resolvedLanguage || 'es').slice(0, 2),
+      })
         .then((results) => setLocationSuggestions(results))
         .catch(() => setLocationSuggestions([]));
     }, 400);
     return () => clearTimeout(timer);
-  }, [location]);
+  }, [location, i18n.resolvedLanguage]);
 
   // Reset form each time the modal opens (or pre-fill in edit mode).
   useEffect(() => {
@@ -244,7 +272,7 @@ export default function AddEventModal({
       const e = editEvent.end ? new Date(editEvent.end) : baseEnd;
       setMode(editEvent.isReminder ? 'reminder' : 'event');
       setTitle(editEvent.title || '');
-      setLocation(editEvent.location || '');
+      setLocation(eventLocationValue(editEvent));
       setNotes(editEvent.notes || '');
       setUrl(editEvent.url || '');
       setAllDay(!!editEvent.allDay);
@@ -298,6 +326,7 @@ export default function AddEventModal({
       setPriority('none');
       setReminderListId('');
     }
+    setLocationSuggestions([]);
     setError('');
   }, [visible, baseStart, baseEnd, editEvent]);
 
@@ -608,7 +637,7 @@ export default function AddEventModal({
           )}
 
           {/* Title + location (event) or just title (reminder) */}
-          <div className={cardClass}>
+          <div className={`${cardClass} overflow-visible`}>
             <div className={rowClass}>
               <input
                 type="text"
@@ -675,14 +704,22 @@ export default function AddEventModal({
                   <span className="text-gray-900 dark:text-gray-100">
                     {mode === 'event' ? t('addEvent.starts') : ''}
                   </span>
-                  <button
-                    type="button"
-                    onClick={() => setShowStartPicker(true)}
-                    className="flex items-center gap-2 text-primary-dark dark:text-btn-primary text-base md:cursor-pointer"
-                  >
-                    <span>{formatDateDisplay(startDate, i18n.language)}</span>
-                    {!allDay && <span>{startTime}</span>}
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <BaseButton
+                      onClick={() => setShowStartDate(true)}
+                      className={pillClass}
+                    >
+                      {formatDateDisplay(startDate, i18n.language)}
+                    </BaseButton>
+                    {!allDay && (
+                      <BaseButton
+                        onClick={() => setShowStartTime(true)}
+                        className={pillClass}
+                      >
+                        {startTime}
+                      </BaseButton>
+                    )}
+                  </div>
                 </div>
                 {mode === 'event' && (
                   <>
@@ -690,14 +727,22 @@ export default function AddEventModal({
                       <span className="text-gray-900 dark:text-gray-100">
                         {t('addEvent.ends')}
                       </span>
-                      <button
-                        type="button"
-                        onClick={() => setShowEndPicker(true)}
-                        className="flex items-center gap-2 text-primary-dark dark:text-btn-primary text-base md:cursor-pointer"
-                      >
-                        <span>{formatDateDisplay(endDate, i18n.language)}</span>
-                        {!allDay && <span>{endTime}</span>}
-                      </button>
+                      <div className="flex items-center gap-2">
+                        <BaseButton
+                          onClick={() => setShowEndDate(true)}
+                          className={pillClass}
+                        >
+                          {formatDateDisplay(endDate, i18n.language)}
+                        </BaseButton>
+                        {!allDay && (
+                          <BaseButton
+                            onClick={() => setShowEndTime(true)}
+                            className={pillClass}
+                          >
+                            {endTime}
+                          </BaseButton>
+                        )}
+                      </div>
                     </div>
                     {/* Duration pills */}
                     {!allDay && (
@@ -1016,6 +1061,7 @@ export default function AddEventModal({
               setRepeatValue('custom');
               setShowCustomRepeat(false);
             }}
+            size="large"
           >
             {t('settings.done')}
           </BaseButton>
@@ -1173,37 +1219,71 @@ export default function AddEventModal({
         </div>
       </BaseModal>
 
-      {/* Start date/time picker */}
+      {/* Start date picker (calendar) */}
       <BaseModal
-        visible={showStartPicker}
-        onClose={() => setShowStartPicker(false)}
+        visible={showStartDate}
+        onClose={() => setShowStartDate(false)}
         title={t('addEvent.starts')}
       >
         <div className="flex flex-col gap-4">
-          <BaseWheelPicker
-            mode={allDay ? 'date' : 'datetime'}
+          <BaseCalendarPicker
             value={fromInputs(startDate, startTime)}
             onChange={handleStartChange}
           />
-          <BaseButton onClick={() => setShowStartPicker(false)}>
+          <BaseButton onClick={() => setShowStartDate(false)}>
             {t('settings.done')}
           </BaseButton>
         </div>
       </BaseModal>
 
-      {/* End date/time picker */}
+      {/* Start time picker (wheel) */}
       <BaseModal
-        visible={showEndPicker}
-        onClose={() => setShowEndPicker(false)}
+        visible={showStartTime}
+        onClose={() => setShowStartTime(false)}
+        title={t('addEvent.starts')}
+      >
+        <div className="flex flex-col gap-4">
+          <BaseWheelPicker
+            mode="time"
+            value={fromInputs(startDate, startTime)}
+            onChange={handleStartChange}
+          />
+          <BaseButton onClick={() => setShowStartTime(false)}>
+            {t('settings.done')}
+          </BaseButton>
+        </div>
+      </BaseModal>
+
+      {/* End date picker (calendar) */}
+      <BaseModal
+        visible={showEndDate}
+        onClose={() => setShowEndDate(false)}
+        title={t('addEvent.ends')}
+      >
+        <div className="flex flex-col gap-4">
+          <BaseCalendarPicker
+            value={fromInputs(endDate, endTime)}
+            onChange={handleEndChange}
+          />
+          <BaseButton onClick={() => setShowEndDate(false)}>
+            {t('settings.done')}
+          </BaseButton>
+        </div>
+      </BaseModal>
+
+      {/* End time picker (wheel) */}
+      <BaseModal
+        visible={showEndTime}
+        onClose={() => setShowEndTime(false)}
         title={t('addEvent.ends')}
       >
         <div className="flex flex-col gap-4">
           <BaseWheelPicker
-            mode={allDay ? 'date' : 'datetime'}
+            mode="time"
             value={fromInputs(endDate, endTime)}
             onChange={handleEndChange}
           />
-          <BaseButton onClick={() => setShowEndPicker(false)}>
+          <BaseButton onClick={() => setShowEndTime(false)}>
             {t('settings.done')}
           </BaseButton>
         </div>

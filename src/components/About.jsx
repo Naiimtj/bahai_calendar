@@ -1,12 +1,15 @@
 import { useTranslation } from 'react-i18next';
+import { BaseIcon } from './base';
+import Privacy from './Privacy';
+import Help from './Help';
 
 export default function About() {
   const { t } = useTranslation();
 
   return (
-    <div className="flex flex-col h-full px-4 py-6">
-      <div className="text-center mb-8">
-        <div className="text-5xl mb-3">⭐</div>
+    <div className="flex flex-col h-full px-4 md:pt-6 pb-6">
+      <div className="text-center flex flex-col items-center mb-8">
+        <BaseIcon icon="info" className="mb-3 stroke-primary-text size-14" />
         <h2 className="text-2xl font-bold text-primary-text">
           {t('about.title')}
         </h2>
@@ -14,10 +17,7 @@ export default function About() {
       </div>
 
       <div className="bg-gray-800 rounded-xl p-5 space-y-4 text-sm text-gray-300 leading-relaxed">
-        <p>
-          <strong className="text-primary-text">{t('about.title')}</strong>{' '}
-          {t('about.description1')}
-        </p>
+        <p>{t('about.description1')}</p>
         <p>{t('about.description2')}</p>
         <p>{t('about.description3')}</p>
       </div>
@@ -34,6 +34,8 @@ export default function About() {
           <li>⭐ {t('about.holyDays')}</li>
         </ul>
       </div>
+      <Privacy />
+      <Help />
     </div>
   );
 }

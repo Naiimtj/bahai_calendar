@@ -68,6 +68,12 @@ export default function GregorianCalendar() {
     setUserMonth(null);
   };
 
+  const handleSelectDate = (date) => {
+    setSelectedDate((prev) =>
+      prev?.getTime() === date.getTime() && density !== 'lista' ? null : date,
+    );
+  };
+
   // Build grid cells
   const cells = useMemo(() => {
     const arr = [];
@@ -154,6 +160,7 @@ export default function GregorianCalendar() {
         desc: selectedInfo.holyDay.desc || '',
         time_note: selectedInfo.holyDay.time_note || '',
         url: selectedInfo.holyDay.url || '',
+        gregDate: selectedDate,
       });
     }
     if (selectedDate && isRidvanPeriod(selectedDate) && !selectedInfo.holyDay) {
@@ -165,6 +172,7 @@ export default function GregorianCalendar() {
         name: 'Riḍván',
         desc: ridvanEv?.desc || '',
         url: ridvanEv?.url || '',
+        gregDate: selectedDate,
       });
     }
     if (
@@ -190,6 +198,7 @@ export default function GregorianCalendar() {
         }),
         desc: monthEntry?.desc || '',
         time_note: monthEntry?.info || '',
+        gregDate: selectedDate,
       });
     }
     evs.push(...eventsForDate(selectedDate));
@@ -257,14 +266,7 @@ export default function GregorianCalendar() {
               return (
                 <button
                   key={cell.day}
-                  onClick={() =>
-                    setSelectedDate((prev) =>
-                      prev?.getTime() === cell.date.getTime() &&
-                      density !== 'lista'
-                        ? null
-                        : cell.date,
-                    )
-                  }
+                  onClick={() => handleSelectDate(cell.date)}
                   className={`relative flex flex-col items-center transition-colors ${
                     density === 'detalles' ? 'py-1 min-w-0 w-full' : 'py-1'
                   }`}
@@ -314,6 +316,7 @@ export default function GregorianCalendar() {
                   cells={week}
                   getCellEvents={getCellEvents}
                   getCellDate={(cell) => cell.date}
+                  onColumnClick={(cell) => handleSelectDate(cell.date)}
                 />
               </div>
             )}

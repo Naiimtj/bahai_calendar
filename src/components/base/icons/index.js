@@ -45,6 +45,8 @@ import OptionViewCalendarIcon from './OptionViewCalendarIcon';
 import SunriseIcon from './SunriseIcon';
 import SunsetIcon from './SunsetIcon';
 import RepeatIcon from './RepeatIcon';
+import ClockIcon from './ClockIcon';
+import BahaiIcon from './BahaiIcon';
 
 export const iconRegistry = {
   search: SearchIcon,
@@ -94,6 +96,8 @@ export const iconRegistry = {
   sunrise: SunriseIcon,
   sunset: SunsetIcon,
   repeat: RepeatIcon,
+  clock: ClockIcon,
+  bahai: BahaiIcon,
 };
 
 export {
@@ -144,4 +148,6 @@ export {
   SunriseIcon,
   SunsetIcon,
   RepeatIcon,
+  ClockIcon,
+  BahaiIcon,
 };

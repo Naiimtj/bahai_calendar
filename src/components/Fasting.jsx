@@ -9,6 +9,7 @@ import { BaseIcon } from './base';
 import BaseButton from './base/BaseButton';
 import { fetchFastingSunTimes } from '../services/sunTimesApi';
 import { reverseGeocode } from '../services/geocodingApi';
+import FastingAlarmsModal from './FastingAlarmsModal';
 
 export default function Fasting() {
   const { lang } = useSettings();
@@ -100,6 +101,7 @@ export default function Fasting() {
   const [citySuggestions, setCitySuggestions] = useState([]);
   const [loadingCities, setLoadingCities] = useState(false);
   const [locError, setLocError] = useState(null);
+  const [showAlarms, setShowAlarms] = useState(false);
 
   useEffect(() => {
     if (!location || fastStartMs === null || fastEndMs === null) {
@@ -255,14 +257,14 @@ export default function Fasting() {
   }
 
   return (
-    <div className="flex flex-col h-auto px-4 py-6">
+    <div className="flex flex-col h-auto px-4 md:pt-6 pb-6">
       <div className="text-center mb-8">
         <img
           src="/static/icons/fast_icon.png"
           alt="Fasting"
           className="mx-auto mb-4 w-24 h-24"
         />
-        <h2 className="text-2xl font-bold text-primary-text">
+        <h2 className="text-2xl font-bold dark:text-primary-light text-primary-dark">
           {t('fasting.theFast')}
         </h2>
         <p className="text-gray-400 mt-1">{t('fasting.monthAla')}</p>
@@ -309,7 +311,9 @@ export default function Fasting() {
         </div>
         <div className="flex justify-between">
           <span className="text-gray-400">{t('fasting.bahaiYear')}</span>
-          <span className="text-primary-text font-medium">{fastYear} B.E.</span>
+          <span className="dark:text-primary-light text-primary-dark  font-medium">
+            {fastYear} B.E.
+          </span>
         </div>
       </div>
 
@@ -318,53 +322,67 @@ export default function Fasting() {
       </div>
 
       {/* Sun Times Section */}
-      <div className="rounded-xl p-2 md:p-4 bg-gray-100 dark:bg-gray-800 mt-4">
-        <div className="flex md:flex-row flex-col md:gap-0 gap-2 items-center justify-between mb-3">
-          <span className="text-xs font-semibold text-gray-600 uppercase tracking-wide">
-            {t('fasting.sunTimes')}
-          </span>
-          <div className="flex items-center justify-end gap-1">
-            {location && (
-              <>
-                <BaseIcon
-                  icon="locationOn"
-                  size="xs"
-                  className="fill-gray-400"
-                />
-                <span className="text-xs text-gray-400">{location.name}</span>
-                <BaseIcon
-                  icon="delete"
-                  className="stroke-gray-400 md:hover:stroke-red-500 cursor-pointer size-4"
-                  onClick={handleClearLocation}
-                />
-              </>
-            )}
+      <div className="relative rounded-xl p-2 md:p-4 bg-gray-100 dark:bg-gray-800 mt-4">
+        <div
+          className={
+            'flex flex-col justify-between mb-3 gap-2' +
+            (location ? '' : ' items-center')
+          }
+        >
+          <div className="flex flex-col md:gap-2 gap-2 items-center md:items-start justify-between my-3 md:my-0">
+            <span className="text-sm font-semibold dark:text-gray-300 text-gray-800 uppercase tracking-wide">
+              {t('fasting.sunTimes')}
+            </span>
+            <div className="flex items-center justify-end gap-1">
+              {location && (
+                <>
+                  <BaseIcon
+                    icon="locationOn"
+                    size="xs"
+                    className="fill-gray-400"
+                  />
+                  <span className="text-xs text-gray-400">{location.name}</span>
+                  <BaseIcon
+                    icon="delete"
+                    className="stroke-primary-text md:hover:stroke-red-500 cursor-pointer size-4"
+                    onClick={handleClearLocation}
+                  />
+                </>
+              )}
+            </div>
           </div>
-        </div>
-
-        {!location && !showSearch && !loadingGPS && (
-          <div className="flex gap-2">
-            {gpsAvailable && (
+          {!location && !showSearch && !loadingGPS && (
+            <div className="flex-1 gap-2">
+              {gpsAvailable && (
+                <BaseButton
+                  label={t('fasting.useMyLocation')}
+                  icon="locationOn"
+                  outlined
+                  onClick={handleGPS}
+                  className="flex-1 text-xs"
+                />
+              )}
               <BaseButton
-                label={t('fasting.useMyLocation')}
-                icon="locationOn"
+                label={t('fasting.searchCity')}
+                icon="search"
                 outlined
-                onClick={handleGPS}
+                onClick={() => {
+                  setShowSearch(true);
+                  setLocError(null);
+                }}
                 className="flex-1 text-xs"
               />
-            )}
-            <BaseButton
-              label={t('fasting.searchCity')}
-              icon="search"
-              outlined
-              onClick={() => {
-                setShowSearch(true);
-                setLocError(null);
-              }}
-              className="flex-1 text-xs"
+            </div>
+          )}
+          {location && (
+            <BaseIcon
+              icon="clock"
+              onClick={() => setShowAlarms(true)}
+              className="stroke-white"
+              wrapperClassName="absolute top-2 right-2 p-2 rounded-full bg-btn-primary-hover md:hover:bg-btn-primary-dark dark:bg-btn-primary-dark md:dark:hover:bg-btn-primary-hover"
             />
-          </div>
-        )}
+          )}
+        </div>
 
         {loadingGPS && (
           <div className="flex justify-center py-2">
@@ -520,6 +538,13 @@ export default function Fasting() {
 
         {locError && <p className="text-red-400 text-xs mt-2">{locError}</p>}
       </div>
+
+      <FastingAlarmsModal
+        visible={showAlarms}
+        onClose={() => setShowAlarms(false)}
+        sunTimes={sunTimes}
+        lang={lang}
+      />
     </div>
   );
 }

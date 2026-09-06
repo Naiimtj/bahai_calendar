@@ -22,6 +22,7 @@ const DEFAULTS = {
   showWeekNumbers: true,
   darkMode: 'system', // 'dark' | 'light' | 'system'
   timeFormat: 'system', // 'system' | '24' | '12' — Clock format for event times
+  hapticFeedback: true, // Vibrate when scrolling through wheel pickers (native only)
 };
 
 export function SettingsProvider({ children }) {

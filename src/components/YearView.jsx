@@ -2,9 +2,8 @@ import { useRef, useEffect, useLayoutEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSettings } from '../context/SettingsContext';
 import { useBadiYear } from '../context/BadiYearContext';
-import { usePersonalEvents } from '../context/PersonalEventsContext';
 import { getGregorianMonthName } from '../lib/badiDate';
-import { BaseButton, BaseIcon } from './base';
+import { BaseButton } from './base';
 import MiniMonthGrid, { getEventStyle } from './MiniMonthGrid';
 
 const WEEKDAYS_ES = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
@@ -38,7 +37,6 @@ function MiniMonth({
   onSelect,
   getHolyDayForDate,
   gregorianToBadi,
-  eventsForDate,
 }) {
   const monthName = getGregorianMonthName(month, lang);
   const daysInMonth = getDaysInMonth(year, month);
@@ -57,7 +55,6 @@ function MiniMonth({
       day: d,
       isToday: d === todayDay,
       evStyle: getEventStyle(date, fns),
-      personalEventColors: eventsForDate(date).map((e) => e.color),
     });
   }
 
@@ -85,7 +82,6 @@ export default function YearView({ year, onSelectMonth, onToggle, onToday }) {
   const { lang, effectiveToday } = useSettings();
   const { t } = useTranslation();
   const { getHolyDayForDate, gregorianToBadi, loadYearsAround } = useBadiYear();
-  const { eventsForDate } = usePersonalEvents();
   const today = effectiveToday;
   const currentMonth = today.getMonth();
   const currentYear = today.getFullYear();
@@ -141,7 +137,7 @@ export default function YearView({ year, onSelectMonth, onToggle, onToday }) {
             >
               {displayYear}
             </h2>
-            <div className="grid grid-cols-3 gap-x-4 gap-y-4 w-full">
+            <div className="grid grid-cols-3 gap-x-4 gap-y-4 w-full items-start">
               {Array.from({ length: 12 }, (_, month) => (
                 <MiniMonth
                   key={month}
@@ -155,7 +151,6 @@ export default function YearView({ year, onSelectMonth, onToggle, onToday }) {
                   onSelect={onSelectMonth}
                   getHolyDayForDate={getHolyDayForDate}
                   gregorianToBadi={gregorianToBadi}
-                  eventsForDate={eventsForDate}
                 />
               ))}
             </div>

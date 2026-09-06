@@ -22,8 +22,14 @@ import {
 
 const CONFIG_KEY = 'bahai-cal-personal-config';
 const LOCAL_EVENTS_KEY = 'bahai-cal-local-events';
+const SYNCED_EVENTS_CACHE_KEY = 'bahai-cal-synced-events';
+const SYNCED_EVENTS_CACHE_VERSION = 1;
 
 const ONE_DAY_MS = 24 * 60 * 60 * 1000;
+const MOCK_WINDOW_DAYS_BEFORE = 120;
+const MOCK_WINDOW_DAYS_AFTER = 180;
+const MOCK_SOURCE_ID = 'mock-local-dev';
+const MOCK_SOURCE_NAME = 'Mock (dev)';
 
 /** Converts an inclusive last-day (allDay) end instant to the exclusive
  *  boundary expected by native calendar providers (EventKit/CalendarContract).
@@ -68,6 +74,122 @@ export function resolveColor(pref, fallbackId) {
 
 export function isNativePlatform() {
   return Capacitor.isNativePlatform();
+}
+
+function parseBooleanEnv(value) {
+  if (value == null) return null;
+  const normalized = String(value).trim().toLowerCase();
+  if (['1', 'true', 'yes', 'on'].includes(normalized)) return true;
+  if (['0', 'false', 'no', 'off'].includes(normalized)) return false;
+  return null;
+}
+
+function shouldUseMockEvents() {
+  const forced = parseBooleanEnv(import.meta.env.VITE_ENABLE_MOCK_EVENTS);
+  if (forced != null) return forced;
+  return import.meta.env.DEV && import.meta.env.MODE !== 'test';
+}
+
+function startOfDay(date) {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+}
+
+function clampDate(date, min, max) {
+  if (date < min) return min;
+  if (date > max) return max;
+  return date;
+}
+
+function hashString(value) {
+  let hash = 2166136261;
+  for (let i = 0; i < value.length; i++) {
+    hash ^= value.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+  return hash >>> 0;
+}
+
+function mulberry32(seed) {
+  let t = seed >>> 0;
+  return () => {
+    t += 0x6d2b79f5;
+    let v = Math.imul(t ^ (t >>> 15), 1 | t);
+    v ^= v + Math.imul(v ^ (v >>> 7), 61 | v);
+    return ((v ^ (v >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function randomInt(rand, min, max) {
+  return Math.floor(rand() * (max - min + 1)) + min;
+}
+
+function mockCountForDay(rand) {
+  const roll = rand();
+  if (roll < 0.08) return 6;
+  if (roll < 0.2) return randomInt(rand, 3, 5);
+  if (roll < 0.48) return randomInt(rand, 1, 2);
+  return 0;
+}
+
+function mockEventForSlot(dayStart, dayIndex, slotIndex, seedKey) {
+  const rand = mulberry32(hashString(`${seedKey}-${dayIndex}-${slotIndex}`));
+  const allDay = rand() < 0.2;
+  const startHour = allDay ? 0 : randomInt(rand, 7, 20);
+  const startMinute = allDay ? 0 : randomInt(rand, 0, 3) * 15;
+  const durationHours = allDay ? 24 : randomInt(rand, 1, 3);
+  const start = new Date(dayStart);
+  start.setHours(startHour, startMinute, 0, 0);
+  const end = new Date(start);
+  end.setHours(end.getHours() + durationHours);
+
+  return {
+    id: `${MOCK_SOURCE_ID}-${dayStart.toISOString().slice(0, 10)}-${slotIndex}`,
+    title: `Mock Event ${slotIndex + 1}`,
+    location: rand() < 0.35 ? 'Test location' : '',
+    notes: 'Generated local mock event for calendar UI testing.',
+    start,
+    end,
+    allDay,
+    color: colorForIndex((dayIndex + slotIndex) % SOURCE_COLORS.length),
+    sourceName: MOCK_SOURCE_NAME,
+    sourceType: 'mock',
+  };
+}
+
+function getMockWindow(windowStart, windowEnd) {
+  const today = startOfDay(new Date());
+  const min = new Date(today);
+  min.setDate(today.getDate() - MOCK_WINDOW_DAYS_BEFORE);
+  const max = new Date(today);
+  max.setDate(today.getDate() + MOCK_WINDOW_DAYS_AFTER);
+
+  const start = startOfDay(clampDate(windowStart, min, max));
+  const end = startOfDay(clampDate(windowEnd, min, max));
+  return start <= end ? { start, end } : null;
+}
+
+function getMockEvents(windowStart, windowEnd) {
+  if (!shouldUseMockEvents()) return [];
+  const boundedWindow = getMockWindow(windowStart, windowEnd);
+  if (!boundedWindow) return [];
+
+  const { start, end } = boundedWindow;
+  const seedKey = `${start.getTime()}-${end.getTime()}`;
+  const events = [];
+  const current = new Date(start);
+  let dayIndex = 0;
+
+  while (current <= end) {
+    const dayRand = mulberry32(hashString(`${seedKey}-${dayIndex}`));
+    const count = mockCountForDay(dayRand);
+    for (let slotIndex = 0; slotIndex < count; slotIndex++) {
+      events.push(mockEventForSlot(current, dayIndex, slotIndex, seedKey));
+    }
+    current.setDate(current.getDate() + 1);
+    dayIndex += 1;
+  }
+
+  return events;
 }
 
 /* ------------------------------------------------------------------ */
@@ -117,6 +239,190 @@ export function loadLocalEvents() {
 export function saveLocalEvents(list) {
   localStorage.setItem(LOCAL_EVENTS_KEY, JSON.stringify(list));
   return list;
+}
+
+function emptySyncedEventsCache() {
+  return { version: SYNCED_EVENTS_CACHE_VERSION, events: [], calendars: [] };
+}
+
+function loadSyncedEventsCache() {
+  try {
+    const raw = localStorage.getItem(SYNCED_EVENTS_CACHE_KEY);
+    if (!raw) return emptySyncedEventsCache();
+    const cache = JSON.parse(raw);
+    if (
+      cache?.version !== SYNCED_EVENTS_CACHE_VERSION ||
+      !Array.isArray(cache.events)
+    ) {
+      return emptySyncedEventsCache();
+    }
+    return {
+      ...cache,
+      calendars: Array.isArray(cache.calendars) ? cache.calendars : [],
+    };
+  } catch {
+    return emptySyncedEventsCache();
+  }
+}
+
+function saveSyncedEventsCache(cache) {
+  try {
+    localStorage.setItem(SYNCED_EVENTS_CACHE_KEY, JSON.stringify(cache));
+  } catch {
+    return undefined;
+  }
+  return undefined;
+}
+
+function replaceCachedEvents(predicate, replacements) {
+  const cache = loadSyncedEventsCache();
+  saveSyncedEventsCache({
+    ...cache,
+    events: [
+      ...cache.events.filter((event) => !predicate(event)),
+      ...replacements,
+    ],
+  });
+}
+
+function removeCachedCalendars(predicate) {
+  const cache = loadSyncedEventsCache();
+  saveSyncedEventsCache({
+    ...cache,
+    calendars: cache.calendars.filter((calendar) => !predicate(calendar)),
+  });
+}
+
+function cacheIcsEvents(sourceId, events) {
+  replaceCachedEvents(
+    (event) => event.sourceType === 'ics' && event.sourceId === sourceId,
+    events,
+  );
+}
+
+function cacheDeviceEvents(events) {
+  replaceCachedEvents((event) => event.sourceType === 'device', events);
+}
+
+function cacheDeviceReminders(events) {
+  replaceCachedEvents((event) => event.sourceType === 'reminder', events);
+}
+
+function cacheSyncedCalendars(sourceType, calendars) {
+  const cache = loadSyncedEventsCache();
+  saveSyncedEventsCache({
+    ...cache,
+    calendars: [
+      ...cache.calendars.filter(
+        (calendar) => calendar.sourceType !== sourceType,
+      ),
+      ...calendars.map((calendar) => ({ ...calendar, sourceType })),
+    ],
+  });
+}
+
+function cacheDeviceCalendars(calendars) {
+  cacheSyncedCalendars('device', calendars);
+}
+
+function cacheReminderLists(lists) {
+  cacheSyncedCalendars('reminder', lists);
+}
+
+function isCachedEventEnabled(event, config) {
+  const prefs = config?.deviceCalendars || {};
+  if (event.sourceType === 'device') {
+    return (
+      config?.deviceCalendarEnabled &&
+      prefs[event.calendarId]?.enabled !== false
+    );
+  }
+  if (event.sourceType === 'reminder') {
+    return (
+      config?.deviceCalendarEnabled && prefs[event.listId]?.enabled !== false
+    );
+  }
+  if (event.sourceType === 'ics') {
+    return (config?.icsSources || []).some(
+      (source) =>
+        source.id === event.sourceId && source.enabled && Boolean(source.url),
+    );
+  }
+  return false;
+}
+
+function normalizeCachedEvent(event) {
+  const start = new Date(event.start);
+  const end = new Date(event.end);
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
+    return null;
+  }
+  return { ...event, start, end };
+}
+
+export function loadCachedSyncedEvents(
+  windowStart,
+  windowEnd,
+  config = loadConfig(),
+) {
+  return loadSyncedEventsCache()
+    .events.map(normalizeCachedEvent)
+    .filter(Boolean)
+    .filter((event) => isCachedEventEnabled(event, config))
+    .filter((event) => event.end >= windowStart && event.start <= windowEnd)
+    .sort((a, b) => a.start - b.start);
+}
+
+export function loadCachedSyncedCalendars() {
+  return loadSyncedEventsCache().calendars;
+}
+
+function getCachedEventsForSource(sourceType, windowStart, windowEnd, config) {
+  return loadCachedSyncedEvents(windowStart, windowEnd, config).filter(
+    (event) => event.sourceType === sourceType,
+  );
+}
+
+export function clearCachedDeviceEvents() {
+  replaceCachedEvents(
+    (event) => event.sourceType === 'device' || event.sourceType === 'reminder',
+    [],
+  );
+  removeCachedCalendars(
+    (calendar) =>
+      calendar.sourceType === 'device' || calendar.sourceType === 'reminder',
+  );
+}
+
+export function clearCachedDeviceCalendar(calendarId) {
+  replaceCachedEvents(
+    (event) =>
+      (event.sourceType === 'device' && event.calendarId === calendarId) ||
+      (event.sourceType === 'reminder' && event.listId === calendarId),
+    [],
+  );
+  removeCachedCalendars((calendar) => calendar.id === calendarId);
+}
+
+export function clearCachedIcsSource(sourceId) {
+  replaceCachedEvents(
+    (event) => event.sourceType === 'ics' && event.sourceId === sourceId,
+    [],
+  );
+}
+
+function removeCachedSyncedEvent(eventId) {
+  replaceCachedEvents((event) => event.id === eventId, []);
+}
+
+function updateCachedSyncedEvent(eventId, updates) {
+  const cache = loadSyncedEventsCache();
+  saveSyncedEventsCache({
+    ...cache,
+    events: cache.events.map((event) =>
+      event.id === eventId ? { ...event, ...updates } : event,
+    ),
+  });
 }
 
 export function addLocalEvent(event) {
@@ -333,7 +639,7 @@ async function fetchIcsText(url) {
   return res.text();
 }
 
-async function getIcsEvents(source, windowStart, windowEnd) {
+async function getIcsEvents(source, windowStart, windowEnd, config) {
   try {
     const text = await fetchIcsText(source.url);
     const vevents = parseVEvents(text);
@@ -342,6 +648,7 @@ async function getIcsEvents(source, windowStart, windowEnd) {
       expandVEvent(ev, windowStart, windowEnd).forEach((occ, i) => {
         out.push({
           id: `${source.id}-${ev.uid || ev.summary}-${i}`,
+          sourceId: source.id,
           ...occ,
           color: source.color || colorForIndex(source.colorIndex ?? 0),
           sourceName: source.name,
@@ -349,9 +656,12 @@ async function getIcsEvents(source, windowStart, windowEnd) {
         });
       });
     });
+    cacheIcsEvents(source.id, out);
     return out;
   } catch {
-    return [];
+    return loadCachedSyncedEvents(windowStart, windowEnd, config).filter(
+      (event) => event.sourceType === 'ics' && event.sourceId === source.id,
+    );
   }
 }
 
@@ -361,6 +671,22 @@ async function getIcsEvents(source, windowStart, windowEnd) {
 
 function isGranted(state) {
   return state === 'granted';
+}
+
+function nativeLocationValue(item) {
+  if (!item) return '';
+  if (typeof item.location === 'string' && item.location) return item.location;
+  if (typeof item.eventLocation === 'string' && item.eventLocation) {
+    return item.eventLocation;
+  }
+  if (typeof item.venue === 'string' && item.venue) return item.venue;
+  if (
+    typeof item.structuredLocation?.title === 'string' &&
+    item.structuredLocation.title
+  ) {
+    return item.structuredLocation.title;
+  }
+  return '';
 }
 
 /**
@@ -393,30 +719,44 @@ async function ensureNativeReadAccess() {
  * Lists the calendars available on the device (iCloud, Gmail, Outlook…).
  * @returns {Promise<Array<{id,title,color,sourceName}>>}
  */
-export async function getDeviceCalendars() {
+export async function getDeviceCalendars(config = loadConfig()) {
   if (!isNativePlatform()) return [];
   try {
     const granted = await ensureNativeReadAccess();
-    if (!granted) return [];
+    if (!granted) {
+      return loadCachedSyncedCalendars().filter(
+        (calendar) => calendar.sourceType === 'device',
+      );
+    }
     const { result } = await CapacitorCalendar.listCalendars();
     const list = Array.isArray(result) ? result : [];
-    return list.map((c) => ({
+    const calendars = list.map((c) => ({
       id: c.id,
       title: c.title || '(sin nombre)',
       color: c.color || null,
       sourceName: c.source?.title || c.accountName || '',
     }));
+    cacheDeviceCalendars(
+      calendars.filter(
+        (calendar) => config.deviceCalendars?.[calendar.id]?.enabled !== false,
+      ),
+    );
+    return calendars;
   } catch {
-    return [];
+    return loadCachedSyncedCalendars().filter(
+      (calendar) => calendar.sourceType === 'device',
+    );
   }
 }
 
 async function getDeviceEvents(windowStart, windowEnd, config) {
   if (!isNativePlatform()) return [];
+  const cachedEvents = () =>
+    getCachedEventsForSource('device', windowStart, windowEnd, config);
   try {
     const granted = await ensureNativeReadAccess();
-    if (!granted) return [];
-    const calendars = await getDeviceCalendars();
+    if (!granted) return cachedEvents();
+    const calendars = await getDeviceCalendars(config);
     const calMap = new Map(calendars.map((c) => [c.id, c]));
     const prefs = config?.deviceCalendars || {};
     const { result } = await CapacitorCalendar.listEventsInRange({
@@ -424,7 +764,7 @@ async function getDeviceEvents(windowStart, windowEnd, config) {
       to: windowEnd.getTime(),
     });
     const list = Array.isArray(result) ? result : [];
-    return list
+    const events = list
       .filter((e) => prefs[e.calendarId]?.enabled !== false)
       .map((e, i) => {
         const start = new Date(e.startDate);
@@ -445,7 +785,7 @@ async function getDeviceEvents(windowStart, windowEnd, config) {
           start,
           end,
           allDay: !!e.isAllDay,
-          location: e.location || '',
+          location: nativeLocationValue(e),
           notes: e.description || '',
           color,
           alerts: Array.isArray(e.alerts) ? e.alerts : [],
@@ -461,8 +801,10 @@ async function getDeviceEvents(windowStart, windowEnd, config) {
           sourceType: 'device',
         };
       });
+    cacheDeviceEvents(events);
+    return events;
   } catch {
-    return [];
+    return cachedEvents();
   }
 }
 
@@ -498,21 +840,38 @@ async function ensureRemindersReadAccess() {
  */
 async function getDeviceReminders(windowStart, windowEnd, config) {
   if (!isNativePlatform()) return [];
-  if (typeof CapacitorCalendar.getRemindersFromLists !== 'function') return [];
+  const cachedReminders = () =>
+    getCachedEventsForSource('reminder', windowStart, windowEnd, config);
+  if (typeof CapacitorCalendar.getRemindersFromLists !== 'function') {
+    return cachedReminders();
+  }
   try {
     const granted = await ensureRemindersReadAccess();
-    if (!granted) return [];
+    if (!granted) return cachedReminders();
     const listsRes = await CapacitorCalendar.getRemindersLists();
     const lists = Array.isArray(listsRes?.result) ? listsRes.result : [];
-    if (lists.length === 0) return [];
+    if (lists.length === 0) {
+      cacheDeviceReminders([]);
+      cacheReminderLists([]);
+      return [];
+    }
+    const prefs = config?.deviceCalendars || {};
+    cacheReminderLists(
+      lists
+        .filter((list) => prefs[list.id]?.enabled !== false)
+        .map((list) => ({
+          id: list.id,
+          title: list.title || '(sin nombre)',
+          color: list.color || null,
+        })),
+    );
     const listColor = new Map(lists.map((l) => [l.id, l.color]));
     const listIds = lists.map((l) => l.id).filter(Boolean);
     const remRes = await CapacitorCalendar.getRemindersFromLists({ listIds });
     const reminders = Array.isArray(remRes?.result) ? remRes.result : [];
     const startMs = windowStart.getTime();
     const endMs = windowEnd.getTime();
-    const prefs = config?.deviceCalendars || {};
-    return reminders
+    const events = reminders
       .filter((r) => prefs[r.listId]?.enabled !== false)
       .map((r) => {
         const due = r.dueDate ?? r.startDate;
@@ -535,7 +894,7 @@ async function getDeviceReminders(windowStart, windowEnd, config) {
           start: date,
           end: date,
           allDay: dateOnly,
-          location: r.location || '',
+          location: nativeLocationValue(r),
           notes: r.notes || '',
           url: r.url || '',
           color,
@@ -547,8 +906,10 @@ async function getDeviceReminders(windowStart, windowEnd, config) {
         };
       })
       .filter(Boolean);
+    cacheDeviceReminders(events);
+    return events;
   } catch {
-    return [];
+    return cachedReminders();
   }
 }
 
@@ -557,21 +918,33 @@ async function getDeviceReminders(windowStart, windowEnd, config) {
  * pick where to add a reminder and choose which lists appear in the app.
  * @returns {Promise<Array<{id:string,title:string,color:?string}>>}
  */
-export async function getReminderLists() {
+export async function getReminderLists(config = loadConfig()) {
   if (!isNativePlatform()) return [];
   if (typeof CapacitorCalendar.getRemindersLists !== 'function') return [];
   try {
     const granted = await ensureRemindersReadAccess();
-    if (!granted) return [];
+    if (!granted) {
+      return loadCachedSyncedCalendars().filter(
+        (calendar) => calendar.sourceType === 'reminder',
+      );
+    }
     const { result } = await CapacitorCalendar.getRemindersLists();
     const list = Array.isArray(result) ? result : [];
-    return list.map((l) => ({
+    const lists = list.map((l) => ({
       id: l.id,
       title: l.title || '(sin nombre)',
       color: l.color || null,
     }));
+    cacheReminderLists(
+      lists.filter(
+        (calendar) => config.deviceCalendars?.[calendar.id]?.enabled !== false,
+      ),
+    );
+    return lists;
   } catch {
-    return [];
+    return loadCachedSyncedCalendars().filter(
+      (calendar) => calendar.sourceType === 'reminder',
+    );
   }
 }
 
@@ -585,6 +958,7 @@ export async function setDeviceReminderCompleted(id, completed) {
       isCompleted: completed,
       ...(completed ? { completionDate: Date.now() } : {}),
     });
+    updateCachedSyncedEvent(id, { isCompleted: completed });
     return true;
   } catch {
     return false;
@@ -614,6 +988,7 @@ export async function updateDeviceReminder(id, updates) {
     const recurrence = repeatToRecurrence(updates);
     if (recurrence) options.recurrence = recurrence;
     await CapacitorCalendar.modifyReminder(options);
+    removeCachedSyncedEvent(id);
     return true;
   } catch {
     return false;
@@ -626,6 +1001,7 @@ export async function deleteDeviceReminder(id) {
   if (typeof CapacitorCalendar.deleteReminder !== 'function') return false;
   try {
     await CapacitorCalendar.deleteReminder({ id });
+    removeCachedSyncedEvent(id);
     return true;
   } catch {
     return false;
@@ -644,6 +1020,7 @@ export async function deleteDeviceEvent(eventId) {
       id: eventId,
       span: EventSpan.THIS_AND_FUTURE_EVENTS,
     });
+    removeCachedSyncedEvent(eventId);
     return true;
   } catch {
     return false;
@@ -673,6 +1050,7 @@ export async function updateDeviceEvent(eventId, updates) {
     const alerts = alertToAlerts(updates);
     if (alerts) options.alerts = alerts;
     await CapacitorCalendar.modifyEvent(options);
+    removeCachedSyncedEvent(eventId);
     return true;
   } catch {
     return false;
@@ -939,11 +1317,14 @@ export async function aggregateEvents(
   }
   (config.icsSources || [])
     .filter((s) => s.enabled && s.url)
-    .forEach((s) => tasks.push(getIcsEvents(s, windowStart, windowEnd)));
+    .forEach((s) =>
+      tasks.push(getIcsEvents(s, windowStart, windowEnd, config)),
+    );
 
   const results = await Promise.all(tasks);
   const events = results.flat();
   events.push(...getLocalNormalized(windowStart, windowEnd, config));
+  events.push(...getMockEvents(windowStart, windowEnd));
   events.sort((a, b) => a.start - b.start);
   return events;
 }

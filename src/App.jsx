@@ -4,6 +4,7 @@ import { SplashScreen } from '@capacitor/splash-screen';
 import { SettingsProvider, useSettings } from './context/SettingsContext';
 import { BadiYearProvider, useBadiYear } from './context/BadiYearContext';
 import { PersonalEventsProvider } from './context/PersonalEventsContext';
+import { NavigationProvider, useNavigation } from './context/NavigationContext';
 import Header from './components/Header';
 import Sidebar from './components/Sidebar';
 import BadiCalendar from './components/BadiCalendar';
@@ -17,8 +18,8 @@ import Help from './components/Help';
 import Privacy from './components/Privacy';
 import BaseToastNotification from './components/base/BaseToastNotification';
 import { useOnlineStatus } from './hooks/useOnlineStatus';
-import { useUrlPage } from './hooks/useUrlPage';
 import { useKeyboardScrollFix } from './hooks/useKeyboardScrollFix';
+import { useAndroidNavigationInset } from './hooks/useAndroidNavigationInset';
 
 function CalendarView({ onMenuClick }) {
   const { settings, effectiveToday } = useSettings();
@@ -74,7 +75,7 @@ const PAGE_TITLES = {
 
 function AppInner() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [page, setPage] = useUrlPage();
+  const { page, setPage } = useNavigation();
   const { t } = useTranslation();
   const { error } = useBadiYear();
 
@@ -84,10 +85,16 @@ function AppInner() {
   const [toastDismissed, setToastDismissed] = useState(false);
   const isOnline = useOnlineStatus();
   useKeyboardScrollFix();
+  useAndroidNavigationInset();
 
   useEffect(() => {
     if (error && page === 'fasting') setPage('today');
-  }, [error, page]);
+  }, [error, page, setPage]);
+
+  const closeToToday = () => {
+    setSidebarOpen(false);
+    setPage('today');
+  };
 
   const renderPage = () => {
     switch (page) {
@@ -96,13 +103,13 @@ function AppInner() {
       case 'fasting':
         return <Fasting />;
       case 'settings':
-        return <Settings onClose={() => setPage('today')} />;
+        return <Settings />;
       case 'help':
         return <Help />;
       case 'about':
         return <About />;
       case 'privacy':
-        return <Privacy onClose={() => setPage('today')} />;
+        return <Privacy />;
       default:
         return <CalendarView onMenuClick={() => setSidebarOpen(true)} />;
     }
@@ -121,6 +128,7 @@ function AppInner() {
         {page !== 'today' && (
           <Header
             title={t(PAGE_TITLES[page] || "Bahá'í Calendar")}
+            onBack={closeToToday}
             onMenuClick={() => setSidebarOpen(true)}
           />
         )}
@@ -155,7 +163,9 @@ export default function App() {
     <SettingsProvider>
       <BadiYearProvider>
         <PersonalEventsProvider>
-          <AppInner />
+          <NavigationProvider>
+            <AppInner />
+          </NavigationProvider>
         </PersonalEventsProvider>
       </BadiYearProvider>
     </SettingsProvider>

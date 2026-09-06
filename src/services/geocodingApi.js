@@ -1,4 +1,15 @@
+import { Capacitor } from '@capacitor/core';
+import { CapacitorCalendar } from '../native/bahaiCalendarNative';
+
 const BASE_URL = 'https://geocoding-api.open-meteo.com/v1';
+
+function supportsNativeIosPlaceSearch() {
+  return (
+    Capacitor.isNativePlatform() &&
+    Capacitor.getPlatform() === 'ios' &&
+    typeof CapacitorCalendar.searchMapPlaces === 'function'
+  );
+}
 
 /**
  * Search locations by name. Returns up to `count` results.
@@ -14,6 +25,38 @@ export async function searchLocations(
   const res = await fetch(url);
   const data = await res.json();
   return data.results || [];
+}
+
+/**
+ * Search places for Add Event using native iOS Maps when available,
+ * otherwise fall back to Open-Meteo geocoding.
+ * @param {string} name
+ * @param {{ count?: number, language?: string }} options
+ * @returns {Promise<Array>}
+ */
+export async function searchEventLocations(
+  name,
+  { count = 5, language = 'es' } = {},
+) {
+  const query = typeof name === 'string' ? name.trim() : '';
+  if (!query) return [];
+
+  if (supportsNativeIosPlaceSearch()) {
+    try {
+      const nativeRes = await CapacitorCalendar.searchMapPlaces({
+        query,
+        count,
+      });
+      const nativeList = Array.isArray(nativeRes?.result)
+        ? nativeRes.result
+        : [];
+      if (nativeList.length > 0) return nativeList;
+    } catch {
+      // Fall back to Open-Meteo when native search fails.
+    }
+  }
+
+  return searchLocations(query, { count, language });
 }
 
 /**

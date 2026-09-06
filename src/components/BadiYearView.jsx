@@ -2,9 +2,8 @@ import { useRef, useEffect, useLayoutEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSettings } from '../context/SettingsContext';
 import { useBadiYear } from '../context/BadiYearContext';
-import { usePersonalEvents } from '../context/PersonalEventsContext';
 import { getMonthName, getWeekdayName } from '../lib/badiDate';
-import { BaseButton, BaseIcon } from './base';
+import { BaseButton } from './base';
 import BaseSpinner from './base/BaseSpinner';
 import MiniMonthGrid, { getEventStyle } from './MiniMonthGrid';
 
@@ -26,7 +25,6 @@ function MiniMonth({
   lang,
   onSelect,
   apiFns,
-  eventsForDate,
 }) {
   const {
     badiToGregorian,
@@ -53,7 +51,6 @@ function MiniMonth({
       col,
       isToday,
       evStyle: getEventStyle(gregDate, fns),
-      personalEventColors: eventsForDate(gregDate).map((e) => e.color),
     });
   }
 
@@ -86,7 +83,7 @@ function MiniMonth({
 }
 
 // monthOrder: 1-18, 0, 19
-const MONTH_ORDER = [...Array(18)].map((_, i) => i + 1).concat([0, 19]);
+const MONTH_ORDER = Array.from({ length: 18 }, (_, i) => i + 1).concat([0, 19]);
 const PAST_YEARS = 5;
 const FUTURE_YEARS = 5;
 
@@ -114,7 +111,6 @@ export default function BadiYearView({
     loadYearsAround,
     loading,
   } = useBadiYear();
-  const { eventsForDate } = usePersonalEvents();
   const today = effectiveToday;
   const todayBadi = gregorianToBadi(today);
   const containerRef = useRef(null);
@@ -187,7 +183,7 @@ export default function BadiYearView({
             >
               {displayYear} B.E.
             </h2>
-            <div className="grid grid-cols-3 gap-x-4 gap-y-4">
+            <div className="grid grid-cols-3 gap-x-4 gap-y-4 items-start">
               {MONTH_ORDER.map((monthNum) => (
                 <MiniMonth
                   key={monthNum}
@@ -201,7 +197,6 @@ export default function BadiYearView({
                   lang={lang}
                   onSelect={onSelectMonth}
                   apiFns={apiFns}
-                  eventsForDate={eventsForDate}
                 />
               ))}
             </div>

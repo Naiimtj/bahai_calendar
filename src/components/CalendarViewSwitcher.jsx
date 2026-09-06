@@ -16,22 +16,22 @@ export default function CalendarViewSwitcher() {
   if (error) return null;
 
   return (
-    <div className="flex items-center gap-1 rounded-full bg-gray-200 dark:bg-gray-800 p-1">
+    <div className="flex items-center gap-1 hover:bg-btn-primary/10 px-4 md:py-0.5 max-lg:min-h-12 max-lg:gap-1.5 max-lg:px-3 border border-btn-primary md:hover:bg-btn-primary/10 bg-white/10 rounded-full text-sm font-semibold active:bg-gray-100 text-gray-900 active:dark:bg-gray-800 dark:text-gray-100 backdrop-blur-sm md:hover:text-btn-primary-dark md:hover:dark:text-btn-primary">
       {VIEW_OPTIONS.map(({ key, icon }) => (
         <BaseIcon
           key={key}
           icon={icon}
-          size="md"
+          size="large"
           color="currentColor"
           onClick={() => updateSetting('calendarView', key)}
-          className={`transition-colors ${
+          className={`transition-colors max-lg:h-7 max-lg:w-7 ${
             current === key
-              ? 'text-gray-900 dark:text-white'
+              ? 'text-btn-primary-active dark:text-btn-primary '
               : 'text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300'
           }`}
-          wrapperClassName={`p-2 rounded-full transition-colors ${
+          wrapperClassName={`p-2 max-lg:p-2.5 rounded-full transition-colors ${
             current === key
-              ? 'bg-white dark:bg-gray-700 shadow-sm'
+              ? ''
               : 'hover:bg-gray-100 dark:hover:bg-gray-700'
           }`}
           title={key}

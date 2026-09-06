@@ -149,6 +149,7 @@ export default function CompactCalendar({
         desc: selectedInfo.holyDay.desc || '',
         time_note: selectedInfo.holyDay.time_note || '',
         url: selectedInfo.holyDay.url || '',
+        gregDate: selectedDate,
       });
     }
     if (selectedDate && isRidvanPeriod(selectedDate) && !selectedInfo.holyDay) {
@@ -160,6 +161,7 @@ export default function CompactCalendar({
         name: 'Riḍván',
         desc: ridvanEv?.desc || '',
         url: ridvanEv?.url || '',
+        gregDate: selectedDate,
       });
     }
     if (
@@ -185,6 +187,7 @@ export default function CompactCalendar({
         }),
         desc: monthEntry?.desc || '',
         time_note: monthEntry?.info || '',
+        gregDate: selectedDate,
       });
     }
     events.push(...eventsForDate(selectedDate));
@@ -276,6 +279,12 @@ export default function CompactCalendar({
   // Bahá'í year for the middle of the viewed month
   const midMonthBadi = gregorianToBadi(new Date(viewYear, viewMonth, 15));
 
+  const handleSelectDate = (date) => {
+    onSelectDate((prev) =>
+      prev?.getTime() === date.getTime() && density !== 'lista' ? null : date,
+    );
+  };
+
   return (
     <div className="relative flex flex-col h-full">
       <CalendarHeader
@@ -337,14 +346,7 @@ export default function CompactCalendar({
               return (
                 <button
                   key={cell.day}
-                  onClick={() =>
-                    onSelectDate((prev) =>
-                      prev?.getTime() === cell.date.getTime() &&
-                      density !== 'lista'
-                        ? null
-                        : cell.date,
-                    )
-                  }
+                  onClick={() => handleSelectDate(cell.date)}
                   className={`relative flex flex-col items-center cursor-pointer md:hover:bg-gray-100 md:dark:hover:bg-gray-800 ${
                     density === 'detalles' ? 'py-1 min-w-0 w-full' : 'py-1.5'
                   }`}
@@ -391,6 +393,7 @@ export default function CompactCalendar({
                   cells={week.cells}
                   getCellEvents={getCellEvents}
                   getCellDate={(cell) => cell.date}
+                  onColumnClick={(cell) => handleSelectDate(cell.date)}
                 />
               </div>
             )}

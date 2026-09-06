@@ -5,10 +5,10 @@ import BaseSpinner from './BaseSpinner';
 const colorClasses = {
   primary: {
     contained:
-      'bg-btn-primary dark:bg-btn-primary-dark text-white md:hover:bg-btn-primary-hover active:bg-btn-primary-active',
+      'bg-btn-primary-dark text-white md:hover:bg-btn-primary-hover active:bg-btn-primary-active',
     outlined:
       'border border-btn-primary md:hover:bg-btn-primary/10 bg-white/10 rounded-full text-sm font-semibold px-4 py-2.5 active:bg-gray-100 text-gray-900 active:dark:bg-gray-800 dark:text-gray-100 backdrop-blur-sm md:hover:text-btn-primary-dark md:hover:dark:text-btn-primary',
-    text: 'dark:text-btn-primary text-btn-primary-dark md:hover:underline md:hover:bg-transparent',
+    text: 'dark:text-primary-text hover:text-primary-light text-btn-primary-dark md:hover:underline md:hover:bg-transparent',
   },
   secondary: {
     contained:
@@ -187,7 +187,7 @@ export const AppButton = ({
       type={type}
       disabled={disabled || loading}
       onClick={onClick}
-      className={`inline-flex items-center justify-start gap-2 rounded text-sm font-medium transition-colors cursor-pointer ${getFlexDirection()} ${getPaddingClasses()} ${(colorClasses[variant] || colorClasses.primary)[buttonStyle] || ''} ${className} ${
+      className={`inline-flex items-center justify-center gap-2 rounded text-sm font-medium transition-colors cursor-pointer ${getFlexDirection()} ${getPaddingClasses()} ${(colorClasses[variant] || colorClasses.primary)[buttonStyle] || ''} ${className} ${
         !text && size === 'large' ? 'px-6 py-3 text-lg font-semibold' : ''
       } ${disabled || loading ? 'opacity-50 cursor-not-allowed' : ''}`}
     >

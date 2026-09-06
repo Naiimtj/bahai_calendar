@@ -117,6 +117,8 @@
     "timeFormatLabel": "قالب زمان",
     "timeFormat24": "۲۴ ساعته",
     "timeFormat12": "۱۲ ساعته",
+    "hapticFeedbackLabel": "بازخورد لمسی",
+    "hapticFeedbackHint": "هنگام پیمایش در انتخابگرهای چرخی، لرزش ملایمی احساس خواهید کرد.",
     "calendarViewLabel": "نمای تقویم",
     "gregorian": "میلادی",
     "mixed": "ترکیبی",
@@ -158,6 +160,9 @@
     "deleteEvent": "حذف رویداد",
     "confirmDelete": "آیا مطمئن هستید که می‌خواهید این رویداد را حذف کنید؟",
     "alert": "هشدار",
+    "location": "موقعیت",
+    "openInAppleMaps": "باز کردن در Apple Maps",
+    "openInGoogleMaps": "باز کردن در Google Maps",
     "none": "هیچ"
   },
   "weekdaysShort": [
@@ -199,7 +204,27 @@
     "locationError": "موقعیت دریافت نشد",
     "cancel": "لغو",
     "day": "روز",
-    "date": "تاریخ"
+    "date": "تاریخ",
+    "alarms": {
+      "title": "هشدارهای روزه",
+      "subtitle": "برای هر روز از روزه، هنگام طلوع و غروب آفتاب مطلع شوید.",
+      "activateAll": "فعال‌سازی همه",
+      "deactivateAll": "غیرفعال‌سازی همه",
+      "sunriseAlarm": "طلوع آفتاب",
+      "sunsetAlarm": "غروب آفتاب",
+      "permissionDenied": "اعلان‌ها غیرفعال هستند. آن‌ها را در تنظیمات دستگاه فعال کنید تا هشدارهای روزه دریافت کنید.",
+      "noLocation": "برای زمان‌بندی هشدارهای طلوع/غروب آفتاب، موقعیت خود را در بخش اوقات آفتاب تنظیم کنید.",
+      "unsupported": "هشدارها فقط در برنامه موبایل در دسترس هستند.",
+      "notificationTitle": "روزه",
+      "sunriseBody": "طلوع آفتاب — روز روزه آغاز می‌شود.",
+      "sunsetBody": "غروب آفتاب — زمان افطار است.",
+      "testTitle": "هشدار آزمایشی",
+      "testSubtitle": "برای ارسال فوری یک اعلان آزمایشی و اطمینان از کارکرد آن (و صدای آن) روی این دستگاه، دکمه را بزنید.",
+      "sendTest": "اکنون آزمایش کن",
+      "testSent": "هشدار آزمایشی ارسال شد",
+      "testNotificationTitle": "هشدار آزمایشی",
+      "testNotificationBody": "این یک آزمایش است — هشدارهای روزه به‌درستی کار می‌کنند."
+    }
   },
   "about": {
     "title": "تقویم بهائی",

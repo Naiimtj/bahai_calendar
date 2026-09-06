@@ -8,7 +8,11 @@ import {
 } from 'react';
 import {
   aggregateEvents,
+  clearCachedDeviceCalendar,
+  clearCachedDeviceEvents,
+  clearCachedIcsSource,
   loadConfig,
+  loadCachedSyncedEvents,
   saveConfig,
   colorForIndex,
   addLocalEvent as persistLocalEvent,
@@ -37,16 +41,23 @@ function formatTimeNote(ev) {
   return ev.location ? `${timeRange} · ${ev.location}` : timeRange;
 }
 
-function eventDurationMs(ev) {
-  return ev.end && ev.start ? ev.end.getTime() - ev.start.getTime() : 0;
-}
+/** All-day events first, then by start time for same-day readability. */
+function byAllDayThenStart(a, b) {
+  const aAllDay = !!a.allDay;
+  const bAllDay = !!b.allDay;
+  if (aAllDay !== bAllDay) return aAllDay ? -1 : 1;
 
-/** Longer (multi-day) events first, then earlier start time, for a stable
- *  display order across day cells regardless of source-fetch order. */
-function byDurationThenStart(a, b) {
-  const durDiff = eventDurationMs(b) - eventDurationMs(a);
-  if (durDiff !== 0) return durDiff;
-  return (a.start?.getTime() || 0) - (b.start?.getTime() || 0);
+  const aStart = a.start?.getTime() || 0;
+  const bStart = b.start?.getTime() || 0;
+  if (aStart !== bStart) return aStart - bStart;
+
+  const aEnd = a.end?.getTime() || aStart;
+  const bEnd = b.end?.getTime() || bStart;
+  if (aEnd !== bEnd) return aEnd - bEnd;
+
+  return (a.title || '').localeCompare(b.title || '', undefined, {
+    sensitivity: 'base',
+  });
 }
 
 /** Build a Map<dayKey, event[]> by spreading each event across the days it spans. */
@@ -83,12 +94,6 @@ function buildEventsByDay(events) {
 
 export function PersonalEventsProvider({ children }) {
   const [config, setConfig] = useState(() => loadConfig());
-  const [eventsByDay, setEventsByDay] = useState(() => new Map());
-  const [optimisticEvents, setOptimisticEvents] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [reloadToken, setReloadToken] = useState(0);
-
-  // Window: previous year → next year (covers normal navigation).
   const range = useMemo(() => {
     const y = new Date().getFullYear();
     return {
@@ -96,6 +101,12 @@ export function PersonalEventsProvider({ children }) {
       end: new Date(y + 1, 11, 31, 23, 59),
     };
   }, []);
+  const [eventsByDay, setEventsByDay] = useState(() =>
+    buildEventsByDay(loadCachedSyncedEvents(range.start, range.end, config)),
+  );
+  const [optimisticEvents, setOptimisticEvents] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [reloadToken, setReloadToken] = useState(0);
 
   useEffect(() => {
     let active = true;
@@ -138,13 +149,17 @@ export function PersonalEventsProvider({ children }) {
   }, []);
 
   const setDeviceCalendarEnabled = useCallback(
-    (enabled) => persist({ ...config, deviceCalendarEnabled: enabled }),
+    (enabled) => {
+      if (!enabled) clearCachedDeviceEvents();
+      persist({ ...config, deviceCalendarEnabled: enabled });
+    },
     [config, persist],
   );
 
   /** Update per-calendar device preferences (enabled / colorIndex). */
   const setDeviceCalendarPref = useCallback(
     (id, patch) => {
+      if (patch.enabled === false) clearCachedDeviceCalendar(id);
       const current = config.deviceCalendars || {};
       persist({
         ...config,
@@ -174,6 +189,15 @@ export function PersonalEventsProvider({ children }) {
 
   const updateIcsSource = useCallback(
     (id, patch) => {
+      const currentSource = (config.icsSources || []).find(
+        (source) => source.id === id,
+      );
+      if (
+        patch.enabled === false ||
+        (patch.url !== undefined && patch.url !== currentSource?.url)
+      ) {
+        clearCachedIcsSource(id);
+      }
       const sources = (config.icsSources || []).map((s) =>
         s.id === id ? { ...s, ...patch } : s,
       );
@@ -184,6 +208,7 @@ export function PersonalEventsProvider({ children }) {
 
   const removeIcsSource = useCallback(
     (id) => {
+      clearCachedIcsSource(id);
       const sources = (config.icsSources || []).filter((s) => s.id !== id);
       persist({ ...config, icsSources: sources });
     },
@@ -292,7 +317,7 @@ export function PersonalEventsProvider({ children }) {
       const opt = optimisticEvents.filter(
         (ev) => ev.end >= dayStart && ev.start <= dayEnd,
       );
-      return [...real, ...opt].sort(byDurationThenStart).map((ev) => ({
+      return [...real, ...opt].sort(byAllDayThenStart).map((ev) => ({
         color: ev.color,
         name: ev.title,
         location: ev.location,

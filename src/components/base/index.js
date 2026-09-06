@@ -5,6 +5,7 @@ export { default as BaseAutocompleteInput } from './BaseAutocompleteInput';
 // (they depend on react-hook-form + hooks not yet available in this project)
 export { default as BaseBoxSelector } from './BaseBoxSelector';
 export { default as BaseButton } from './BaseButton';
+export { default as BaseCalendarPicker } from './BaseCalendarPicker';
 export { default as BaseCheckbox } from './BaseCheckbox';
 export { default as BaseExpandableSection } from './BaseExpandableSection';
 export { default as BaseIcon } from './BaseIcon';

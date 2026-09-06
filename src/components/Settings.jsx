@@ -13,7 +13,6 @@ import {
 } from '../services/personalCalendar';
 import { supportsNativeReminders } from '../services/calendarSync';
 import { reverseGeocode } from '../services/geocodingApi';
-import ArrowLeftIcon from './base/icons/ArrowLeftIcon';
 import BaseSelectInput from './base/BaseSelectInput';
 import { BaseIcon, BaseSegmentedControl } from './base';
 import BaseButton from './base/BaseButton';
@@ -456,7 +455,7 @@ function RemindersListSection() {
   );
 }
 
-export default function Settings({ onClose }) {
+export default function Settings() {
   const { settings, updateSetting, lang, refreshEffectiveToday } =
     useSettings();
   const { t } = useTranslation();
@@ -564,13 +563,7 @@ export default function Settings({ onClose }) {
     <div className="flex flex-col h-full bg-gray-50 dark:bg-gray-950">
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-800">
-        <button
-          onClick={onClose}
-          className="text-primary-text font-semibold text-sm inline-flex items-center gap-1"
-        >
-          <ArrowLeftIcon size="small" color="currentColor" />
-          {t('settings.done')}
-        </button>
+        <div className="w-12" />
         <h2 className="text-lg font-semibold">{t('settings.settings')}</h2>
         <div className="w-12" />
       </div>
@@ -779,6 +772,24 @@ export default function Settings({ onClose }) {
             ]}
           />
         </div>
+
+        {/* Haptic feedback */}
+        {isNativePlatform() && (
+          <div className="px-4 pt-4 pb-3 border-t border-gray-200 dark:border-gray-800">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-semibold tracking-wider text-gray-400 dark:text-gray-500">
+                {t('settings.hapticFeedbackLabel')}
+              </label>
+              <BaseToggleSwitch
+                value={settings.hapticFeedback}
+                onChange={(v) => updateSetting('hapticFeedback', v)}
+              />
+            </div>
+            <p className="text-xs mt-2 text-gray-400 dark:text-gray-500">
+              {t('settings.hapticFeedbackHint')}
+            </p>
+          </div>
+        )}
 
         {/* Location */}
         <div className="px-4 pt-4 pb-6 border-t border-gray-200 dark:border-gray-800">

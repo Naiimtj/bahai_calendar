@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSettings } from '../context/SettingsContext';
-import DensityCompactIcon from './base/icons/DensityCompactIcon';
 import DensityDetailsIcon from './base/icons/DensityDetailsIcon';
 import DensityListIcon from './base/icons/DensityListIcon';
 import CheckIcon from './base/icons/CheckIcon';
@@ -11,14 +10,13 @@ const DENSITY_OPTIONS = [
   {
     key: 'compacta',
     labelKey: 'calendar.compact',
-    Icon: DensityCompactIcon,
+    Icon: DensityListIcon,
   },
   {
     key: 'detalles',
     labelKey: 'calendar.details',
     Icon: DensityDetailsIcon,
   },
-  { key: 'lista', labelKey: 'calendar.list', Icon: DensityListIcon },
 ];
 
 export default function DensitySwitcher() {
@@ -39,19 +37,17 @@ export default function DensitySwitcher() {
   }, [open]);
 
   const current = settings.calendarDensity || 'compacta';
-  const CurrentIcon =
-    DENSITY_OPTIONS.find((o) => o.key === current)?.Icon || DensityCompactIcon;
 
   return (
     <div
-      className="relative flex items-center gap-3 border border-btn-primary justify-center transition-colors cursor-pointer flex-row hover:bg-btn-primary/10 active:bg-btn-primary/20 z-10 rounded-full p-2.5 text-sm font-semibold bg-gray-200 text-gray-900 dark:bg-gray-800 dark:text-gray-100"
+      className="relative flex items-center gap-3 justify-center transition-colors cursor-pointer flex-row z-10 px-4 py-2.5 max-lg:min-h-12 max-lg:px-5 max-lg:py-3 border border-btn-primary md:hover:bg-btn-primary/10 bg-white/10 rounded-full text-sm font-semibold  active:bg-gray-100 text-gray-900 active:dark:bg-gray-800 dark:text-gray-100 backdrop-blur-sm md:hover:text-btn-primary-dark md:hover:dark:text-btn-primary"
       ref={menuRef}
+      onClick={() => setOpen((v) => !v)}
     >
       <BaseIcon
         icon="optionViewCalendar"
         size="md"
-        className="rounded-full text-gray-500 dark:fill-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer"
-        onClick={() => setOpen((v) => !v)}
+        className="rounded-full text-gray-500 dark:fill-gray-100 cursor-pointer max-lg:h-7 max-lg:w-7"
         title={t('calendar.density')}
       />
 
@@ -67,17 +63,17 @@ export default function DensitySwitcher() {
                   updateSetting('calendarDensity', opt.key);
                   setOpen(false);
                 }}
-                className={`flex items-center gap-3 w-full px-3 py-2.5 text-sm transition-colors hover:bg-gray-50 dark:hover:bg-gray-700 ${
-                  !isLast ? `border-b border-gray-200 dark:border-gray-700` : ''
-                }`}
+                className={`flex items-center gap-3 w-full px-3 py-2.5 text-sm transition-colors md:hover:bg-gray-50 md:dark:hover:bg-gray-700 cursor-pointer ${
+                  isActive
+                    ? 'text-btn-primary-dark dark:text-btn-primary'
+                    : 'text-gray-900 dark:text-gray-100'
+                } ${!isLast ? `border-b border-gray-200 dark:border-gray-700` : ''}`}
               >
                 <span className="w-5 flex justify-center">
                   {isActive && <CheckIcon size="small" color="currentColor" />}
                 </span>
                 <opt.Icon size="small" color="currentColor" />
-                <span className="flex-1 text-left text-gray-900 dark:text-gray-100">
-                  {t(opt.labelKey)}
-                </span>
+                <span className="flex-1 text-left">{t(opt.labelKey)}</span>
               </button>
             );
           })}

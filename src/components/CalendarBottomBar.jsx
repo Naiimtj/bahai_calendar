@@ -12,12 +12,23 @@ import BaseButton from './base/BaseButton';
 export default function CalendarBottomBar({ onToday }) {
   const { t } = useTranslation();
 
+  const spacerClass = 'h-[calc(6rem+var(--app-system-navigation-bottom,0px))]';
+  const barBottomClass =
+    'bottom-[calc(1.5rem+var(--app-system-navigation-bottom,0px))]';
+
   return (
     <>
-      {/* Spacer so content isn't hidden behind the fixed bar on mobile */}
-      <div className="h-20 md:hidden" />
-      <div className="fixed bottom-6 left-0 right-0 z-40 flex items-center justify-between px-8 md:static md:bottom-auto md:z-auto md:px-4 md:py-2 md:border-t md:border-gray-200 md:dark:border-gray-800 md:bg-white md:dark:bg-gray-950">
-        <BaseButton label={t('calendar.today')} onClick={onToday} outlined />
+      {/* Spacer so content isn't hidden behind the fixed bar */}
+      <div className={spacerClass} />
+      <div
+        className={`fixed ${barBottomClass} left-0 right-0 md:left-64 z-40 flex items-center justify-between px-4`}
+      >
+        <BaseButton
+          label={t('calendar.today')}
+          onClick={onToday}
+          outlined
+          className="max-lg:min-h-12 max-lg:px-5 max-lg:py-3 max-lg:text-base"
+        />
         <CalendarViewSwitcher />
         <DensitySwitcher />
       </div>

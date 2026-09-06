@@ -18,7 +18,7 @@ const DensityListIcon = ({
       className={className}
       {...props}
     >
-      <path d="M3 4h18v2H3zm0 7h18v2H3zm0 7h18v2H3zM3 8h10v1H3zm0 7h10v1H3z" />
+      <path d="M3 5h2v2H3zm4 0h14v2H7zM3 11h2v2H3zm4 0h14v2H7zM3 17h2v2H3zm4 0h14v2H7z" />
     </svg>
   );
 };

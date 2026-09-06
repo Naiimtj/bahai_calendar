@@ -56,10 +56,6 @@ export default function Privacy() {
             {t('privacy.contactBody')}
           </p>
         </section>
-
-        <p className="text-xs text-gray-400 dark:text-gray-600 pt-2">
-          {t('privacy.lastUpdated')}
-        </p>
       </div>
     </div>
   );

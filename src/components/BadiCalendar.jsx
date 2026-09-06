@@ -195,6 +195,7 @@ export default function BadiCalendar({
           desc: cell.holyDay.desc || '',
           time_note: cell.holyDay.time_note || '',
           url: cell.holyDay.url || '',
+          gregDate: cell.gregDate,
         });
       }
       if (cell.ridvan && !cell.holyDay) {
@@ -206,6 +207,7 @@ export default function BadiCalendar({
           name: 'Riḍván',
           desc: ridvanEv?.desc || '',
           url: ridvanEv?.url || '',
+          gregDate: cell.gregDate,
         });
       }
       if (cell.day === 1 && viewMonth >= 1 && viewMonth <= 19) {
@@ -219,6 +221,7 @@ export default function BadiCalendar({
           name: t('calendar.feast', { name: getMonthName(viewMonth, 'ar') }),
           desc: monthEntry?.desc || '',
           time_note: monthEntry?.info || '',
+          gregDate: cell.gregDate,
         });
       }
       evs.push(...eventsForDate(cell.gregDate));
@@ -291,6 +294,12 @@ export default function BadiCalendar({
     );
   }
 
+  const handleSelectDate = (date) => {
+    onSelectDate((prev) =>
+      prev?.getTime() === date.getTime() && density !== 'lista' ? null : date,
+    );
+  };
+
   return (
     <div className="relative flex flex-col h-full">
       <CalendarHeader
@@ -349,14 +358,7 @@ export default function BadiCalendar({
               return (
                 <button
                   key={ci}
-                  onClick={() =>
-                    onSelectDate((prev) =>
-                      prev?.getTime() === cell.gregDate.getTime() &&
-                      density !== 'lista'
-                        ? null
-                        : cell.gregDate,
-                    )
-                  }
+                  onClick={() => handleSelectDate(cell.gregDate)}
                   className={`flex flex-col items-center cursor-pointer md:hover:bg-gray-100 md:dark:hover:bg-gray-800 ${
                     density === 'detalles' ? 'py-1 min-w-0 w-full' : 'py-1'
                   }`}
@@ -407,6 +409,7 @@ export default function BadiCalendar({
                   cells={week.cells}
                   getCellEvents={getCellEvents}
                   getCellDate={(cell) => cell.gregDate}
+                  onColumnClick={(cell) => handleSelectDate(cell.gregDate)}
                 />
               </div>
             )}

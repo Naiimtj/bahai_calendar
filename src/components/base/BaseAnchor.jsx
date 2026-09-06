@@ -12,7 +12,7 @@ const BaseAnchor = ({
 }) => {
   const getVariantClasses = () => {
     const variantMap = {
-      primary: 'text-btn-primary hover:text-btn-primary-hover hover:underline',
+      primary: 'text-btn-primary-dark dark:text-btn-primary hover:text-btn-primary-hover hover:underline',
       secondary:
         'text-btn-secondary hover:text-btn-secondary-hover hover:underline',
       success: 'text-success hover:text-success-hover hover:underline',
