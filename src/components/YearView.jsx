@@ -90,6 +90,37 @@ export default function YearView({ year, onSelectMonth, onToggle, onToday }) {
   const [focusYear, setFocusYear] = useState(year);
   const [years, setYears] = useState(() => buildYears(year));
   const [scrollNudge, setScrollNudge] = useState(0);
+  const sectionRefs = useRef(new Map());
+  const [visibleYear, setVisibleYear] = useState(year);
+
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const handleScroll = () => {
+      const containerTop = container.getBoundingClientRect().top;
+      let closestYear = year;
+      let closestDistance = Infinity;
+
+      sectionRefs.current.forEach((section, displayYear) => {
+        const distance = Math.abs(
+          section.getBoundingClientRect().top - containerTop,
+        );
+
+        if (distance < closestDistance) {
+          closestDistance = distance;
+          closestYear = displayYear;
+        }
+      });
+
+      setVisibleYear(closestYear);
+    };
+
+    container.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll();
+
+    return () => container.removeEventListener('scroll', handleScroll);
+  }, [year, years]);
 
   useEffect(() => {
     setFocusYear(year);
@@ -105,6 +136,13 @@ export default function YearView({ year, onSelectMonth, onToggle, onToday }) {
   }, [years, loadYearsAround]);
 
   const handleToday = () => {
+    const isTodayYearVisible = visibleYear === currentYear;
+
+    if (isTodayYearVisible) {
+      onSelectMonth?.(currentYear, currentMonth, today.getDate());
+      return;
+    }
+
     setFocusYear(currentYear);
     setYears(buildYears(currentYear));
     setScrollNudge((n) => n + 1);
@@ -114,14 +152,15 @@ export default function YearView({ year, onSelectMonth, onToggle, onToday }) {
   return (
     <div className="relative h-full">
       <div ref={containerRef} className="flex flex-col h-full overflow-y-auto">
-        <div className="sticky top-0 z-10 flex justify-end px-4 pt-[max(0.5rem,env(safe-area-inset-top))]  bg-white/90 dark:bg-gray-950/90">
+        <div className="sticky top-0 z-50 flex items-center justify-between px-4 pt-[max(0.5rem,env(safe-area-inset-top))] pb-1">
           {onToggle && (
             <BaseButton
               icon="calendarBadi"
-              color="currentColor"
               onClick={onToggle}
               outlined
-              className="fixed top-[max(0.5rem,env(safe-area-inset-top))] right-8 z-40 md:absolute md:top-4 md:right-4"
+              size="large"
+              iconClassName="size-7"
+              className="fixed top-[max(0.5rem,env(safe-area-inset-top))] right-8 z-40 md:absolute md:top-4 md:right-4 !px-3 !text-xl lg:!text-lg"
             />
           )}
         </div>
@@ -129,7 +168,17 @@ export default function YearView({ year, onSelectMonth, onToggle, onToday }) {
         {years.map((displayYear) => (
           <section
             key={displayYear}
-            ref={displayYear === focusYear ? focusRef : null}
+            ref={(element) => {
+              if (element) {
+                sectionRefs.current.set(displayYear, element);
+              } else {
+                sectionRefs.current.delete(displayYear);
+              }
+
+              if (displayYear === focusYear) {
+                focusRef.current = element;
+              }
+            }}
             className="px-4 pb-8 scroll-mt-16"
           >
             <h2
@@ -137,7 +186,7 @@ export default function YearView({ year, onSelectMonth, onToggle, onToday }) {
             >
               {displayYear}
             </h2>
-            <div className="grid grid-cols-3 gap-x-4 gap-y-4 w-full items-start">
+            <div className="grid grid-cols-3 gap-x-2 md:gap-x-4 gap-y-4 w-full items-start">
               {Array.from({ length: 12 }, (_, month) => (
                 <MiniMonth
                   key={month}
@@ -162,7 +211,7 @@ export default function YearView({ year, onSelectMonth, onToggle, onToday }) {
         label={t('calendar.today')}
         onClick={handleToday}
         outlined
-        className="fixed z-40 md:absolute bottom-4 left-4"
+        className="fixed bottom-[calc(1rem+var(--app-system-navigation-bottom,0px))] left-4 z-40 md:absolute md:bottom-4 md:left-4 max-lg:min-h-12 max-lg:px-5 max-lg:py-3 !max-lg:text-base !text-xl lg:!text-lg"
       />
     </div>
   );

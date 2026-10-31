@@ -10,6 +10,7 @@ export { default as BaseCheckbox } from './BaseCheckbox';
 export { default as BaseExpandableSection } from './BaseExpandableSection';
 export { default as BaseIcon } from './BaseIcon';
 export { default as BaseLabel } from './BaseLabel';
+export { default as BaseMenu } from './BaseMenu';
 export { default as BaseModal } from './BaseModal';
 export { default as BaseMultiSelectInput } from './BaseMultiSelectInput';
 export { default as BaseNumberInput } from './BaseNumberInput';

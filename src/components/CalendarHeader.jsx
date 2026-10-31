@@ -112,57 +112,55 @@ export default function CalendarHeader({
       {!showSearch && (
         <>
           {/* Navigation row */}
-          <div className="sticky top-0 z-50 ">
-            <div className="flex items-center justify-between px-4 pt-[max(0.5rem,env(safe-area-inset-top))] pb-1">
-              <BaseButton
-                onClick={onYearClick}
-                outlined
-                icon="arrowLeft"
-                iconSize="large"
-                className="gap-0! max-lg:min-h-12 max-lg:px-5 max-lg:py-3 max-lg:text-base"
-              >
-                <div className="flex items-center gap-1">{yearLabel}</div>
-              </BaseButton>
+          <div className="sticky top-0 z-45 flex items-center justify-between px-4 pt-[max(0.5rem,env(safe-area-inset-top))] pb-1">
+            <BaseButton
+              onClick={onYearClick}
+              outlined
+              icon="arrowLeft"
+              iconSize="large"
+              className="!gap-0 !max-lg:min-h-12 !max-lg:px-5 !max-lg:py-3 !max-lg:text-base !text-xl lg:!text-lg"
+            >
+              <div className="flex items-center gap-1">{yearLabel}</div>
+            </BaseButton>
 
-              <div className="flex items-center gap-3 justify-center transition-colors cursor-pointer flex-row z-50 hover:bg-btn-primary/10 px-4 md:py-0.5 max-lg:min-h-12 max-lg:gap-4 max-lg:px-3  border border-btn-primary md:hover:bg-btn-primary/10 bg-white/10 rounded-full text-sm font-semibold  active:bg-gray-100 text-gray-900 active:dark:bg-gray-800 dark:text-gray-100 backdrop-blur-sm md:hover:text-btn-primary-dark md:hover:dark:text-btn-primary">
+            <div className="flex items-center gap-3 justify-center transition-colors cursor-pointer flex-row z-50 hover:bg-btn-primary/10 px-4 md:py-0.5 max-lg:min-h-12 max-lg:gap-4 max-lg:px-3  shadow-md md:hover:bg-btn-primary/10 bg-gray-100/30 dark:bg-gray-100/5 rounded-full text-sm font-semibold  active:bg-gray-100 text-gray-900 active:dark:bg-gray-800 dark:text-gray-100 backdrop-blur-sm md:hover:text-btn-primary-dark md:hover:dark:text-btn-primary">
+              <BaseIcon
+                icon="search"
+                className="fill-gray-900 dark:fill-gray-100 hover:fill-gray-900 dark:hover:fill-gray-200 max-lg:h-7 max-lg:w-7"
+                wrapperClassName="p-2 max-lg:p-2.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"
+                onClick={onToggleSearch}
+              />
+              <BaseIcon
+                icon="plus"
+                className="fill-gray-900 dark:fill-gray-100 hover:fill-gray-900 dark:hover:fill-gray-200 max-lg:h-7 max-lg:w-7"
+                wrapperClassName="p-2 max-lg:p-2.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"
+                onClick={() => setShowAddEvent(true)}
+              />
+              {/* Desktop-only arrows */}
+              {onPrev && (
                 <BaseIcon
-                  icon="search"
-                  className="fill-gray-900 dark:fill-gray-100 hover:fill-gray-900 dark:hover:fill-gray-200 max-lg:h-7 max-lg:w-7"
-                  wrapperClassName="p-2 max-lg:p-2.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"
-                  onClick={onToggleSearch}
+                  icon="arrowLeft"
+                  onClick={onPrev}
+                  className="stroke-gray-900 dark:stroke-gray-100 hover:stroke-gray-900 dark:hover:stroke-gray-200"
+                  wrapperClassName="hidden md:inline-flex p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"
                 />
+              )}
+              {onNext && (
                 <BaseIcon
-                  icon="plus"
-                  className="fill-gray-900 dark:fill-gray-100 hover:fill-gray-900 dark:hover:fill-gray-200 max-lg:h-7 max-lg:w-7"
-                  wrapperClassName="p-2 max-lg:p-2.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"
-                  onClick={() => setShowAddEvent(true)}
+                  icon="arrowRight"
+                  onClick={onNext}
+                  className="stroke-gray-900 dark:stroke-gray-100 hover:stroke-gray-900 dark:hover:stroke-gray-200"
+                  wrapperClassName="hidden md:inline-flex p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"
                 />
-                {/* Desktop-only arrows */}
-                {onPrev && (
-                  <BaseIcon
-                    icon="arrowLeft"
-                    onClick={onPrev}
-                    className="stroke-gray-900 dark:stroke-gray-100 hover:stroke-gray-900 dark:hover:stroke-gray-200"
-                    wrapperClassName="hidden md:inline-flex p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"
-                  />
-                )}
-                {onNext && (
-                  <BaseIcon
-                    icon="arrowRight"
-                    onClick={onNext}
-                    className="stroke-gray-900 dark:stroke-gray-100 hover:stroke-gray-900 dark:hover:stroke-gray-200"
-                    wrapperClassName="hidden md:inline-flex p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"
-                  />
-                )}
-                {onMenuClick && (
-                  <BaseIcon
-                    icon="menu"
-                    onClick={onMenuClick}
-                    className="fill-gray-600 dark:fill-gray-100 max-lg:h-7 max-lg:w-7"
-                    wrapperClassName="md:hidden p-2 max-lg:p-2.5 rounded-full"
-                  />
-                )}
-              </div>
+              )}
+              {onMenuClick && (
+                <BaseIcon
+                  icon="menu"
+                  onClick={onMenuClick}
+                  className="fill-gray-600 dark:fill-gray-100 max-lg:h-7 max-lg:w-7"
+                  wrapperClassName="md:hidden p-2 max-lg:p-2.5 rounded-full"
+                />
+              )}
             </div>
           </div>
 

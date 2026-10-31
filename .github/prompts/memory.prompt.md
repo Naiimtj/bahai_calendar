@@ -1,6 +1,8 @@
 ---
 description: 'View and manage the project memory layer (learnings, decisions, conventions, glossary)'
 name: 'memory'
+# Generated from .github/MODELS.md by .github/scripts/sync-agent-models.sh. Do not edit.
+model: ["GPT-5.3-Codex", "GPT-5.6 Luna"]
 ---
 
 # /memory - Manage Project Memory

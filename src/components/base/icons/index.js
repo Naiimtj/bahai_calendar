@@ -28,6 +28,7 @@ import CheckCircleOutlineIcon from './CheckCircleOutlineIcon';
 import CircleIcon from './CircleIcon';
 import SaveIcon from './SaveIcon';
 import LocationOnIcon from './LocationOnIcon';
+import MapMarkerIcon from './MapMarkerIcon';
 import DownloadIcon from './DownloadIcon';
 import ViewWeekIcon from './ViewWeekIcon';
 import ViewWeekOutlineIcon from './ViewWeekOutlineIcon';
@@ -47,6 +48,14 @@ import SunsetIcon from './SunsetIcon';
 import RepeatIcon from './RepeatIcon';
 import ClockIcon from './ClockIcon';
 import BahaiIcon from './BahaiIcon';
+import AlarmIcon from './AlarmIcon';
+import StarNineIcon from './StarNineIcon';
+import BellIcon from './BellIcon';
+import LinkIcon from './LinkIcon';
+import NotesIcon from './NotesIcon';
+import NavigationIcon from './NavigationIcon';
+import ChevronUpDownIcon from './ChevronUpDownIcon';
+import ColorBarIcon from './ColorBarIcon';
 
 export const iconRegistry = {
   search: SearchIcon,
@@ -79,6 +88,7 @@ export const iconRegistry = {
   circle: CircleIcon,
   save: SaveIcon,
   locationOn: LocationOnIcon,
+  mapMarker: MapMarkerIcon,
   download: DownloadIcon,
   viewWeek: ViewWeekIcon,
   viewWeekOutline: ViewWeekOutlineIcon,
@@ -98,6 +108,14 @@ export const iconRegistry = {
   repeat: RepeatIcon,
   clock: ClockIcon,
   bahai: BahaiIcon,
+  alarm: AlarmIcon,
+  starNine: StarNineIcon,
+  bell: BellIcon,
+  link: LinkIcon,
+  notes: NotesIcon,
+  navigation: NavigationIcon,
+  chevronUpDown: ChevronUpDownIcon,
+  colorBar: ColorBarIcon,
 };
 
 export {
@@ -132,6 +150,7 @@ export {
   CircleIcon,
   SaveIcon,
   LocationOnIcon,
+  MapMarkerIcon,
   DownloadIcon,
   ViewWeekIcon,
   ViewWeekOutlineIcon,
@@ -150,4 +169,12 @@ export {
   RepeatIcon,
   ClockIcon,
   BahaiIcon,
+  StarNineIcon,
+  AlarmIcon,
+  BellIcon,
+  LinkIcon,
+  NotesIcon,
+  NavigationIcon,
+  ChevronUpDownIcon,
+  ColorBarIcon,
 };

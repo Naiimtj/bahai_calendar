@@ -88,7 +88,7 @@ export const TRANSLATIONS = {
         '1fast': 'First day of the period of fasting.',
         '19fast': 'Last day of the period of fasting.',
         ayyamiha:
-          '(also known as the intercalary days) is a period of celebration dedicated to charity, gift-giving, and festivities before the annual period of fasting.',
+          'Also known as the intercalary days, it is a period of celebration dedicated to charity, gift-giving, and festivities before the annual period of fasting.',
       },
       time_notes: {},
       urls: {
@@ -206,7 +206,7 @@ export const TRANSLATIONS = {
         '1fast': 'Primer día de período de ayuno.',
         '19fast': 'Último día de período de ayuno.',
         ayyamiha:
-          '(también conocido como los días intercalares) es un período de celebración dedicado a la caridad, los regalos y las festividades antes del período anual de ayuno.',
+          'También conocido como los días intercalares, es un período de celebración dedicado a la caridad, los regalos y las festividades antes del período anual de ayuno.',
       },
       time_notes: {
         '1Ridvan': 'A las cuatro de la tarde',
@@ -333,7 +333,7 @@ export const TRANSLATIONS = {
         '1fast': 'اليوم الأول من فترة الصيام.',
         '19fast': 'اليوم الأخير من فترة الصيام.',
         ayyamiha:
-          '(المعروفة أيضاً بأيام الهاء) هي فترة احتفال مخصصة للإحسان والهدايا والاحتفالات قبل فترة الصيام السنوية.',
+          'المعروفة أيضاً بأيام الهاء، هي فترة احتفال مخصصة للإحسان والهدايا والاحتفالات قبل فترة الصيام السنوية.',
       },
       time_notes: {
         '1Ridvan': 'في الساعة الرابعة بعد الظهر',
@@ -432,7 +432,7 @@ export const TRANSLATIONS = {
         '1fast': 'Erster Tag der Fastenzeit.',
         '19fast': 'Letzter Tag der Fastenzeit.',
         ayyamiha:
-          '(auch bekannt als die Schalttage) ist eine Zeit der Feier, die der Nächstenliebe, dem Schenken und Festlichkeiten vor der jährlichen Fastenzeit gewidmet ist.',
+          'Auch bekannt als die Schalttage, ist eine Zeit der Feier, die der Nächstenliebe, dem Schenken und Festlichkeiten vor der jährlichen Fastenzeit gewidmet ist.',
       },
       time_notes: {
         '1Ridvan': 'Um vier Uhr nachmittags',
@@ -530,7 +530,7 @@ export const TRANSLATIONS = {
         '1fast': 'نخستین روز دورهٔ روزه.',
         '19fast': 'آخرین روز دورهٔ روزه.',
         ayyamiha:
-          '(که به ایام هاء نیز شناخته می‌شود) دوره‌ای از جشن است که به نیکوکاری، هدیه دادن و برگزاری جشن‌ها پیش از دورهٔ سالانه روزه اختصاص دارد.',
+          'همچنین به ایام هاء شناخته می‌شود، دوره‌ای از جشن است که به نیکوکاری، هدیه دادن و برگزاری جشن‌ها پیش از دورهٔ سالانه روزه اختصاص دارد.',
       },
       time_notes: {
         '1Ridvan': 'ساعت چهار بعدازظهر',
@@ -629,7 +629,7 @@ export const TRANSLATIONS = {
         '1fast': 'Premier jour de la période de jeûne.',
         '19fast': 'Dernier jour de la période de jeûne.',
         ayyamiha:
-          '(également connus sous le nom de jours intercalaires) est une période de célébration consacrée à la charité, aux dons et aux festivités avant la période annuelle de jeûne.',
+          'Également connus sous le nom de jours intercalaires, ils sont une période de célébration consacrée à la charité, aux dons et aux festivités avant la période annuelle de jeûne.',
       },
       time_notes: {
         '1Ridvan': 'À quatre heures de l’après-midi',

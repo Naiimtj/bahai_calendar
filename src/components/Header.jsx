@@ -4,7 +4,6 @@ import MenuIcon from './base/icons/MenuIcon';
 
 export default function Header({ onBack, onMenuClick }) {
   const { t } = useTranslation();
-
   return (
     <header
       className="md:hidden flex items-center justify-between md:px-4 pr-4 md:py-3 sticky top-0 z-30"
@@ -19,7 +18,6 @@ export default function Header({ onBack, onMenuClick }) {
       >
         {t('addEvent.calendar')}
       </BaseButton>
-
       {/* Menu button — mobile/tablet only */}
       <button
         onClick={onMenuClick}

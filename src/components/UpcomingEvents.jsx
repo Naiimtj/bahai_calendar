@@ -193,8 +193,8 @@ export default function UpcomingEvents() {
                       className="stroke-gray-400 shrink-0"
                     />
                   </div>
-                  <div className="flex justify-between text-xs text-gray-500 mt-0.5">
-                    <div className="flex md:flex-row flex-col items-center gap-1">
+                  <div className="grid grid-cols-2 gap-2 items-center text-xs text-gray-500 mt-0.5">
+                    <div className="flex flex-col items-start gap-1">
                       <span>{formatGregorianDate(ev.gregDate, lang)}</span>
                       {ev.time_note && (
                         <div className="text-xs mt-0.5 text-amber-700 italic">
@@ -202,8 +202,8 @@ export default function UpcomingEvents() {
                         </div>
                       )}
                     </div>
-                    <div className="flex md:flex-row flex-col items-center gap-1">
-                      <span>{ev.badiDate}</span>
+                    <div className="flex flex-col items-end gap-1">
+                      <span className="text-right">{ev.badiDate}</span>
                       {ev.suspend && (
                         <span className="text-xs text-gray-600">
                           {t('events.workSuspended')}

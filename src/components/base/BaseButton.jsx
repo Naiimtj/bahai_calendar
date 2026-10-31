@@ -2,15 +2,21 @@ import { useState, useRef, useEffect } from 'react';
 import BaseIcon from './BaseIcon';
 import BaseSpinner from './BaseSpinner';
 
+// Pill on a grouped-list surface: white (gray-800 dark) fill, tinted label; hover/active tint via inset overlay so the fill survives.
+const surfaceBase =
+  '!rounded-full !border-0 !bg-white !px-4 !py-3.5 !text-[17px] !font-normal md:hover:!no-underline dark:!bg-gray-800';
+
 const colorClasses = {
   primary: {
+    surface: `${surfaceBase} !text-btn-primary-dark md:hover:!text-btn-primary-dark dark:!text-primary-text dark:md:hover:!text-primary-text md:hover:!shadow-[inset_0_0_0_999px_rgb(var(--color-btn-primary)/0.1)] active:!shadow-[inset_0_0_0_999px_rgb(var(--color-btn-primary)/0.2)]`,
     contained:
       'bg-btn-primary-dark text-white md:hover:bg-btn-primary-hover active:bg-btn-primary-active',
     outlined:
-      'border border-btn-primary md:hover:bg-btn-primary/10 bg-white/10 rounded-full text-sm font-semibold px-4 py-2.5 active:bg-gray-100 text-gray-900 active:dark:bg-gray-800 dark:text-gray-100 backdrop-blur-sm md:hover:text-btn-primary-dark md:hover:dark:text-btn-primary',
-    text: 'dark:text-primary-text hover:text-primary-light text-btn-primary-dark md:hover:underline md:hover:bg-transparent',
+      'shadow-md md:hover:bg-btn-primary/10 bg-gray-100/30 dark:bg-gray-100/5 rounded-full text-sm font-semibold px-4 py-2.5 active:bg-gray-100 text-gray-900 active:dark:bg-gray-800 dark:text-gray-100 backdrop-blur-sm md:hover:text-btn-primary-dark md:hover:dark:text-btn-primary',
+    text: 'dark:text-primary-text md:hover:text-primary md:dark:hover:text-primary-light text-btn-primary-dark md:hover:underline md:hover:bg-transparent',
   },
   secondary: {
+    surface: `${surfaceBase} !text-btn-secondary md:hover:!text-btn-secondary dark:!text-btn-secondary-dark dark:md:hover:!text-btn-secondary-dark md:hover:!shadow-[inset_0_0_0_999px_rgb(var(--color-btn-secondary)/0.15)] active:!shadow-[inset_0_0_0_999px_rgb(var(--color-btn-secondary)/0.25)]`,
     contained:
       'bg-btn-secondary text-white md:hover:bg-btn-secondary-hover active:bg-btn-secondary-active',
     outlined:
@@ -18,6 +24,7 @@ const colorClasses = {
     text: 'dark:text-btn-secondary-dark text-btn-secondary md:hover:underline md:hover:bg-transparent',
   },
   success: {
+    surface: `${surfaceBase} !text-success-hover md:hover:!text-success-hover dark:!text-success dark:md:hover:!text-success md:hover:!shadow-[inset_0_0_0_999px_rgb(var(--color-success)/0.1)] active:!shadow-[inset_0_0_0_999px_rgb(var(--color-success)/0.2)]`,
     contained:
       'bg-success text-white md:hover:bg-success-hover active:bg-success-active',
     outlined:
@@ -25,6 +32,7 @@ const colorClasses = {
     text: 'dark:text-success text-success md:hover:underline md:hover:bg-transparent',
   },
   warning: {
+    surface: `${surfaceBase} !text-warning-hover md:hover:!text-warning-hover dark:!text-warning dark:md:hover:!text-warning md:hover:!shadow-[inset_0_0_0_999px_rgb(var(--color-warning)/0.1)] active:!shadow-[inset_0_0_0_999px_rgb(var(--color-warning)/0.2)]`,
     contained:
       'bg-warning text-white md:hover:bg-warning-hover active:bg-warning-active',
     outlined:
@@ -32,6 +40,7 @@ const colorClasses = {
     text: 'dark:text-warning text-warning md:hover:underline md:hover:bg-transparent',
   },
   danger: {
+    surface: `${surfaceBase} !text-red-600 md:hover:!text-red-600 dark:!text-red-400 dark:md:hover:!text-red-400 md:hover:!shadow-[inset_0_0_0_999px_rgb(var(--color-error)/0.1)] active:!shadow-[inset_0_0_0_999px_rgb(var(--color-error)/0.2)]`,
     contained:
       'bg-error text-white md:hover:bg-error-hover active:bg-error-active',
     outlined:
@@ -39,11 +48,15 @@ const colorClasses = {
     text: 'dark:text-error text-error md:hover:underline md:hover:bg-transparent',
   },
   info: {
-    contained: 'bg-info text-white md:hover:bg-info-hover active:bg-info-active',
-    outlined: 'border border-info text-info md:hover:bg-info/10 active:bg-info/20',
+    surface: `${surfaceBase} !text-info md:hover:!text-info dark:!text-blue-400 dark:md:hover:!text-blue-400 md:hover:!shadow-[inset_0_0_0_999px_rgb(var(--color-info)/0.1)] active:!shadow-[inset_0_0_0_999px_rgb(var(--color-info)/0.2)]`,
+    contained:
+      'bg-info text-white md:hover:bg-info-hover active:bg-info-active',
+    outlined:
+      'border border-info text-info md:hover:bg-info/10 active:bg-info/20',
     text: 'dark:text-info text-info md:hover:underline md:hover:bg-transparent',
   },
   help: {
+    surface: `${surfaceBase} !text-btn-secondary md:hover:!text-btn-secondary dark:!text-btn-secondary-dark dark:md:hover:!text-btn-secondary-dark md:hover:!shadow-[inset_0_0_0_999px_rgb(var(--color-btn-secondary)/0.1)] active:!shadow-[inset_0_0_0_999px_rgb(var(--color-btn-secondary)/0.2)]`,
     contained:
       'bg-btn-secondary text-white md:hover:bg-btn-secondary-hover active:bg-btn-secondary-active',
     outlined:
@@ -57,7 +70,8 @@ const types = ['button', 'submit', 'reset'];
 const tooltipPositions = ['top', 'bottom', 'left', 'right'];
 const iconPositions = ['left', 'right', 'top', 'bottom'];
 
-const determineStyle = (variant, outlined, text) => {
+const determineStyle = (variant, outlined, text, surface) => {
+  if (surface) return 'surface';
   if (text) return 'text';
   if (outlined) return 'outlined';
   if (variant === 'secondary') return 'outlined';
@@ -74,6 +88,7 @@ export const AppButton = ({
   variant = 'primary',
   outlined = false,
   text = false,
+  surface = false,
   tooltip,
   tooltipPosition = tooltipPositions[0] || 'top',
   tooltipDisabled = false,
@@ -88,7 +103,7 @@ export const AppButton = ({
   children,
   onClick,
 }) => {
-  const buttonStyle = determineStyle(variant, outlined, text);
+  const buttonStyle = determineStyle(variant, outlined, text, surface);
   const [showTooltip, setShowTooltip] = useState(false);
   const tooltipTimerRef = useRef(null);
 
@@ -119,7 +134,7 @@ export const AppButton = ({
 
   const getPaddingClasses = () => {
     if (text) return 'p-0 bg-transparent shadow-none';
-    if (hasPaddingOverride) return '';
+    if (surface || hasPaddingOverride) return '';
     return 'px-3 py-2';
   };
 
@@ -215,7 +230,10 @@ export const AppButton = ({
       {contentButton}
       {showTooltip && (
         <span
-          className={`absolute z-50 px-2 py-1 text-xs text-white bg-gray-800 rounded shadow-lg whitespace-nowrap pointer-events-none ${tooltipPlacementClasses[tooltipPosition] || tooltipPlacementClasses.top}`}
+          className={`hidden md:inline-flex absolute z-50 px-2 py-1 text-xs text-white bg-gray-800 rounded shadow-lg whitespace-nowrap pointer-events-none ${
+            tooltipPlacementClasses[tooltipPosition] ||
+            tooltipPlacementClasses.top
+          }`}
         >
           {tooltip}
         </span>

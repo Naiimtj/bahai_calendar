@@ -149,12 +149,12 @@ Copilot Chat — let me copy them AND ask."
 ### Corrected files:
 
 1. **`store.agent.md`** ✅
-   - **Before**: Used `createGlobalState` from `@vueuse/core` (generic template)
+   - **Before**: Used a generic shared-state helper (generic template)
    - **After**: Uses Pinia `defineStore` with setup-store pattern (correct RDCP)
 
 2. **`test.agent.md`** ✅
    - **Before**: Used Vitest + happy-dom (generic template)
-   - **After**: Uses Jest 26.6.3 + Vue Test Utils (correct RDCP)
+   - **After**: Uses Vitest 4 + Node environment (correct RDCP)
 
 3. **`api.agent.md`** ⚠️ MARKED FOR MANUAL MERGE
    - **Problem**: 150 lines of difference between OLD (real RDCP URLs) and NEW (template with [TODO])
@@ -180,7 +180,7 @@ Before declaring `/init-github` complete:
 - [ ] **All files from `.github-old/` inventoried** (use `find`)
 - [ ] **Each file has a status**: ✅ COPIED, ✅ MERGED, ✅ ADAPTED, or 🗑️ DISCARDED (with approval)
 - [ ] **Zero [TODO] in Project Profile** (copilot-instructions.md)
-- [ ] **Zero references to incorrect stack** (search for "Vitest", "createGlobalState", etc. if project uses Jest/Pinia)
+- [ ] **Zero references to incorrect stack** (search for "Vitest", "legacy shared-state helper", etc. if project uses Jest/Pinia)
 - [ ] **All agent files use the correct stack** (grep verification)
 - [ ] **Hooks copied** if they existed in `-old`
 - [ ] **`/verify-legacy-merge` executed** and reports 100% success
@@ -215,7 +215,7 @@ If you see any of these signals after `/init-github`, run `/verify-legacy-merge`
 
 🚩 **You find [TODO] in files that should be filled** (Project Profile, TOOLS.md file scopes, ROUTER.md models)
 
-🚩 **Agent files have examples from incorrect stack** (Vitest when project uses Jest, createGlobalState when it uses Pinia)
+🚩 **Agent files have examples from incorrect stack** (Vitest when project uses Jest, legacy shared-state helper when it uses Pinia)
 
 🚩 **Some file from `.github-old/` doesn't exist in `.github/`** without explanation
 

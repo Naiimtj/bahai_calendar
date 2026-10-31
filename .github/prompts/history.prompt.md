@@ -1,8 +1,10 @@
 ---
 agent: agent
-model: claude-sonnet
+tools: [read, edit]
 description: 'Record the current chat iteration history'
 name: 'history'
+# Generated from .github/MODELS.md by .github/scripts/sync-agent-models.sh. Do not edit.
+model: ["GPT-5.3-Codex", "GPT-5.6 Luna"]
 ---
 
 # /history - Conversation History Tracking
@@ -39,7 +41,7 @@ Invoke this command after each significant interaction:
 
 - **Directory**: `.history/conversations/`
 - **Filename**: `conversation_YYYY-MM-DD.md` (use current date)
-- **Example**: `.history/conversationsconversation_2025-11-18.md`
+- **Example**: `.history/conversations/conversation_2025-11-18.md`
 
 ### Raw Chat Archive
 
@@ -248,14 +250,14 @@ The iteration summary table must:
 - **Output message**: "Updating conversation history..."
 - Check if conversation history file exists for today's date
 - If new file, create with full header structure and iteration summary table
-- If existing, use `replace_string_in_file` to update the table, then append the new iteration section using `replace_string_in_file` with sufficient context to uniquely identify the end of the file
+- If existing, use available file-editing tools to update the table and append the new iteration section with enough context to preserve all prior content
 - **Completion message**: "Conversation history updated."
 
 ### Step 4: Document the Iteration
 
 - **Output message**: "Documenting iteration..."
-- Add new row to iteration summary table using `replace_string_in_file`
-- Append complete iteration section to the end of the file using `replace_string_in_file`
+- Add a new row to the iteration summary table with an available file-editing tool
+- Append the complete iteration section to the end of the file
 - Create anchor with correct ID
 - Write heading with descriptive title
 - Add metadata line with mode detection method: Mode (user-specified|inferred|unknown), Model, and Chats
@@ -270,24 +272,19 @@ The iteration summary table must:
 
 - **Output message**: "Updating model usage..."
 - Read current `.history/model_usage.md` file
-- Use `replace_string_in_file` to append new entry to the table
+- Use an available file-editing tool to append a new entry to the table
 - Include all required columns: Timestamp, Model, Input/Reasoning/Output/Total Tokens, Files Read/Created/Modified, Summary
-- **IMPORTANT**: Use only file editing tools (replace_string_in_file, multi_replace_string_in_file), never use terminal commands
+- Use only file-editing tools, never terminal commands
+- If exact token values are unavailable from the runtime, write `unavailable`; never estimate or invent them
 - **Completion message**: "Model usage updated."
 
 ### Step 6: File Handling
 
-- All file edits made with `replace_string_in_file` or `multi_replace_string_in_file` are automatically saved
-- Do NOT open edited files in the editor
-- Files are modified in place without user interaction
-- **CRITICAL**: Edits must be auto-accepted - no "Keep" and "Undo" prompts should appear
-- This ensures a clean, non-intrusive workflow
+- Do not open edited files in the editor
+- Do not attempt UI keystrokes or automate Keep/Undo controls
+- Preserve all previous history entries and raw archives
 
-### Step 7: Auto-Accept Changes
-
-- After completing all file operations, send Ctrl+Enter keystroke to automatically keep all changes
-
-### Step 8: Review for Completeness
+### Step 7: Review for Completeness
 
 - **Output message**: "Verifying completeness..."
 - Verify all links work
@@ -325,7 +322,7 @@ Use these categories to organize changes within iterations:
 
 ### Iteration 7: Database Integration
 
-**Mode:** Ask (inferred) | **Model:** claude-sonnet | **Chats:** 1
+**Mode:** Ask (inferred) | **Model:** standard | **Chats:** 1
 
 **User Feedback:** In the proposal, the data for users.json and groups.json would come from a database. Update the file and diagrams.
 

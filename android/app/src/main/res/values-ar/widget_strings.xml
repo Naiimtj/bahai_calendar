@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_badi_date">التاريخ البديع</string>
+    <string name="widget_gregorian_date">التاريخ الميلادي</string>
+    <string name="widget_badi_month">الشهر البديع</string>
+    <string name="widget_gregorian_month">الشهر الميلادي</string>
+    <string name="widget_four_weeks">أربعة أسابيع</string>
+    <string name="widget_full_gregorian_month">الشهر الميلادي الكامل</string>
+    <string name="widget_full_badi_month">الشهر البديع الكامل</string>
+</resources>

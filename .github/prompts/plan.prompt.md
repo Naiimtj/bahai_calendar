@@ -1,6 +1,9 @@
 ---
 description: 'Generate an execution plan for a task without writing any code'
+tools: [read, search]
 name: 'plan'
+# Generated from .github/MODELS.md by .github/scripts/sync-agent-models.sh. Do not edit.
+model: ["GPT-5.3-Codex", "GPT-5.6 Luna"]
 ---
 
 # /plan - Generate an Execution Plan

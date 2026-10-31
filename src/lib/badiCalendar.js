@@ -318,6 +318,16 @@ function sunsetUtcHour(date, lat = TEHRAN_LAT, lon = TEHRAN_LON) {
 }
 
 /**
+ * Approximate sunset instant (NOAA, ±2 min) for the local calendar day
+ * `year-month-day` (month 1–12) at `lat`/`lon`.
+ * @returns {number} epoch milliseconds
+ */
+export function sunsetTimestamp(year, month, day, lat, lon) {
+  const date = utcDate(year, month, day);
+  return date.getTime() + Math.round(sunsetUtcHour(date, lat, lon) * 3600000);
+}
+
+/**
  * Calculate Naw-Rúz from the vernal equinox for `gregYear`.
  * Rule: if the equinox occurs before sunset in Tehran, Naw-Rúz is that day;
  * otherwise it is the following day.

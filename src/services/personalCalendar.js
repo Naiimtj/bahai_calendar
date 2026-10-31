@@ -44,6 +44,30 @@ export function fromNativeEndDate(endMs, allDay) {
   return allDay ? endMs - ONE_DAY_MS : endMs;
 }
 
+export function birthdayPersonName(event) {
+  const info = birthdayPersonInfo(event);
+  return info?.name ?? null;
+}
+
+export function birthdayPersonInfo(event) {
+  if (!event.isBirthday) return null;
+  const title = event.title || '';
+  const englishPossessive = title.match(
+    /^(.+?)[’']s(?: (\d{1,3})(?:st|nd|rd|th))? Birthday$/i,
+  );
+  if (englishPossessive) {
+    return {
+      name: englishPossessive[1],
+      age: englishPossessive[2] ? Number(englishPossessive[2]) : null,
+    };
+  }
+
+  const englishOf = title.match(/^Birthday of (.+)$/i);
+  if (englishOf) return { name: englishOf[1], age: null };
+
+  return null;
+}
+
 // Predefined HEX palette for personal-event colors. Personal-event colors are
 // dynamic, user-chosen values (including free-form HEX), so they are rendered
 // with an inline background-color rather than a static Tailwind class.
@@ -431,6 +455,7 @@ export function addLocalEvent(event) {
     id: `local-${Date.now()}`,
     title: event.title,
     location: event.location || '',
+    locationCoords: event.locationCoords || null,
     notes: event.notes || '',
     url: event.url || '',
     allDay: !!event.allDay,
@@ -689,6 +714,15 @@ function nativeLocationValue(item) {
   return '';
 }
 
+function nativeLocationCoords(item) {
+  const latitude = item?.structuredLocation?.latitude;
+  const longitude = item?.structuredLocation?.longitude;
+  if (Number.isFinite(latitude) && Number.isFinite(longitude)) {
+    return { latitude, longitude };
+  }
+  return null;
+}
+
 /**
  * Triggers the iOS permission prompt for full calendar access.
  * Returns true if access was granted.
@@ -782,11 +816,14 @@ async function getDeviceEvents(windowStart, windowEnd, config) {
           id: e.id ?? `device-${i}`,
           calendarId: e.calendarId,
           title: e.title || '(sin título)',
+          isBirthday: e.isBirthday === true,
           start,
           end,
           allDay: !!e.isAllDay,
           location: nativeLocationValue(e),
+          locationCoords: nativeLocationCoords(e),
           notes: e.description || '',
+          url: e.url || '',
           color,
           alerts: Array.isArray(e.alerts) ? e.alerts : [],
           alert: alertsToAlertValue(e.alerts),
@@ -982,6 +1019,7 @@ export async function updateDeviceReminder(id, updates) {
     }
     if (updates.start instanceof Date) {
       options.dueDate = updates.start.getTime();
+      options.isAllDay = !!updates.allDay;
     }
     const alerts = alertToAlerts(updates);
     if (alerts) options.alerts = alerts;
@@ -1006,6 +1044,17 @@ export async function deleteDeviceReminder(id) {
   } catch {
     return false;
   }
+}
+
+/** Calls `callback` when the device Calendar/Reminders database changes; returns an unsubscribe function. */
+export function onDeviceCalendarChange(callback) {
+  if (!isNativePlatform()) return () => {};
+  const handle = Promise.resolve(
+    CapacitorCalendar.addListener('eventStoreChanged', callback),
+  ).catch(() => null);
+  return () => {
+    handle.then((listener) => listener?.remove());
+  };
 }
 
 /* ------------------------------------------------------------------ */
@@ -1033,7 +1082,12 @@ export async function updateDeviceEvent(eventId, updates) {
     const options = { id: eventId, span: EventSpan.THIS_AND_FUTURE_EVENTS };
     if (updates.title !== undefined) options.title = updates.title;
     if (updates.location !== undefined) options.location = updates.location;
+    if (updates.locationCoords) {
+      options.latitude = updates.locationCoords.latitude;
+      options.longitude = updates.locationCoords.longitude;
+    }
     if (updates.notes !== undefined) options.description = updates.notes;
+    if (updates.url !== undefined) options.url = updates.url || '';
     if (updates.calendarId !== undefined) {
       options.calendarId = updates.calendarId;
     }

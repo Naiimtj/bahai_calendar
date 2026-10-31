@@ -71,6 +71,7 @@ Other data sources (no configuration needed):
 
 - **Sun times** — [sunrise-sunset.org](https://sunrise-sunset.org)
 - **Geocoding** — [Open-Meteo](https://open-meteo.com)
+- **Event place search** — Apple MapKit on iOS, otherwise [Photon](https://photon.komoot.io) (OpenStreetMap)
 
 ## Native (Capacitor)
 
@@ -92,7 +93,7 @@ src/
 ├── components/        # Feature components (calendar views, modals, pages)
 │   └── base/          # Reusable UI primitives (BaseButton, BaseIcon, …)
 ├── context/           # Global state (Settings, BadiYear, PersonalEvents)
-├── hooks/             # Reusable reactive logic (useSwipe, useOnlineStatus)
+├── hooks/             # Reusable reactive logic (useMonthPager, useOnlineStatus)
 ├── services/          # Data access (badiApi, sunTimesApi, geocodingApi, …)
 ├── lib/               # Badí' calendar engine + date helpers (badiCalendar.js, badiDate.jsx)
 ├── utils/             # Pure helpers

@@ -1,6 +1,6 @@
 # Router — Central Request Routing Layer
 
-Single source of truth for deciding **which agent, which skills, and which model** handle a request. All routing tables previously scattered across `copilot-instructions.md` and `SKILLS-DIGEST.md` defer to this file.
+Single source of truth for deciding **which agent and which skills** handle a request. Model assignments are owned exclusively by `.github/MODELS.md`.
 
 > Pipeline: **Guardrails check → Router (this file) → Planner (if multi-domain) → Agent(s) → Memory write-back**
 
@@ -28,80 +28,74 @@ User request
 
 ## 2. Intent → Agent Matrix
 
-**⛔ HARD RULE — ZERO TOLERANCE ⛔**: When a request contains ANY of the keywords/contexts below, you are FORBIDDEN from processing it directly. You MUST execute the Routing Gate (see `GUARDRAILS.md` §0) BEFORE any work. This is not optional. This is not "nice to have". Skipping this step is a guardrail violation equivalent to deleting user data.
+When a request matches a keyword or context below, select that specialized agent
+and apply the routing and model workflow in `GUARDRAILS.md` section 0 before work.
+Delegate without forcing a model so the agent's confirmed fallback array remains
+effective. The parent may handle the task directly only when delegation is
+unavailable or the user explicitly requests that override.
 
-> **Model column is canonical in `.github/MODELS.md`.** The values below mirror it for quick reference — if you ever change a model, edit `MODELS.md` first (single source of truth), then update the row here and the agent's frontmatter.
+> After selecting an agent, resolve its profile and runtime candidates only from `.github/MODELS.md`. This router deliberately does not repeat model assignments.
 
-| Intent signals (keywords / context)                                 | Agent                    | Mandatory skills                   | Model         |
-| ------------------------------------------------------------------- | ------------------------ | ---------------------------------- | ------------- |
-| component, UI, page, layout, widget, modal, styling, responsive     | `component.agent.md`     | `styling`, `quality`               | gpt-fast      |
-| store, state, global state, getter, action, reactive data           | `store.agent.md`         | `state-management`                 | claude-sonnet |
-| API, endpoint, fetch, HTTP, request/response, backend types, schema | `api.agent.md`           | `api`                              | claude-sonnet |
-| Capacitor, native, iOS, Android, Xcode, Android Studio, `npx cap`   | `native.agent.md`        | `capacitor-native`                 | claude-sonnet |
-| translation, i18n, locale, label, language, t(), add key            | `i18n.agent.md`          | `i18n`                             | gpt-cheap     |
-| where is, what does, project structure, orientation                 | `overview.agent.md`      | `project-overview`                 | gpt-cheap     |
-| merge request, MR, PR, push branch, code review                     | `merge-request.agent.md` | none                               | gpt-cheap     |
-| review, code review, full review, multi-concern review              | `reviewer.agent.md`      | dispatches all relevant skills     | claude-sonnet |
-| plan, estimate, break down, "how would you approach"                | `planner.agent.md`       | none (planner loads what it needs) | claude-sonnet |
-| new feature + 2+ domains                                            | `feature.agent.md`       | per dispatched agent               | claude-opus   |
-| refactor/rename/extract/move + 2+ domains                           | `refactor.agent.md`      | per dispatched agent               | claude-sonnet |
-| `/init-github` Step 3: `.github-old/` merge (internal delegation)   | `legacy-merger.agent.md` | `legacy-audit`                     | claude-sonnet |
+| Intent signals (keywords / context)                                  | Agent                    | Mandatory skills                                                           |
+| -------------------------------------------------------------------- | ------------------------ | -------------------------------------------------------------------------- |
+| animation, motion, transition, microinteraction, gesture, drag/swipe | `component.agent.md`     | `components`, `styling`, `company-styling`, `quality`, `motion`, `animate` |
+| component, UI, page, layout, widget, modal, styling, responsive      | `component.agent.md`     | `components`, `styling`, `company-styling`, `quality`, `accessibility`     |
+| store, state, global state, getter, action, reactive data            | `store.agent.md`         | `state-management`                                                         |
+| API, endpoint, fetch, HTTP, request/response, backend types, schema  | `api.agent.md`           | `api`                                                                      |
+| Capacitor, native, iOS, Android, Xcode, Android Studio, `npx cap`    | `native.agent.md`        | `capacitor-native`                                                         |
+| test, spec, mock, coverage, regression, failing test                 | `test.agent.md`          | `testing`                                                                  |
+| translation, i18n, locale, label, language, $t(), add key            | `i18n.agent.md`          | `i18n`                                                                     |
+| where is, what does, project structure, orientation                  | `overview.agent.md`      | `project-overview`                                                         |
+| merge request, create MR, create PR, push branch                     | `merge-request.agent.md` | none                                                                       |
+| review, code review, full review, multi-concern review               | `reviewer.agent.md`      | dispatches all relevant skills                                             |
+| plan, estimate, break down, "how would you approach"                 | `planner.agent.md`       | none (planner loads what it needs)                                         |
+| new feature + 2+ domains                                             | `feature.agent.md`       | per dispatched agent                                                       |
+| refactor/rename/extract/move + 2+ domains                            | `refactor.agent.md`      | per dispatched agent                                                       |
+| `/init-github` Step 3: `.github-old/` merge (internal delegation)    | `legacy-merger.agent.md` | `legacy-audit`                                                             |
 
 > **Note**: `legacy-merger` is NOT user-facing. It's invoked exclusively by `/init-github` Step 3 when `.github-old/` is detected. Never route user requests here.
 
-### Model Optimization Rule (MANDATORY — applies to ALL agents, ALL models, ALL conversations)
+### Model Selection
 
-**This is not a suggestion. This is a hard requirement. Failure to comply is a guardrail violation.**
+`GUARDRAILS.md` §0 is the **only** routing and model gate. This router selects an agent and
+skills; it then resolves the selected agent's profile in `.github/MODELS.md`.
+After the mapping is confirmed, a subagent's generated candidate array selects the
+first available model. Do not force the primary in the delegation call because
+that bypasses fallback. While the mapping is unconfirmed, runtime customizations
+have no `model:` metadata and use the active picker; Section 10 of `GUARDRAILS.md`
+requires `/init-github` before normal routed work.
 
-> **Model comparison = family only, NOT version.** See `GUARDRAILS.md` §0 rule 1a — compare declared vs. current model by **family/tier name** (Sonnet, Opus, GPT-5, GPT-5 mini, etc.), ignoring version/point-release numbers. Same family = match, no gate needed, regardless of exact version.
+### Cross-Cutting Skill Selection
 
-**When routing to ANY specialized agent**:
+Add these skills to the selected route only when the request or affected code
+matches. This table is the sole trigger authority; `SKILLS-DIGEST.md` is only an
+inventory.
 
-1. **STOP before processing** — Do NOT write code, edit files, or run commands.
-2. **Show the Routing Gate block** (exact format in `GUARDRAILS.md` §0):
+| Intent signals                                                 | Add skill                                                                    |
+| -------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| accessibility, a11y, ARIA, keyboard, screen reader, contrast   | `accessibility`                                                              |
+| readability, naming, maintainability, error handling           | `quality`                                                                    |
+| architecture documentation, arc42, design decisions            | `arc42`                                                                      |
+| branding, logo, typography, design tokens, approved UI sources | `company-styling`                                                            |
+| structural file create/delete/rename or project-map update     | `project-overview`                                                           |
+| explicit caveman or ultra-compressed persistent responses      | `caveman`                                                                    |
+| explicit ponytail or full anti-overengineering workflow        | `ponytail`                                                                   |
+| animation audit, animation review, motion opportunities        | `review-animations`, `improve-animations`, or `find-animation-opportunities` |
+| mobile web UX, touch, safe area, viewport, PWA                 | `mobile-native`                                                              |
 
-   ```
-   ⚠️ ROUTING GATE
-   This task matches: @[agent-name]
-   Declared model: [model-name]
-   Current model: [your model]
+## 3. Model Resolution
 
-   Options:
-   1. Invoke @[agent-name] directly (guarantees declared model)
-   2. I process it with my current model ([current-model])
+`.github/MODELS.md` is the sole model-assignment authority. Its manifest maps
+each agent/prompt path to a profile and maps each profile to primary and fallback
+VS Code model candidates. After any manifest change, run:
 
-   Which do you prefer?
-   ```
+```bash
+bash .github/scripts/sync-agent-models.sh
+bash .github/scripts/sync-agent-models.sh --check
+```
 
-3. **WAIT for user response** — Do NOT assume, do NOT proceed silently.
-4. **If user says "use the agent"** or "direct" or "1": respond with `@[agent-name] [task description]` and stop.
-5. **If user says "process it"** or "continue" or "2": proceed with current model + load agent's mandatory skills.
-
-> **WHY**: `runSubagent()` doesn't respect child agent's `model:` frontmatter — always uses parent's model. Direct user invocation (`@agent-name`) is the only way to guarantee the declared model is used. gpt-cheap tasks cost 10-20× less than opus/sonnet.
-
-**SELF-CHECK for ALL AI models reading this**: If you are about to write/edit code and you have NOT yet shown the routing gate block for a matching task — STOP. You are about to violate this rule. Go back and show the gate.
-
-**Cost/Quality Trade-offs**:
-
-- **gpt-cheap** → fastest, cheapest (10-20× less than sonnet), ideal for mechanical tasks
-- **gpt-fast** → fast iterative UI work, template generation
-- **claude-sonnet** → multi-file reasoning, schema work, impact analysis
-- **claude-opus** → complex orchestration, long dependency chains
-
-> Skill trigger details: see `skills/SKILLS-DIGEST.md`. Cross-cutting skills (`accessibility`, `quality`, `caveman`) combine with any route.
-
-## 3. Model Routing
-
-> Canonical per-agent model assignments live in `.github/MODELS.md` — this section only summarises the tiers. Edit `MODELS.md` to change a model, not this table.
-
-| Complexity tier                                    | Tier (see MODELS.md) | Routes                           |
-| -------------------------------------------------- | -------------------- | -------------------------------- |
-| Multi-domain orchestration, long dependency chains | Top-tier (Opus)      | feature, planner (complex plans) |
-| Multi-file reasoning, impact analysis, schemas     | Strong (Sonnet)      | api, store, refactor, reviewer   |
-| Templated code generation, iterative UI            | Fast (gpt-fast)      | component                        |
-| Mechanical / repetitive / read-only                | Cheap (GPT-5 mini)   | i18n, overview, merge-request    |
-
-**Escalation rule**: if a cheap-tier agent fails twice on the same task, retry once with the next tier up before reporting a blocker.
+**Escalation rule**: after two failed attempts, `cheap` may retry with `medium`.
+Ask the user before escalating from `medium` to `expensive`.
 
 ## 4. Tie-Breaking Rules
 
@@ -122,7 +116,7 @@ User request
 Every routed response starts with a one-line trace:
 
 ```
-Route: [agent] | Skills: [skill list] | Model: [model]
+Route: [agent] | Skills: [skill list] | Profile: [from MODELS.md] | Model: [primary candidate]
 ```
 
 For orchestrated flows, the orchestrator's step format (see `ORCHESTRATORS.md`) replaces this per step.
@@ -132,5 +126,5 @@ For orchestrated flows, the orchestrator's step format (see `ORCHESTRATORS.md`) 
 ## Adapting for Your Project
 
 1. Rename/add domain agents to match your stack (e.g., split `component` into `design-system` + `views`).
-2. Fill in `[TODO]` model names with the models available to your team.
+2. Verify the `MODELS.md` manifest candidates against the models available to your team, then run `.github/scripts/sync-agent-models.sh`.
 3. Keep the matrix in sync when adding agents — a route that points to a missing file breaks the chain.

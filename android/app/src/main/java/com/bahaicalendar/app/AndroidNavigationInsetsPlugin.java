@@ -75,6 +75,24 @@ public class AndroidNavigationInsetsPlugin extends Plugin {
         return Math.max(0, Math.min(navigationBottom, tappableBottom));
     }
 
+    static int calculateOverlappingBottomObstruction(
+        int rawBottomObstruction,
+        int observedTop,
+        int observedBottom,
+        int windowBottom
+    ) {
+        if (rawBottomObstruction <= 0) return 0;
+        if (observedBottom <= observedTop || windowBottom <= 0) return rawBottomObstruction;
+
+        int obstructionTop = windowBottom - rawBottomObstruction;
+        int overlapTop = Math.max(observedTop, obstructionTop);
+        int overlapBottom = Math.min(observedBottom, windowBottom);
+        int overlapHeight = overlapBottom - overlapTop;
+        if (overlapHeight <= 0) return 0;
+
+        return Math.max(0, Math.min(rawBottomObstruction, overlapHeight));
+    }
+
     private int currentBottomInset() {
         WindowInsetsCompat windowInsets = ViewCompat.getRootWindowInsets(observedView);
         if (windowInsets == null) return 0;
@@ -86,6 +104,20 @@ public class AndroidNavigationInsetsPlugin extends Plugin {
             tappableInsets.bottom,
             windowInsets.isVisible(WindowInsetsCompat.Type.navigationBars()),
             windowInsets.isVisible(WindowInsetsCompat.Type.ime())
+        );
+
+        int[] locationInWindow = new int[2];
+        observedView.getLocationInWindow(locationInWindow);
+        int observedTop = locationInWindow[1];
+        int observedBottom = observedTop + observedView.getHeight();
+        int windowBottom = observedView.getRootView() != null
+            ? observedView.getRootView().getHeight()
+            : observedBottom;
+        bottomPixels = calculateOverlappingBottomObstruction(
+            bottomPixels,
+            observedTop,
+            observedBottom,
+            windowBottom
         );
 
         float density = getActivity().getResources().getDisplayMetrics().density;

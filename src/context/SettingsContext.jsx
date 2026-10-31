@@ -23,6 +23,11 @@ const DEFAULTS = {
   darkMode: 'system', // 'dark' | 'light' | 'system'
   timeFormat: 'system', // 'system' | '24' | '12' — Clock format for event times
   hapticFeedback: true, // Vibrate when scrolling through wheel pickers (native only)
+  defaultCalendarId: 'local', // Calendar preselected for new events ('local' or a device calendar id)
+  defaultReminderListId: null, // Reminders list preselected for new reminders (null = first visible list)
+  // Notification preferences
+  notificationsEvents: true,
+  notificationsBahaiEvents: true,
 };
 
 export function SettingsProvider({ children }) {

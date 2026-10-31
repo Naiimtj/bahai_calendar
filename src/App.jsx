@@ -14,12 +14,13 @@ import UpcomingEvents from './components/UpcomingEvents';
 import Settings from './components/Settings';
 import Fasting from './components/Fasting';
 import About from './components/About';
-import Help from './components/Help';
 import Privacy from './components/Privacy';
 import BaseToastNotification from './components/base/BaseToastNotification';
 import { useOnlineStatus } from './hooks/useOnlineStatus';
 import { useKeyboardScrollFix } from './hooks/useKeyboardScrollFix';
 import { useAndroidNavigationInset } from './hooks/useAndroidNavigationInset';
+import { useEventNotifications } from './hooks/useEventNotifications';
+import { useWidgetSync } from './hooks/useWidgetSync';
 
 function CalendarView({ onMenuClick }) {
   const { settings, effectiveToday } = useSettings();
@@ -86,6 +87,8 @@ function AppInner() {
   const isOnline = useOnlineStatus();
   useKeyboardScrollFix();
   useAndroidNavigationInset();
+  useEventNotifications();
+  useWidgetSync();
 
   useEffect(() => {
     if (error && page === 'fasting') setPage('today');
@@ -104,8 +107,6 @@ function AppInner() {
         return <Fasting />;
       case 'settings':
         return <Settings />;
-      case 'help':
-        return <Help />;
       case 'about':
         return <About />;
       case 'privacy':
@@ -116,7 +117,7 @@ function AppInner() {
   };
 
   return (
-    <div className="h-full flex flex-row bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100">
+    <div className="h-full flex flex-row bg-transparent text-slate-900 dark:text-slate-100">
       <Sidebar
         open={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
@@ -124,7 +125,9 @@ function AppInner() {
         onNavigate={setPage}
       />
 
-      <div className="flex-1 flex flex-col w-full h-full">
+      <div className="flex-1 flex flex-col w-full h-full relative">
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(125,211,207,0.18),_transparent_22%)]" />
+
         {page !== 'today' && (
           <Header
             title={t(PAGE_TITLES[page] || "Bahá'í Calendar")}
@@ -133,16 +136,13 @@ function AppInner() {
           />
         )}
 
-        <main className="flex-1 overflow-y-auto pb-[var(--kb-height)]">
+        <main className="relative flex-1 overflow-y-auto pb-[var(--kb-height)]">
           {renderPage()}
         </main>
       </div>
 
       {!isOnline && (
-        <div
-          className="fixed bottom-0 inset-x-0 z-50 bg-yellow-500 text-yellow-950 text-sm font-medium text-center py-2 px-4"
-          style={{ paddingBottom: 'max(0.5rem, env(safe-area-inset-bottom))' }}
-        >
+        <div className="fixed bottom-[var(--app-system-navigation-bottom,0px)] inset-x-0 z-50 bg-amber-400/90 text-amber-950 text-sm font-medium text-center px-4 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] backdrop-blur-md shadow-[0_-8px_24px_rgba(251,146,60,0.18)]">
           {t('offline.banner')}
         </div>
       )}

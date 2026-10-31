@@ -1,6 +1,6 @@
-@import 'tailwindcss';
-
-@custom-variant dark (&:where(.dark *));
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 :root {
   /* Live iOS/Android keyboard height, set by useKeyboardScrollFix; used as
@@ -11,65 +11,118 @@
   --app-system-navigation-bottom: var(--android-navigation-bar-inset-bottom);
 }
 
-@utility touch-callout-none {
-  -webkit-touch-callout: none;
-}
-
-@theme {
+:root {
   /* Brand */
-  --color-primary-light: #cff6f8;
-  --color-primary: #96dce0;
-  --color-primary-text: #4bbdc2;
-  --color-primary-dark: #4b8ea1;
-  --color-primary-xdark: #255773;
-  --color-gold-400: #d4a843;
-  --color-gold-500: #c9952a;
-  --color-gold-600: #b8841f;
+  --color-primary-light: 207 246 248;
+  --color-primary: 150 220 224;
+  --color-primary-text: 75 189 194;
+  --color-primary-dark: 75 142 161;
+  --color-primary-xdark: 37 87 115;
+  --color-gold-400: 212 168 67;
+  --color-gold-500: 201 149 42;
+  --color-gold-600: 184 132 31;
 
   /* Semantic – base components */
-  --color-btn-primary: #96dce0;
-  --color-btn-primary-dark: #4b8ea1;
-  --color-btn-primary-hover: #4bbdc2;
-  --color-btn-primary-active: #255773;
-  --color-btn-secondary: #4b5563;
-  --color-btn-secondary-dark: #b1c1d0;
-  --color-btn-secondary-hover: #374151;
-  --color-btn-secondary-active: #1f2937;
-  --color-success: #22c55e;
-  --color-success-hover: #16a34a;
-  --color-success-active: #15803d;
-  --color-warning: #f59e0b;
-  --color-warning-hover: #d97706;
-  --color-warning-active: #b45309;
-  --color-error: #ef4444;
-  --color-error-hover: #dc2626;
-  --color-error-active: #b91c1c;
-  --color-info: #2563eb;
-  --color-info-hover: #1d4ed8;
-  --color-info-active: #1e40af;
+  --color-btn-primary: 150 220 224;
+  --color-btn-primary-dark: 75 142 161;
+  --color-btn-primary-hover: 75 189 194;
+  --color-btn-primary-active: 37 87 115;
+  --color-btn-secondary: 75 85 99;
+  --color-btn-secondary-dark: 177 193 208;
+  --color-btn-secondary-hover: 55 65 81;
+  --color-btn-secondary-active: 31 41 55;
+  --color-success: 34 197 94;
+  --color-success-hover: 22 163 74;
+  --color-success-active: 21 128 61;
+  --color-warning: 245 158 11;
+  --color-warning-hover: 217 119 6;
+  --color-warning-active: 180 83 9;
+  --color-error: 239 68 68;
+  --color-error-hover: 220 38 38;
+  --color-error-active: 185 28 28;
+  --color-info: 37 99 235;
+  --color-info-hover: 29 78 216;
+  --color-info-active: 30 64 175;
 
   /* Semantic – form inputs */
-  --color-input-border: #d1d5db;
-  --color-input-focus: #2563eb;
-  --color-input-error: #ef4444;
-  --color-input-label: #374151;
-  --color-input-label-error: #dc2626;
-  --color-input-helper: #6b7280;
+  --color-input-border: 150 220 224;
+  --color-input-focus: 75 189 194;
+  --color-input-error: 239 68 68;
+  --color-input-label: 55 65 81;
+  --color-input-label-error: 220 38 38;
+  --color-input-helper: 107 114 128;
 }
 
-@utility pt-safe {
-  padding-top: env(safe-area-inset-top);
+@keyframes sheet-in {
+  from {
+    transform: translateY(100%);
+  }
 }
 
-@utility pb-safe {
-  padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+@keyframes menu-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
 }
 
-@utility scrollbar-none {
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-  -webkit-overflow-scrolling: touch;
-  &::-webkit-scrollbar {
+@keyframes reveal {
+  from {
+    opacity: 0;
+    transform: translateY(-0.25rem);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@layer utilities {
+  .touch-callout-none {
+    -webkit-touch-callout: none;
+  }
+
+  .h-sheet {
+    height: calc(100% - max(env(safe-area-inset-top), 0.75rem) - 0.5rem);
+  }
+
+  .pb-sheet {
+    padding-bottom: calc(var(--kb-height) + env(safe-area-inset-bottom));
+  }
+
+  .animate-sheet-in {
+    animation: sheet-in 340ms cubic-bezier(0.32, 0.72, 0, 1);
+  }
+
+  .animate-menu-in {
+    animation: menu-in 200ms cubic-bezier(0.23, 1, 0.32, 1);
+  }
+
+  .animate-reveal {
+    animation: reveal 200ms cubic-bezier(0.23, 1, 0.32, 1);
+  }
+
+  .animate-fade-in {
+    animation: fade-in 150ms ease-out;
+  }
+
+  .pt-safe {
+    padding-top: env(safe-area-inset-top);
+  }
+
+  .pb-safe {
+    padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+  }
+
+  .scrollbar-none {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .scrollbar-none::-webkit-scrollbar {
     display: none;
     width: 0;
     height: 0;
@@ -87,6 +140,7 @@ body,
 
 #root {
   height: 100dvh;
+  padding-bottom: var(--app-system-navigation-bottom);
 }
 
 html {

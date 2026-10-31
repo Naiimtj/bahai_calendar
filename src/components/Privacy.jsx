@@ -4,14 +4,14 @@ export default function Privacy() {
   const { t } = useTranslation();
 
   return (
-    <div className="flex flex-col h-full bg-gray-50 dark:bg-gray-950">
+    <div className="flex flex-col h-full text-gray-900 dark:text-gray-100">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-800">
+      <div className="flex items-center justify-between py-3 border-b border-gray-200 dark:border-gray-800">
         <h2 className="text-lg font-semibold">{t('privacy.title')}</h2>
         <div className="w-12" />
       </div>
 
-      <div className="flex-1 overflow-y-auto px-4 py-6 space-y-6">
+      <div className="flex-1 overflow-y-auto pt-6 space-y-6">
         <section>
           <h3 className="font-semibold text-base text-gray-900 dark:text-gray-100 mb-2">
             {t('privacy.dataCollectionTitle')}

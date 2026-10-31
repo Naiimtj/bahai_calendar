@@ -6,8 +6,11 @@ import {
   useCallback,
   useMemo,
 } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   aggregateEvents,
+  birthdayPersonInfo,
+  birthdayPersonName,
   clearCachedDeviceCalendar,
   clearCachedDeviceEvents,
   clearCachedIcsSource,
@@ -20,6 +23,7 @@ import {
   updateLocalEvent as patchLocalEvent,
   deleteDeviceEvent,
   updateDeviceEvent,
+  onDeviceCalendarChange,
   setDeviceReminderCompleted,
   updateDeviceReminder,
   deleteDeviceReminder,
@@ -93,6 +97,7 @@ function buildEventsByDay(events) {
 }
 
 export function PersonalEventsProvider({ children }) {
+  const { t } = useTranslation();
   const [config, setConfig] = useState(() => loadConfig());
   const range = useMemo(() => {
     const y = new Date().getFullYear();
@@ -141,6 +146,19 @@ export function PersonalEventsProvider({ children }) {
     };
     document.addEventListener('visibilitychange', onVisible);
     return () => document.removeEventListener('visibilitychange', onVisible);
+  }, [refresh]);
+
+  // Re-read events when another app or iCloud changes the device calendars/reminders.
+  useEffect(() => {
+    let timer;
+    const unsubscribe = onDeviceCalendarChange(() => {
+      clearTimeout(timer);
+      timer = setTimeout(refresh, 500);
+    });
+    return () => {
+      clearTimeout(timer);
+      unsubscribe();
+    };
   }, [refresh]);
 
   const persist = useCallback((next) => {
@@ -294,6 +312,16 @@ export function PersonalEventsProvider({ children }) {
     [config, persist],
   );
 
+  /** Deduped, flat list of every known event (real + optimistic) for notification scheduling. */
+  const upcomingEvents = useMemo(() => {
+    const byId = new Map();
+    for (const list of eventsByDay.values()) {
+      for (const ev of list) byId.set(ev.id, ev);
+    }
+    for (const ev of optimisticEvents) byId.set(ev.id, ev);
+    return [...byId.values()];
+  }, [eventsByDay, optimisticEvents]);
+
   /** Returns display-ready events `{ color, name, time_note, desc, sourceType }` for a date. */
   const eventsForDate = useCallback(
     (date) => {
@@ -317,17 +345,28 @@ export function PersonalEventsProvider({ children }) {
       const opt = optimisticEvents.filter(
         (ev) => ev.end >= dayStart && ev.start <= dayEnd,
       );
-      return [...real, ...opt].sort(byAllDayThenStart).map((ev) => ({
-        color: ev.color,
-        name: ev.title,
-        location: ev.location,
-        desc: ev.notes,
-        sourceType: ev.sourceType,
-        time_note: formatTimeNote(ev),
-        _raw: ev,
-      }));
+      return [...real, ...opt].sort(byAllDayThenStart).map((ev) => {
+        const birthday = birthdayPersonInfo(ev);
+        const name = birthday?.name ?? birthdayPersonName(ev);
+        return {
+          color: ev.color,
+          name: name
+            ? birthday?.age != null
+              ? t('personalEvents.birthdayWithAge', {
+                  name,
+                  age: birthday.age,
+                })
+              : t('personalEvents.birthday', { name })
+            : ev.title,
+          location: ev.location,
+          desc: ev.notes,
+          sourceType: ev.sourceType,
+          time_note: formatTimeNote(ev),
+          _raw: ev,
+        };
+      });
     },
-    [eventsByDay, optimisticEvents],
+    [eventsByDay, optimisticEvents, t],
   );
 
   const value = useMemo(
@@ -335,6 +374,7 @@ export function PersonalEventsProvider({ children }) {
       config,
       loading,
       eventsForDate,
+      upcomingEvents,
       colorForIndex,
       refresh,
       setDeviceCalendarEnabled,
@@ -358,6 +398,7 @@ export function PersonalEventsProvider({ children }) {
       config,
       loading,
       eventsForDate,
+      upcomingEvents,
       refresh,
       setDeviceCalendarEnabled,
       setDeviceCalendarPref,
@@ -396,6 +437,7 @@ export function usePersonalEvents() {
       },
       loading: false,
       eventsForDate: () => [],
+      upcomingEvents: [],
       colorForIndex,
       refresh: () => {},
       setDeviceCalendarEnabled: () => {},

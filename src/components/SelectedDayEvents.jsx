@@ -79,14 +79,14 @@ export default function SelectedDayEvents({
                 <BaseButton
                   outlined
                   onClick={() => handleEventTap(ev)}
-                  className={`border-none! bg-transparent! md:hover:bg-primary-light/30! flex! items-start! justify-start! gap-3! rounded-none! px-4 py-2.5 w-full text-left ${ev._raw || ev.desc ? 'cursor-pointer' : ''}`}
+                  className={`!border-none !bg-transparent !shadow-none !backdrop-blur-none md:hover:!bg-primary-light/30 !flex !items-start !justify-start !gap-3 !rounded-none px-4 py-2.5 w-full text-left ${ev._raw || ev.desc ? 'cursor-pointer' : ''}`}
                 >
                   <span
                     className={`w-1 self-stretch rounded-full mt-0.5 ${bgColor}`}
                     style={colorStyle}
                   />
                   <div className="flex-1 min-w-0">
-                    <div className="font-medium text-sm text-gray-900 dark:text-gray-100">
+                    <div className="font-medium text-base text-gray-900 dark:text-gray-100">
                       {ev.name}
                     </div>
                     {colorTextTimeNote && (
@@ -106,7 +106,7 @@ export default function SelectedDayEvents({
                     const times = eventTimes(ev);
                     if (!times) return null;
                     return (
-                      <div className="shrink-0 flex flex-col items-end text-xs text-gray-500 dark:text-gray-400 tabular-nums">
+                      <div className="shrink-0 flex flex-col items-end text-sm text-gray-500 dark:text-gray-400 tabular-nums">
                         <span>{times.start}</span>
                         {times.end && <span>{times.end}</span>}
                       </div>
@@ -145,7 +145,7 @@ export default function SelectedDayEvents({
                 <BaseButton
                   outlined
                   onClick={() => handleEventTap(ev)}
-                  className="border-none! bg-transparent! md:hover:bg-primary-light/30! flex! items-center! justify-start! gap-3! rounded-none! py-2.5 flex-1 min-w-0 text-left cursor-pointer"
+                  className={`!border-none !bg-transparent !shadow-none !backdrop-blur-none md:hover:!bg-primary-light/30 !flex !items-center !justify-start !gap-3 !rounded-none px-4 py-2.5 w-full text-left ${ev._raw || ev.desc ? 'cursor-pointer' : ''}`}
                 >
                   <span
                     className={`w-1.5 h-1.5 rounded-full shrink-0 ${bgColor}`}
@@ -153,12 +153,12 @@ export default function SelectedDayEvents({
                   />
                   <div className="flex-1 min-w-0">
                     <div
-                      className={`font-medium text-sm ${completed ? 'line-through text-gray-400 dark:text-gray-600' : 'text-gray-900 dark:text-gray-100'}`}
+                      className={`font-medium text-base ${completed ? 'line-through text-gray-400 dark:text-gray-600' : 'text-gray-900 dark:text-gray-100'}`}
                     >
                       {ev.name}
                     </div>
                     {ev.time_note && (
-                      <div className="text-xs mt-0.5 text-gray-500 dark:text-gray-400">
+                      <div className="text-sm mt-0.5 text-gray-500 dark:text-gray-400">
                         {ev.time_note}
                       </div>
                     )}
@@ -170,7 +170,7 @@ export default function SelectedDayEvents({
         </div>
       )}
       {events.length === 0 && (
-        <div className="px-4 py-3 text-sm text-gray-400 dark:text-gray-600">
+        <div className="px-4 py-3 text-lg text-gray-400 dark:text-gray-600">
           {t('calendar.noEvents')}
         </div>
       )}

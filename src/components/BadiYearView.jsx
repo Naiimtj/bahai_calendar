@@ -115,6 +115,7 @@ export default function BadiYearView({
   const todayBadi = gregorianToBadi(today);
   const containerRef = useRef(null);
   const focusRef = useRef(null);
+  const sectionRefs = useRef(new Map());
   const [focusYear, setFocusYear] = useState(badiYear);
   const [years, setYears] = useState(() => buildYears(badiYear));
   const [scrollNudge, setScrollNudge] = useState(0);
@@ -133,6 +134,26 @@ export default function BadiYearView({
   }, [years, loadYearsAround]);
 
   const handleToday = () => {
+    const containerTop = containerRef.current.getBoundingClientRect().top;
+    let visibleYear = null;
+    let closestDistance = Infinity;
+
+    sectionRefs.current.forEach((section, displayYear) => {
+      const distance = Math.abs(
+        section.getBoundingClientRect().top - containerTop,
+      );
+
+      if (distance < closestDistance) {
+        closestDistance = distance;
+        visibleYear = displayYear;
+      }
+    });
+
+    if (visibleYear === todayBadi.year) {
+      onSelectMonth?.(todayBadi.year, todayBadi.month, todayBadi.day);
+      return;
+    }
+
     setFocusYear(todayBadi.year);
     setYears(buildYears(todayBadi.year));
     setScrollNudge((n) => n + 1);
@@ -156,18 +177,16 @@ export default function BadiYearView({
 
   return (
     <div className="relative h-full">
-      <div
-        ref={containerRef}
-        className="flex flex-col h-full overflow-y-auto overflow-x-hidden"
-      >
-        <div className="sticky top-0 z-10 flex justify-end px-4 pt-[max(0.5rem,env(safe-area-inset-top))]  bg-white/90 dark:bg-gray-950/90">
+      <div ref={containerRef} className="flex flex-col h-full overflow-y-auto">
+        <div className="sticky top-0 z-50 flex items-center justify-between px-4 pt-[max(0.5rem,env(safe-area-inset-top))] pb-1">
           {onToggle && (
             <BaseButton
               icon="calendarGregorian"
-              color="currentColor"
               onClick={onToggle}
               outlined
-              className="fixed top-[max(0.5rem,env(safe-area-inset-top))] right-8 z-40 md:absolute md:top-4 md:right-4"
+              size="large"
+              iconClassName="size-7"
+              className="fixed top-[max(0.5rem,env(safe-area-inset-top))] right-8 z-40 md:absolute md:top-4 md:right-4 !px-3 !text-xl lg:!text-lg"
             />
           )}
         </div>
@@ -175,7 +194,17 @@ export default function BadiYearView({
         {years.map((displayYear) => (
           <section
             key={displayYear}
-            ref={displayYear === focusYear ? focusRef : null}
+            ref={(element) => {
+              if (element) {
+                sectionRefs.current.set(displayYear, element);
+              } else {
+                sectionRefs.current.delete(displayYear);
+              }
+
+              if (displayYear === focusYear) {
+                focusRef.current = element;
+              }
+            }}
             className="px-4 pb-8 scroll-mt-16"
           >
             <h2
@@ -183,7 +212,7 @@ export default function BadiYearView({
             >
               {displayYear} B.E.
             </h2>
-            <div className="grid grid-cols-3 gap-x-4 gap-y-4 items-start">
+            <div className="grid grid-cols-3 gap-x-2 md:gap-x-4 gap-y-4 w-full items-start">
               {MONTH_ORDER.map((monthNum) => (
                 <MiniMonth
                   key={monthNum}
@@ -208,7 +237,7 @@ export default function BadiYearView({
         label={t('calendar.today')}
         onClick={handleToday}
         outlined
-        className="fixed bottom-6 left-8 z-40 md:absolute md:bottom-4 md:left-4"
+        className="fixed bottom-[calc(1rem+var(--app-system-navigation-bottom,0px))] left-4 z-40 md:absolute md:bottom-4 md:left-4 max-lg:min-h-12 max-lg:px-5 max-lg:py-3 !max-lg:text-base !text-xl lg:!text-lg"
       />
     </div>
   );

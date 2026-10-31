@@ -1,6 +1,6 @@
 # State Management
 
-> **Stack-specific skill** (React 19 Context API). Global state lives in `src/context/` as `createContext` + provider + `useXxx()` hook.
+> **Stack-specific skill** (React 19 Context API). Global state lives in `src/context/` as `createContext` + provider + `useXxx()` hook. For other stacks, start from `skills-templates/state-management/` and replace this file.
 
 Best practices for **contexts**, **hooks**, and shared state in this project.
 

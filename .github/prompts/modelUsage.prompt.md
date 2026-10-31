@@ -1,8 +1,10 @@
 ---
 agent: agent
-model: claude-sonnet
+tools: [read, edit, execute]
 description: Display model usage statistics, details, or interactive chart from model_usage.md
 name: modelUsage
+# Generated from .github/MODELS.md by .github/scripts/sync-agent-models.sh. Do not edit.
+model: ["GPT-5.3-Codex", "GPT-5.6 Luna"]
 ---
 
 # /modelUsage - Model Usage Analysis
@@ -122,14 +124,19 @@ Total: [X] iterations
 1. **Generate HTML chart file**
    - Create (or overwrite) `.history/model_usage_chart.html`
    - Use the EXACT template provided in the "HTML Template" section below
-   - Replace ONLY the data in the `iterations` array with parsed data from model_usage.md
+   - Replace the data in the `iterations` array with parsed data from model_usage.md
+   - Replace `[TODO: project name]` (in both the `<title>` and the subtitle `<p>`) with the detected project name — check `copilot-instructions.md`'s Project Profile or `package.json`'s `name` field
+   - Replace `[TODO: current date]` in the subtitle with **today's actual date** (the date this command is run), never a stale/hardcoded date
    - Keep ALL styling, structure, and JavaScript logic identical to the template
    - NO external libraries - pure HTML/CSS/JavaScript
    - BASF brand colors throughout
 
 2. **Open in browser**
-   - Use `run_in_terminal` with PowerShell command
-   - Command: `Start-Process "c:\Users\ChesneFr\OneDrive - BASF\02_LabDataSolutions\Workshops\2025.12_Team_Hackathon\hackathon_agentic_coding_20251205\.history\model_usage_chart.html"`
+
+- Use the available execution tool to open the generated file with the OS default handler, using a path relative to the workspace root - never a hardcoded machine-specific absolute path
+- macOS: `open .history/model_usage_chart.html`
+- Windows: `start .history/model_usage_chart.html`
+- Linux: `xdg-open .history/model_usage_chart.html`
 
 ## Output Messages
 
@@ -190,7 +197,7 @@ Model usage chart created and opened in browser.
 - Orange line connecting ratio dots across iterations
 - Legend at top showing Input Tokens, Output Tokens, and Output/Input Ratio (%)
 - Chart title: "Input vs Output Tokens per Iteration"
-- Subtitle: "Hackathon Agentic Coding - [Current Date]"
+- Subtitle: "[TODO: project name] Agentic Coding - [TODO: current date]"
 
 #### Interactive Features
 
@@ -234,7 +241,7 @@ Each card has:
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Token Usage - Hackathon Agentic Coding</title>
+    <title>Token Usage - [TODO: project name]</title>
     <style>
       * {
         margin: 0;
@@ -510,7 +517,9 @@ Each card has:
   <body>
     <div class="container">
       <h1>📊 Token Usage Analysis</h1>
-      <p class="subtitle">Hackathon Agentic Coding - November 24, 2025</p>
+      <p class="subtitle">
+        [TODO: project name] Agentic Coding - [TODO: current date]
+      </p>
 
       <div class="chart-wrapper">
         <div class="chart-title">Input vs Output Tokens per Iteration</div>
@@ -576,7 +585,7 @@ Each card has:
       const iterations = [
         {
           name: 'Iteration 1',
-          model: 'claude-sonnet',
+          model: 'medium',
           input: 56697,
           output: 900,
           filesRead: 3,
@@ -587,7 +596,7 @@ Each card has:
         },
         {
           name: 'Iteration 2',
-          model: 'claude-sonnet',
+          model: 'medium',
           input: 78886,
           output: 800,
           filesRead: 5,
@@ -598,7 +607,7 @@ Each card has:
         },
         {
           name: 'Iteration 3',
-          model: 'claude-sonnet',
+          model: 'medium',
           input: 78073,
           output: 1200,
           filesRead: 4,
@@ -609,7 +618,7 @@ Each card has:
         },
         {
           name: 'Iteration 4',
-          model: 'claude-sonnet',
+          model: 'medium',
           input: 85477,
           output: 1100,
           filesRead: 3,
@@ -620,7 +629,7 @@ Each card has:
         },
         {
           name: 'Iteration 5',
-          model: 'claude-sonnet',
+          model: 'medium',
           input: 107969,
           output: 1300,
           filesRead: 2,
@@ -810,7 +819,7 @@ Each card has:
 </html>
 ```
 
-**CRITICAL:** Only modify the `iterations` array with data from model_usage.md. Keep everything else identical.
+**CRITICAL:** Fill in `[TODO: project name]` (title + subtitle) with the detected project name and `[TODO: current date]` with today's actual date, replace the `iterations` array with data from model_usage.md — keep everything else identical.
 
 ## Error Handling
 

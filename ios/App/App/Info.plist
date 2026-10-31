@@ -2,12 +2,12 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-    <key>CAPACITOR_DEBUG</key>
+	<key>CAPACITOR_DEBUG</key>
 	<string>$(CAPACITOR_DEBUG)</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleDisplayName</key>
-        <string>Bahá'í Calendar</string>
+	<string>Bahá'í Calendar</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -22,41 +22,18 @@
 	<string>$(MARKETING_VERSION)</string>
 	<key>CFBundleVersion</key>
 	<string>$(CURRENT_PROJECT_VERSION)</string>
-	<key>LSRequiresIPhoneOS</key>
-	<true/>
-	<key>UILaunchStoryboardName</key>
-	<string>LaunchScreen</string>
-	<key>UIMainStoryboardFile</key>
-	<string>Main</string>
-	<key>UIRequiredDeviceCapabilities</key>
-	<array>
-		<string>armv7</string>
-	</array>
-	<key>UISupportedInterfaceOrientations</key>
-	<array>
-		<string>UIInterfaceOrientationPortrait</string>
-		<string>UIInterfaceOrientationLandscapeLeft</string>
-		<string>UIInterfaceOrientationLandscapeRight</string>
-	</array>
-	<key>UISupportedInterfaceOrientations~ipad</key>
-	<array>
-		<string>UIInterfaceOrientationPortrait</string>
-		<string>UIInterfaceOrientationPortraitUpsideDown</string>
-		<string>UIInterfaceOrientationLandscapeLeft</string>
-		<string>UIInterfaceOrientationLandscapeRight</string>
-	</array>
-	<key>UIViewControllerBasedStatusBarAppearance</key>
-	<true/>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
-	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>El Calendario Bahá'í usa tu ubicación para mostrar los horarios de amanecer y atardecer durante el período de ayuno.</string>
-	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-	<string>El Calendario Bahá'í usa tu ubicación para mostrar los horarios de amanecer y atardecer durante el período de ayuno.</string>
+	<key>LSRequiresIPhoneOS</key>
+	<true/>
 	<key>NSCalendarsFullAccessUsageDescription</key>
 	<string>El Calendario Bahá'í accede a tus calendarios para mostrar tus eventos personales junto a las fechas bahá'ís.</string>
 	<key>NSCalendarsUsageDescription</key>
 	<string>El Calendario Bahá'í accede a tus calendarios para mostrar tus eventos personales junto a las fechas bahá'ís.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>El Calendario Bahá'í usa tu ubicación para mostrar los horarios de amanecer y atardecer durante el período de ayuno.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>El Calendario Bahá'í usa tu ubicación para mostrar los horarios de amanecer y atardecer durante el período de ayuno.</string>
 	<key>NSRemindersFullAccessUsageDescription</key>
 	<string>El Calendario Bahá'í accede a tus recordatorios para crear recordatorios directamente desde la app.</string>
 	<key>NSRemindersUsageDescription</key>
@@ -80,5 +57,28 @@
 			</array>
 		</dict>
 	</dict>
+	<key>UILaunchStoryboardName</key>
+	<string>LaunchScreen</string>
+	<key>UIMainStoryboardFile</key>
+	<string>Main</string>
+	<key>UIRequiredDeviceCapabilities</key>
+	<array>
+		<string>armv7</string>
+	</array>
+	<key>UISupportedInterfaceOrientations</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+		<string>UIInterfaceOrientationLandscapeLeft</string>
+		<string>UIInterfaceOrientationLandscapeRight</string>
+	</array>
+	<key>UISupportedInterfaceOrientations~ipad</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+		<string>UIInterfaceOrientationPortraitUpsideDown</string>
+		<string>UIInterfaceOrientationLandscapeLeft</string>
+		<string>UIInterfaceOrientationLandscapeRight</string>
+	</array>
+	<key>UIViewControllerBasedStatusBarAppearance</key>
+	<true/>
 </dict>
 </plist>

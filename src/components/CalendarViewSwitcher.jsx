@@ -16,7 +16,7 @@ export default function CalendarViewSwitcher() {
   if (error) return null;
 
   return (
-    <div className="flex items-center gap-1 hover:bg-btn-primary/10 px-4 md:py-0.5 max-lg:min-h-12 max-lg:gap-1.5 max-lg:px-3 border border-btn-primary md:hover:bg-btn-primary/10 bg-white/10 rounded-full text-sm font-semibold active:bg-gray-100 text-gray-900 active:dark:bg-gray-800 dark:text-gray-100 backdrop-blur-sm md:hover:text-btn-primary-dark md:hover:dark:text-btn-primary">
+    <div className="flex items-center gap-1 hover:bg-btn-primary/10 px-4 md:py-0.5 max-lg:min-h-12 max-lg:gap-1.5 max-lg:px-3 shadow-md md:hover:bg-btn-primary/10 bg-gray-100/30 dark:bg-gray-100/5 rounded-full text-sm font-semibold active:bg-gray-100 text-gray-900 active:dark:bg-gray-800 dark:text-gray-100 backdrop-blur-sm md:hover:text-btn-primary-dark md:hover:dark:text-btn-primary">
       {VIEW_OPTIONS.map(({ key, icon }) => (
         <BaseIcon
           key={key}
@@ -29,11 +29,7 @@ export default function CalendarViewSwitcher() {
               ? 'text-btn-primary-active dark:text-btn-primary '
               : 'text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300'
           }`}
-          wrapperClassName={`p-2 max-lg:p-2.5 rounded-full transition-colors ${
-            current === key
-              ? ''
-              : 'hover:bg-gray-100 dark:hover:bg-gray-700'
-          }`}
+          wrapperClassName={`p-2 max-lg:p-2.5 rounded-full transition-colors `}
           title={key}
         />
       ))}

@@ -120,9 +120,9 @@ function WheelColumn({
           key={it.key ?? it.value}
           type="button"
           onClick={() => onChange(it.value)}
-          className={`w-full h-10 flex items-center ${alignClass} snap-center text-lg transition-colors ${
+          className={`w-full h-10 flex items-center ${alignClass} snap-center text-2xl transition-colors ${
             it.value === value
-              ? 'font-semibold text-gray-900 dark:text-gray-100'
+              ? 'text-gray-900 dark:text-gray-100'
               : 'text-gray-400 dark:text-gray-500'
           }`}
         >
@@ -157,6 +157,7 @@ export default function BaseWheelPicker({
   dayRangePast = 365,
   dayRangeFuture = 730,
   showHeader = true,
+  bare = false,
 }) {
   const { i18n } = useTranslation();
   const locale = i18n.language || undefined;
@@ -266,6 +267,7 @@ export default function BaseWheelPicker({
           value: date.getHours(),
           onChange: (v) => emit({ hour: v }),
           loop: true,
+          align: 'right',
         },
         {
           key: 'minute',
@@ -273,6 +275,7 @@ export default function BaseWheelPicker({
           value: selMinute,
           onChange: (v) => emit({ minute: v }),
           loop: true,
+          align: 'left',
         },
       );
     }
@@ -290,15 +293,22 @@ export default function BaseWheelPicker({
               {headerDateFmt.format(date)}
             </span>
           )}
-          {(mode === 'time' || mode === 'datetime') && (
-            <span className="text-primary-dark dark:text-btn-primary font-medium text-base ml-auto">
-              {pad2(date.getHours())} : {pad2(date.getMinutes())}
-            </span>
-          )}
         </div>
       )}
-      <div className="relative flex h-44 overflow-hidden rounded-xl bg-gray-100 dark:bg-gray-800">
-        <div className="pointer-events-none absolute inset-x-0 top-1/2 -translate-y-1/2 h-10 bg-gray-200/80 dark:bg-gray-700/80 rounded-lg z-0" />
+      <div
+        className={
+          bare
+            ? 'relative flex h-44 overflow-hidden [mask-image:linear-gradient(to_bottom,transparent,#000_30%,#000_70%,transparent)] [-webkit-mask-image:linear-gradient(to_bottom,transparent,#000_30%,#000_70%,transparent)]'
+            : 'relative flex h-44 overflow-hidden rounded-xl bg-gray-100 dark:bg-gray-800'
+        }
+      >
+        <div
+          className={
+            bare
+              ? 'pointer-events-none absolute inset-x-2 top-1/2 z-0 h-10 -translate-y-1/2 rounded-full bg-gray-100 dark:bg-gray-700/70'
+              : 'pointer-events-none absolute inset-x-0 top-1/2 -translate-y-1/2 h-10 bg-gray-200/80 dark:bg-gray-700/80 rounded-lg z-0'
+          }
+        />
         {cols.map((c, i) => {
           const { key, ...colProps } = c;
           return (

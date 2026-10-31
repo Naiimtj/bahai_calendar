@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_badi_date">Date badíʿ</string>
+    <string name="widget_gregorian_date">Date grégorienne</string>
+    <string name="widget_badi_month">Mois badíʿ</string>
+    <string name="widget_gregorian_month">Mois grégorien</string>
+    <string name="widget_four_weeks">Quatre semaines</string>
+    <string name="widget_full_gregorian_month">Mois grégorien complet</string>
+    <string name="widget_full_badi_month">Mois badíʿ complet</string>
+</resources>

@@ -12,23 +12,23 @@ Orchestrators differ from regular agents in that they **control other agents**: 
 | Situation | Use |
 |-----------|-----|
 | Task needs scoping/decomposition first (or complexity unclear) | `planner.agent.md` (read-only Planner) |
-| Single domain (only UI, only store, only API, only native) | Direct agent (component, store, api, native, i18n) |
+| Single domain (only UI, only store, only API, or only i18n) | Direct agent (component, store, api, i18n) |
 | Multiple domains, NEW feature | `feature.agent.md` (Feature Orchestrator) |
 | Multiple domains, MODIFY existing code | `refactor.agent.md` (Refactor Orchestrator) |
-| Multi-concern code review (quality, styling, a11y, state, components) | `reviewer.agent.md` (Review Orchestrator) |
+| Multi-concern code review (quality, styling, a11y, state, testing) | `reviewer.agent.md` (Review Orchestrator) |
 | Questions about project structure | `overview.agent.md` (read-only) |
-| GitHub PR creation | `merge-request.agent.md` (terminal only) |
+| GitLab MR creation | `merge-request.agent.md` (terminal only) |
 
 ---
 
 ## Available Orchestrators
 
-| Orchestrator              | File                | Alias           | Purpose                                                               | Typical triggers                                                                                                                                     |
-| ------------------------- | ------------------- | --------------- | --------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Planner**               | `planner.agent.md`  | `claude-sonnet` | Read-only task decomposition: plan, risks, memory check, handoff      | "Plan this", "How would you approach", `/plan`, complexity unclear                                                                                   |
-| **Feature Orchestrator**  | `feature.agent.md`  | `claude-opus`   | Build new features end-to-end across UI, state, API, i18n, tests      | "Add a new page", "Create a dashboard widget", "Build a login flow"                                                                                  |
-| **Refactor Orchestrator** | `refactor.agent.md` | `claude-sonnet` | Refactor, cleanup, or quality improvements that span multiple domains | "Rename this context everywhere", "Extract this logic into a hook", "Consolidate duplicate components", "Mirror a feature across all calendar views" |
-| **Review Orchestrator**   | `reviewer.agent.md` | `claude-sonnet` | Multi-concern code review across styling, quality, a11y, state, tests | "Review this PR", "Code review this file", "Check this component", "Full review"                                                                     |
+| Orchestrator               | File                 | Alias       | Purpose                                                                                         | Typical triggers                                                                                                                        |
+| -------------------------- | -------------------- | ----------- | ----------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| **Planner**                | `planner.agent.md`   | `medium`    | Read-only task decomposition: plan, risks, memory check, handoff                                | "Plan this", "How would you approach", `/plan`, complexity unclear                                                                      |
+| **Feature Orchestrator**   | `feature.agent.md`   | `expensive` | Build new features end-to-end across UI, state, API, i18n, tests                                | "Add a new page", "Create a dashboard widget", "Build a login flow"                                                                     |
+| **Refactor Orchestrator**  | `refactor.agent.md`  | `medium`    | Refactor, cleanup, or quality improvements that span multiple domains                           | "Rename this store everywhere", "Extract this logic into a composable", "Consolidate duplicate components", "Add types to untyped code" |
+| **Review Orchestrator**    | `reviewer.agent.md`  | `medium`    | Multi-concern code review across styling, quality, a11y, state, tests                           | "Review this PR", "Code review this file", "Check this component", "Full review"                                                        |
 
 ---
 
@@ -49,11 +49,15 @@ agent: agent
 description: 'What this orchestrator does and when to use it'
 tools: [read, edit, search, agent]
 user-invocable: true
-model: claude-opus
+# model: generated from .github/MODELS.md by scripts/sync-agent-models.sh
 ---
 ```
 
-The `model` field sets the **default AI model alias** for the agent (see `.github/MODELS.md`). In VS Code Copilot Chat this is a recommended default — the user selects the actual model in the model picker, or the routing gate (`GUARDRAILS.md` §0) passes the mapped display name to `runSubagent`. There is no runtime resolver.
+While `MODELS.md` is unconfirmed, `model:` is absent and VS Code uses the active
+picker. After user confirmation, the synchronizer generates runtime arrays from
+the canonical manifest. Do not add an alias such as `expensive` to frontmatter:
+VS Code requires exact picker names. After changing the manifest, run
+`bash .github/scripts/sync-agent-models.sh`.
 
 ### Internal delegation format
 

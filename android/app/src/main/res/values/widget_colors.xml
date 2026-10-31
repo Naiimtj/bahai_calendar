@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="widget_surface">#FFFFFF</color>
+    <color name="widget_surface_tint">#E3F7F8</color>
+    <color name="widget_accent">#4B8EA1</color>
+    <color name="widget_text">#1B2838</color>
+    <color name="widget_muted">#5B6B79</color>
+    <color name="widget_event">#4B8EA1</color>
+    <color name="widget_holy_day">#C9952A</color>
+    <color name="widget_feast">#51A2FF</color>
+    <color name="widget_ridvan">#4BBDC2</color>
+    <color name="widget_today">#D32F2F</color>
+</resources>

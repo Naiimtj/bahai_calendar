@@ -116,6 +116,7 @@ async function createNativeEvent(event, calendarId) {
     startDate: event.start.getTime(),
     endDate: toNativeEndDate(event.end, !!event.allDay),
     description: event.notes || undefined,
+    url: event.url || undefined,
   };
   const recurrence = repeatToRecurrence(event);
   if (recurrence) payload.recurrence = recurrence;
@@ -123,6 +124,10 @@ async function createNativeEvent(event, calendarId) {
   if (alerts) payload.alerts = alerts;
   if (event.availability) {
     payload.availability = availabilityToNative(event.availability);
+  }
+  if (event.locationCoords) {
+    payload.latitude = event.locationCoords.latitude;
+    payload.longitude = event.locationCoords.longitude;
   }
   // Method name varies across plugin versions.
   const create =
@@ -394,7 +399,7 @@ export async function getAvailableCalendars() {
 /**
  * Creates an event on the selected calendar.
  *
- * @param {{title:string,location?:string,notes?:string,allDay:boolean,start:Date,end:Date}} event
+ * @param {{title:string,location?:string,locationCoords?:{latitude:number,longitude:number}|null,notes?:string,url?:string,allDay:boolean,start:Date,end:Date}} event
  * @param {{id:string,provider:string}} calendar
  */
 export async function createEvent(event, calendar) {

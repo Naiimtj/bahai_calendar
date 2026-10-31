@@ -1,6 +1,8 @@
 ---
 description: 'Refresh the project overview skill with current project structure'
 name: 'refresh-overview'
+# Generated from .github/MODELS.md by .github/scripts/sync-agent-models.sh. Do not edit.
+model: ["GPT-5.3-Codex", "GPT-5.6 Luna"]
 ---
 
 # /refresh-overview - Project Overview Refresh
@@ -35,19 +37,23 @@ Read `.github/skills/project-overview/SKILL.md` to understand the existing struc
 
 ### Step 2: Scan the project
 
-List the contents of these directories (all paths relative to `src/`):
+Read the Project Profile, dependency manifest, and framework/router configuration,
+then enumerate the actual workspace roots. Identify and scan only directories that
+exist for these roles:
 
-| Directory                | What to capture                             |
-| ------------------------ | ------------------------------------------- |
-| `context/`               | All `*Context.jsx` files                    |
-| `hooks/`                 | All `use*.js` files                         |
-| `utils/`                 | All `*.js` files                            |
-| `lib/`                   | All files (date logic)                      |
-| `services/`              | All `*.js` files                            |
-| `components/`            | Top-level feature components                |
-| `components/base/`       | All `Base*.jsx` files (base component list) |
-| `components/base/icons/` | Registered icons                            |
-| `i18n/locales/`          | Locale files (en, es, ar, de, fa, fr)       |
+| Role                     | What to capture                                               |
+| ------------------------ | ------------------------------------------------------------- |
+| Pages/routes/layouts     | Route definitions, pages/views, layouts, and middleware       |
+| Components/design system | Primitive, shared, and feature component roots                |
+| State/reactive logic     | Stores, contexts, hooks, composables, and selectors           |
+| API/data access          | HTTP clients, API modules, schemas, and generated clients     |
+| Types/domain             | Interfaces, types, models, enums, and constants               |
+| Styling/assets           | Theme, tokens, global styles, and static assets               |
+| Plugins/config           | Framework plugins, runtime configuration, and app entry files |
+| Tests                    | Unit, integration, end-to-end, fixtures, and setup files      |
+
+Do not invent a conventional folder when the role is absent. Record the actual
+path and framework-specific file extension for each detected role.
 
 ### Step 3: Identify changes
 

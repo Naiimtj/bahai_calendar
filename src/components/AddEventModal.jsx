@@ -1,12 +1,12 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Capacitor } from '@capacitor/core';
 import { useTranslation } from 'react-i18next';
 import {
-  BaseButton,
   BaseCalendarPicker,
   BaseIcon,
+  BaseMenu,
   BaseModal,
   BaseSegmentedControl,
-  BaseSelect,
   BaseToggleSwitch,
   BaseWheelPicker,
 } from './base';
@@ -19,8 +19,15 @@ import {
   supportsNativeReminders,
 } from '../services/calendarSync';
 import { usePersonalEvents } from '../context/PersonalEventsContext';
-import { getReminderLists } from '../services/personalCalendar';
+import { colorForIndex, getReminderLists } from '../services/personalCalendar';
+import {
+  buildEventCalendars,
+  resolveDefaultCalendarId,
+  toCalendarMenuOptions,
+} from '../lib/eventCalendars';
 import { searchEventLocations } from '../services/geocodingApi';
+import { useSettings } from '../context/SettingsContext';
+import { hour12Option } from '../utils/timeFormat';
 
 function pad(n) {
   return String(n).padStart(2, '0');
@@ -45,11 +52,18 @@ function formatDateDisplay(dateStr, locale) {
   if (!dateStr) return '';
   const d = new Date(`${dateStr}T00:00:00`);
   return new Intl.DateTimeFormat(locale, {
-    weekday: 'short',
     day: 'numeric',
     month: 'short',
     year: 'numeric',
   }).format(d);
+}
+
+function formatTimeDisplay(dateStr, timeStr, locale, hour12) {
+  return new Intl.DateTimeFormat(locale, {
+    hour: 'numeric',
+    minute: '2-digit',
+    ...(hour12 !== undefined && { hour12 }),
+  }).format(fromInputs(dateStr, timeStr));
 }
 
 function combine(dateStr, timeStr, allDay) {
@@ -155,17 +169,38 @@ export function repeatDisplayLabel(value, interval, unit, t) {
   return '';
 }
 
+export const cardClass = 'rounded-[1.625rem] bg-white dark:bg-gray-800';
+export const rowClass = 'group flex items-center gap-4 px-4';
+export const rowInnerClass =
+  'flex min-h-[3.25rem] min-w-0 flex-1 items-center justify-between gap-3 border-b border-gray-200 py-2 dark:border-gray-700 group-last:border-b-0';
+const panelClass =
+  'mx-4 border-b border-gray-200 py-3 last:border-b-0 dark:border-gray-700 motion-safe:animate-reveal motion-reduce:animate-fade-in';
+export const labelClass =
+  'shrink-0 text-[17px] text-gray-900 dark:text-gray-100';
+export const sectionTitleClass =
+  'px-4 pb-2.5 text-[17px] font-semibold text-gray-500 dark:text-gray-400';
+export const rowIconClass = 'shrink-0 stroke-gray-500 dark:stroke-gray-400';
 const fieldClass =
-  'bg-transparent outline-none text-gray-900 dark:text-gray-100 text-base';
-const rowClass =
-  'flex items-center justify-between gap-3 px-4 py-3 border-b border-gray-100 dark:border-gray-800 last:border-b-0';
-const cardClass = 'rounded-xl bg-white dark:bg-gray-800/60 overflow-hidden';
-const pillClass =
-  'bg-gray-100! dark:bg-gray-800! text-gray-900! dark:text-gray-100! md:hover:bg-gray-200! dark:md:hover:bg-gray-700! active:bg-gray-200! dark:active:bg-gray-700! px-3! py-1.5! rounded-lg! text-base! font-normal!';
+  'w-full min-w-0 bg-transparent text-[17px] text-gray-900 placeholder-gray-400 outline-none dark:text-gray-100 dark:placeholder-gray-500';
 
-/**
- * Modal to create a calendar event or reminder.
- */
+function pillClass(active) {
+  return `shrink-0 rounded-full bg-gray-100 px-3.5 py-1 text-[17px] leading-6 tabular-nums transition-colors active:bg-gray-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-dark dark:bg-gray-700 dark:active:bg-gray-600 ${
+    active
+      ? 'text-primary-dark dark:text-btn-primary'
+      : 'text-gray-900 dark:text-gray-100'
+  }`;
+}
+
+function endRepeatDisplayValue(mode, repeatEndDate, repeatEndCount, locale, t) {
+  if (mode === 'date' && repeatEndDate) {
+    return formatDateDisplay(repeatEndDate, locale);
+  }
+  if (mode === 'count') {
+    return t('addEvent.endRepeatTimes', { count: repeatEndCount });
+  }
+  return undefined;
+}
+
 export default function AddEventModal({
   visible,
   onClose,
@@ -174,6 +209,12 @@ export default function AddEventModal({
   editEvent,
 }) {
   const { t, i18n } = useTranslation();
+  const { settings } = useSettings();
+  const locale = i18n.language;
+  const hour12 = hour12Option(settings?.timeFormat);
+  const defaultCalendarId = settings?.defaultCalendarId;
+  const defaultReminderListId = settings?.defaultReminderListId;
+  const remindersSupported = supportsNativeReminders();
   const {
     config,
     addLocalEventAndRefresh,
@@ -197,10 +238,13 @@ export default function AddEventModal({
     return d;
   }, [baseStart]);
 
-  const [mode, setMode] = useState('event'); // 'event' | 'reminder'
+  const [mode, setMode] = useState('event');
   const [title, setTitle] = useState('');
   const [location, setLocation] = useState('');
+  const [locationCoords, setLocationCoords] = useState(null);
+  const [locationQuery, setLocationQuery] = useState('');
   const [locationSuggestions, setLocationSuggestions] = useState([]);
+  const locationInputRef = useRef(null);
   const [notes, setNotes] = useState('');
   const [url, setUrl] = useState('');
   const [allDay, setAllDay] = useState(false);
@@ -211,60 +255,59 @@ export default function AddEventModal({
   const [hasDueDate, setHasDueDate] = useState(true);
   const [calendars, setCalendars] = useState([]);
   const [calendarId, setCalendarId] = useState('');
-  const [showCalendarPicker, setShowCalendarPicker] = useState(false);
   const [reminderLists, setReminderLists] = useState([]);
   const [reminderListId, setReminderListId] = useState('');
-  const [showReminderListPicker, setShowReminderListPicker] = useState(false);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
-
-  // Repeat & Alert state
   const [repeatValue, setRepeatValue] = useState('none');
   const [repeatCustomInterval, setRepeatCustomInterval] = useState(1);
   const [repeatCustomUnit, setRepeatCustomUnit] = useState('day');
-  const [showCustomRepeat, setShowCustomRepeat] = useState(false);
-  const [pendingInterval, setPendingInterval] = useState(1);
-  const [pendingUnit, setPendingUnit] = useState('day');
   const [alertValue, setAlertValue] = useState('none');
   const [alertValue2, setAlertValue2] = useState('none');
   const [alertCustomDate, setAlertCustomDate] = useState('');
-  const [showCustomAlert, setShowCustomAlert] = useState(false);
   const [availability, setAvailability] = useState('busy');
   const [priority, setPriority] = useState('none');
-  const [prevRepeatValue, setPrevRepeatValue] = useState('none');
-  // End repeat state
-  const [repeatEndMode, setRepeatEndMode] = useState('none'); // 'none'|'date'|'count'
+  const [repeatEndMode, setRepeatEndMode] = useState('none');
   const [repeatEndDate, setRepeatEndDate] = useState('');
   const [repeatEndCount, setRepeatEndCount] = useState(1);
-  const [showEndRepeat, setShowEndRepeat] = useState(false);
-  // Pending end-repeat values (committed only on "Hecho")
-  const [pendingEndMode, setPendingEndMode] = useState('none');
-  const [pendingEndDate, setPendingEndDate] = useState('');
-  const [pendingEndCount, setPendingEndCount] = useState(1);
-  // Date (calendar) & time (wheel) pickers
-  const [showStartDate, setShowStartDate] = useState(false);
-  const [showStartTime, setShowStartTime] = useState(false);
-  const [showEndDate, setShowEndDate] = useState(false);
-  const [showEndTime, setShowEndTime] = useState(false);
-  // Location autocomplete (debounced geocoding).
+  const [expanded, setExpanded] = useState(null);
+  const showReminderOption = remindersSupported || !!editEvent?.isReminder;
+
+  const toggleExpanded = (key) => {
+    setExpanded((cur) => (cur === key ? null : key));
+  };
+
   useEffect(() => {
-    if (!location || location.length < 2) {
+    if (!visible || showReminderOption || mode !== 'reminder') return;
+    setMode('event');
+  }, [visible, mode, showReminderOption]);
+
+  useEffect(() => {
+    const query = locationQuery.trim();
+    if (query.length < 2) {
       setLocationSuggestions([]);
-      return;
+      return undefined;
     }
+    let active = true;
     const timer = setTimeout(() => {
-      searchEventLocations(location, {
+      searchEventLocations(query, {
         count: 5,
         language: (i18n.resolvedLanguage || 'es').slice(0, 2),
       })
-        .then((results) => setLocationSuggestions(results))
-        .catch(() => setLocationSuggestions([]));
+        .then((results) => {
+          if (active) setLocationSuggestions(results);
+        })
+        .catch(() => {
+          if (active) setLocationSuggestions([]);
+        });
     }, 400);
-    return () => clearTimeout(timer);
-  }, [location, i18n.resolvedLanguage]);
+    return () => {
+      active = false;
+      clearTimeout(timer);
+    };
+  }, [locationQuery, i18n.resolvedLanguage]);
 
-  // Reset form each time the modal opens (or pre-fill in edit mode).
   useEffect(() => {
     if (!visible) return;
     if (editEvent) {
@@ -273,6 +316,7 @@ export default function AddEventModal({
       setMode(editEvent.isReminder ? 'reminder' : 'event');
       setTitle(editEvent.title || '');
       setLocation(eventLocationValue(editEvent));
+      setLocationCoords(editEvent.locationCoords ?? null);
       setNotes(editEvent.notes || '');
       setUrl(editEvent.url || '');
       setAllDay(!!editEvent.allDay);
@@ -281,9 +325,11 @@ export default function AddEventModal({
       setStartTime(toTimeInput(s));
       setEndDate(toDateInput(e));
       setEndTime(toTimeInput(e));
-      if (editEvent.sourceType === 'device' && editEvent.calendarId) {
-        setCalendarId(editEvent.calendarId);
-      }
+      setCalendarId(
+        editEvent.sourceType === 'device' && editEvent.calendarId
+          ? editEvent.calendarId
+          : 'local',
+      );
       if (editEvent.sourceType === 'reminder' && editEvent.listId) {
         setReminderListId(editEvent.listId);
       }
@@ -302,6 +348,7 @@ export default function AddEventModal({
       setMode('event');
       setTitle('');
       setLocation('');
+      setLocationCoords(null);
       setNotes('');
       setUrl('');
       setAllDay(false);
@@ -316,21 +363,20 @@ export default function AddEventModal({
       setRepeatEndMode('none');
       setRepeatEndDate('');
       setRepeatEndCount(1);
-      setPendingEndMode('none');
-      setPendingEndDate('');
-      setPendingEndCount(1);
       setAlertValue('none');
       setAlertValue2('none');
       setAlertCustomDate('');
       setAvailability('busy');
       setPriority('none');
+      setCalendarId('');
       setReminderListId('');
     }
+    setExpanded(null);
+    setLocationQuery('');
     setLocationSuggestions([]);
     setError('');
   }, [visible, baseStart, baseEnd, editEvent]);
 
-  // Load connected calendars.
   useEffect(() => {
     if (!visible) return;
     let active = true;
@@ -338,57 +384,98 @@ export default function AddEventModal({
     getAvailableCalendars()
       .then((list) => {
         if (!active) return;
-        const deviceNamePrefs = config.deviceCalendars || {};
-        const localCal = {
-          id: 'local',
-          name: config.localCalendarName || t('addEvent.localCalendar'),
-          sourceType: 'local',
-        };
-        const named = list.map((c) => {
-          const customName = deviceNamePrefs[c.id]?.customName;
-          return customName ? { ...c, name: customName } : c;
-        });
-        const full = [localCal, ...named];
+        const full = buildEventCalendars(
+          list,
+          config,
+          t('addEvent.localCalendar'),
+        );
         setCalendars(full);
-        setCalendarId((prev) => prev || full[0]?.id || '');
+        setCalendarId(
+          (prev) =>
+            prev || resolveDefaultCalendarId(full, defaultCalendarId, config),
+        );
       })
       .catch((err) => console.error('[getAvailableCalendars]', err))
       .finally(() => active && setLoading(false));
     return () => {
       active = false;
     };
-  }, [visible, t, config.deviceCalendars, config.localCalendarName]);
+  }, [visible, t, config, defaultCalendarId]);
 
-  // Load available iOS Reminders lists (native only) for the list picker.
   useEffect(() => {
-    if (!visible || !supportsNativeReminders()) return undefined;
+    if (!visible || !remindersSupported) return undefined;
     let active = true;
     getReminderLists()
       .then((lists) => {
         if (!active) return;
         setReminderLists(lists);
-        setReminderListId((prev) => prev || lists[0]?.id || '');
+        setReminderListId(
+          (prev) =>
+            prev ||
+            resolveDefaultCalendarId(lists, defaultReminderListId, config),
+        );
       })
       .catch((err) => console.error('[getReminderLists]', err));
     return () => {
       active = false;
     };
-  }, [visible]);
+  }, [visible, remindersSupported, config, defaultReminderListId]);
 
-  // Auto-request Reminders access when switching to reminder mode.
   useEffect(() => {
-    if (!visible || mode !== 'reminder' || !supportsNativeReminders()) return;
+    if (!visible || mode !== 'reminder' || !remindersSupported) return;
     requestRemindersAccess()
       .then((granted) => {
         if (!granted) setError(t('addEvent.remindersAccessDenied'));
       })
       .catch((err) => console.error('[requestRemindersAccess]', err));
-  }, [visible, mode, t]);
+  }, [visible, mode, remindersSupported, t]);
+
+  useEffect(() => {
+    if (!allDay) return;
+    if (expanded === 'startTime' || expanded === 'endTime') {
+      setExpanded(null);
+    }
+  }, [allDay, expanded]);
 
   const selectedCalendar = calendars.find((c) => c.id === calendarId);
   const selectedReminderList = reminderLists.find(
     (l) => l.id === reminderListId,
   );
+  // Android CalendarContract does not support storing event URLs.
+  const urlSupported = !(
+    mode === 'event' &&
+    selectedCalendar?.provider === 'native' &&
+    Capacitor.getPlatform() === 'android'
+  );
+
+  const calendarMenuOptions = useMemo(
+    () =>
+      toCalendarMenuOptions(
+        editEvent?.sourceType === 'device'
+          ? calendars.filter((c) => c.id !== 'local')
+          : calendars,
+      ),
+    [calendars, editEvent?.sourceType],
+  );
+
+  const reminderListOptions = useMemo(
+    () =>
+      reminderLists.map((list) => ({
+        value: list.id,
+        label: list.title,
+        color: list.color || undefined,
+      })),
+    [reminderLists],
+  );
+
+  const accentColor =
+    (mode === 'reminder'
+      ? selectedReminderList?.color
+      : selectedCalendar?.color) ||
+    config.localCalendarColor ||
+    colorForIndex(0);
+
+  const canSave = !!title.trim() && !saving;
 
   const updateEndToMinimumDuration = (date, time) => {
     const nextEnd = addMinutes(date, time, MIN_EVENT_DURATION_MINUTES);
@@ -407,6 +494,21 @@ export default function AddEventModal({
     if (currentEnd < nextStart) {
       updateEndToMinimumDuration(nextStartDate, nextStartTime);
     }
+  };
+
+  const handleSelectLocation = (place) => {
+    setLocation([place.name, place.address].filter(Boolean).join('\n'));
+    setLocationCoords({ latitude: place.latitude, longitude: place.longitude });
+    setLocationQuery('');
+    setLocationSuggestions([]);
+  };
+
+  const handleClearLocation = () => {
+    setLocation('');
+    setLocationCoords(null);
+    setLocationQuery('');
+    setLocationSuggestions([]);
+    locationInputRef.current?.focus();
   };
 
   const handleEndChange = (date) => {
@@ -436,14 +538,96 @@ export default function AddEventModal({
     return Math.round((e - s) / 60000);
   }, [startDate, startTime, endDate, endTime]);
 
-  const commitEndRepeat = () => {
-    setRepeatEndMode(pendingEndMode);
-    setRepeatEndDate(pendingEndDate);
-    setRepeatEndCount(pendingEndCount);
-    setShowEndRepeat(false);
+  const handleRepeatChange = (v) => {
+    if (v === 'custom') {
+      setRepeatValue('custom');
+      toggleExpanded('repeatCustom');
+      return;
+    }
+
+    setRepeatValue(v);
+    if (v === 'none') {
+      setRepeatEndMode('none');
+    }
+
+    if (
+      expanded === 'repeatCustom' ||
+      expanded === 'repeatEndDate' ||
+      expanded === 'repeatEndCount'
+    ) {
+      setExpanded(null);
+    }
   };
 
-  const alertLabel = alertOptions(t).find((o) => o.value === alertValue)?.label;
+  const handleRepeatEndChange = (v) => {
+    setRepeatEndMode(v);
+    if (v === 'date') {
+      if (!repeatEndDate) setRepeatEndDate(startDate);
+      toggleExpanded('repeatEndDate');
+      return;
+    }
+    if (v === 'count') {
+      toggleExpanded('repeatEndCount');
+      return;
+    }
+    if (expanded === 'repeatEndDate' || expanded === 'repeatEndCount') {
+      setExpanded(null);
+    }
+  };
+
+  const handleAlertChange = (v) => {
+    if (v === 'customDate') {
+      if (!alertCustomDate) setAlertCustomDate(startDate);
+      setAlertValue('customDate');
+      toggleExpanded('alertDate');
+      return;
+    }
+
+    setAlertValue(v);
+    if (v === 'none') {
+      setAlertCustomDate('');
+      setAlertValue2('none');
+    }
+    if (expanded === 'alertDate') {
+      setExpanded(null);
+    }
+  };
+
+  const endRepeatOptions = useMemo(
+    () => [
+      { value: 'none', label: t('addEvent.endRepeatNone') },
+      { value: 'date', label: t('addEvent.endRepeatOnDate') },
+      { value: 'count', label: t('addEvent.endRepeatAfterCount') },
+    ],
+    [t],
+  );
+
+  const endRepeatDisplay = useMemo(
+    () =>
+      endRepeatDisplayValue(
+        repeatEndMode,
+        repeatEndDate,
+        repeatEndCount,
+        locale,
+        t,
+      ),
+    [repeatEndMode, repeatEndDate, repeatEndCount, locale, t],
+  );
+
+  const alertDisplay =
+    alertValue === 'customDate' && alertCustomDate
+      ? formatDateDisplay(alertCustomDate, locale)
+      : undefined;
+
+  const repeatDisplay =
+    repeatValue === 'none'
+      ? undefined
+      : repeatDisplayLabel(
+          repeatValue,
+          repeatCustomInterval,
+          repeatCustomUnit,
+          t,
+        );
 
   const saveEvent = async () => {
     const start = combine(startDate, startTime, allDay);
@@ -458,8 +642,9 @@ export default function AddEventModal({
       const payload = {
         title: title.trim(),
         location,
+        locationCoords,
         notes,
-        url,
+        url: url.trim(),
         allDay,
         start,
         end,
@@ -501,6 +686,7 @@ export default function AddEventModal({
           allDay: payload.allDay,
           location: payload.location || '',
           notes: payload.notes || '',
+          url: payload.url,
           color: selectedCalendar.color || '#3b82f6',
           sourceName: selectedCalendar.name,
           sourceType: 'device',
@@ -523,7 +709,7 @@ export default function AddEventModal({
       const reminderData = {
         title: title.trim(),
         notes,
-        url,
+        url: url.trim(),
         allDay,
         priority,
         alert: alertValue,
@@ -549,7 +735,7 @@ export default function AddEventModal({
           end: dueStart || new Date(),
           isReminder: true,
         });
-      } else if (supportsNativeReminders()) {
+      } else if (remindersSupported) {
         const granted = await requestRemindersAccess();
         if (!granted) {
           setError(t('addEvent.remindersAccessDenied'));
@@ -597,697 +783,659 @@ export default function AddEventModal({
   };
 
   return (
-    <BaseModal visible={visible} onClose={onClose} closeButtonHidden fullscreen>
-      <div className="flex flex-col h-full md:h-auto -m-6">
-        {/* Sticky header */}
-        <div className="sticky rounded-t-lg top-0 z-10 bg-gray-50 dark:bg-gray-900 flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-800">
+    <BaseModal
+      visible={visible}
+      onClose={onClose}
+      sheet
+      closeHidden
+      ariaLabel={editEvent?.id ? t('calendar.edit') : t('addEvent.title')}
+    >
+      <div className="flex flex-col">
+        <div className="sticky top-0 z-20 -mx-4 flex items-center justify-between gap-3 bg-gray-100/80 px-4 pb-3 pt-4 backdrop-blur-xl dark:bg-gray-900/80">
           <BaseIcon
             icon="close"
+            size="large"
             onClick={onClose}
-            className="fill-gray-700 dark:fill-gray-200"
-            wrapperClassName="p-2 rounded-full bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 cursor-pointer"
+            aria-label={t('addEvent.cancel')}
+            className="fill-gray-900 dark:fill-gray-100"
+            wrapperClassName="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white/80 shadow-sm ring-1 ring-black/5 backdrop-blur-md transition-transform active:scale-95 dark:bg-gray-700/80 dark:ring-white/10"
           />
-          {/* Segmented: Event / Reminder */}
-          <BaseSegmentedControl
-            value={mode}
-            onChange={setMode}
-            options={[
-              { value: 'event', label: t('addEvent.event') },
-              { value: 'reminder', label: t('addEvent.reminder') },
-            ]}
-          />
+
+          {editEvent?.id ? (
+            <span className="text-primary-dark dark:text-btn-primary font-medium text-base">
+              {t('calendar.editEvent')}
+            </span>
+          ) : (
+            <BaseSegmentedControl
+              variant="glass"
+              value={mode}
+              onChange={setMode}
+              options={[
+                { value: 'event', label: t('addEvent.event') },
+                ...(showReminderOption
+                  ? [{ value: 'reminder', label: t('addEvent.reminder') }]
+                  : []),
+              ]}
+            />
+          )}
           <BaseIcon
             icon="check"
+            size="large"
+            strokeWidth={2.5}
             onClick={saving ? undefined : handleSave}
-            className="stroke-white"
-            wrapperClassName={`p-2 rounded-full ${
-              saving
-                ? 'bg-gray-400'
-                : 'bg-btn-primary hover:bg-btn-primary-hover dark:bg-btn-primary-dark dark:hover:bg-btn-primary-hover'
+            aria-label={t('addEvent.save')}
+            className={
+              canSave ? 'stroke-white' : 'stroke-gray-400 dark:stroke-gray-500'
+            }
+            wrapperClassName={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full shadow-sm ring-1 ring-black/5 transition-transform active:scale-95 ${
+              canSave
+                ? 'bg-btn-primary-dark'
+                : 'bg-white/80 dark:bg-gray-700/80 dark:ring-white/10'
             }`}
           />
         </div>
 
-        {/* Scrollable content */}
-        <div className="flex-1 md:flex-none overflow-y-auto pb-[var(--kb-height)] p-4 flex flex-col gap-5">
+        <div className="flex flex-col gap-7 pb-4 pt-2">
           {error && (
-            <p className="text-sm text-error px-1" role="alert">
+            <p
+              role="alert"
+              className="rounded-2xl bg-error/10 px-4 py-3 text-sm text-error-active dark:text-error"
+            >
               {error}
             </p>
           )}
 
-          {/* Title + location (event) or just title (reminder) */}
-          <div className={`${cardClass} overflow-visible`}>
-            <div className={rowClass}>
-              <input
-                type="text"
-                autoFocus
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder={t('addEvent.eventTitle')}
-                className={`${fieldClass} w-full placeholder-gray-400 dark:placeholder-gray-500`}
+          <div className="flex gap-2.5">
+            <span
+              aria-hidden="true"
+              className="relative w-1.5 shrink-0 overflow-hidden rounded-full"
+            >
+              <BaseIcon
+                icon="colorBar"
+                color={accentColor}
+                className="absolute inset-0 h-full w-full"
               />
-            </div>
-            {mode === 'event' && (
-              <div className={`${rowClass} relative flex-col items-stretch`}>
+            </span>
+
+            <div className="flex min-w-0 flex-1 flex-col gap-3">
+              <div className={`${cardClass} px-5`}>
                 <input
                   type="text"
-                  value={location}
-                  onChange={(e) => setLocation(e.target.value)}
-                  placeholder={t('addEvent.location')}
-                  className={`${fieldClass} w-full placeholder-gray-400 dark:placeholder-gray-500`}
+                  autoFocus
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder={t('addEvent.eventTitle')}
+                  aria-label={t('addEvent.eventTitle')}
+                  className={`${fieldClass} h-[3.25rem]`}
                 />
-                {locationSuggestions.length > 0 && (
-                  <div className="absolute top-full left-0 right-0 z-10 bg-white dark:bg-gray-800 rounded-b-lg shadow-lg border border-gray-200 dark:border-gray-700 max-h-40 overflow-y-auto">
-                    {locationSuggestions.map((s) => (
-                      <button
-                        key={s.id}
-                        type="button"
-                        className="w-full text-left px-4 py-2 text-sm text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700"
-                        onClick={() => {
-                          const label = s.admin1
-                            ? `${s.name}, ${s.admin1}, ${s.country}`
-                            : `${s.name}, ${s.country}`;
-                          setLocation(label);
-                          setLocationSuggestions([]);
-                        }}
-                      >
-                        {s.name}
-                        {s.admin1 ? `, ${s.admin1}` : ''}, {s.country}
-                      </button>
-                    ))}
+              </div>
+
+              <div className={cardClass}>
+                {mode === 'reminder' && (
+                  <div className={rowClass}>
+                    <div className={rowInnerClass}>
+                      <span className={labelClass}>
+                        {t('addEvent.dueDate')}
+                      </span>
+                      <BaseToggleSwitch
+                        value={hasDueDate}
+                        onChange={setHasDueDate}
+                        aria-label={t('addEvent.dueDate')}
+                      />
+                    </div>
                   </div>
                 )}
-              </div>
-            )}
-          </div>
 
-          {/* Date / time section */}
-          <div className={cardClass}>
-            {mode === 'reminder' && (
-              <div className={rowClass}>
-                <span className="text-gray-900 dark:text-gray-100">
-                  {t('addEvent.dueDate')}
-                </span>
-                <BaseToggleSwitch value={hasDueDate} onChange={setHasDueDate} />
-              </div>
-            )}
-            <div className={rowClass}>
-              <span className="text-gray-900 dark:text-gray-100">
-                {t('addEvent.allDay')}
-              </span>
-              <BaseToggleSwitch value={allDay} onChange={setAllDay} />
-            </div>
-            {(mode === 'event' || hasDueDate) && (
-              <>
-                <div className={rowClass}>
-                  <span className="text-gray-900 dark:text-gray-100">
-                    {mode === 'event' ? t('addEvent.starts') : ''}
-                  </span>
-                  <div className="flex items-center gap-2">
-                    <BaseButton
-                      onClick={() => setShowStartDate(true)}
-                      className={pillClass}
-                    >
-                      {formatDateDisplay(startDate, i18n.language)}
-                    </BaseButton>
-                    {!allDay && (
-                      <BaseButton
-                        onClick={() => setShowStartTime(true)}
-                        className={pillClass}
-                      >
-                        {startTime}
-                      </BaseButton>
-                    )}
-                  </div>
-                </div>
-                {mode === 'event' && (
+                {(mode === 'event' || hasDueDate) && (
                   <>
                     <div className={rowClass}>
-                      <span className="text-gray-900 dark:text-gray-100">
-                        {t('addEvent.ends')}
-                      </span>
-                      <div className="flex items-center gap-2">
-                        <BaseButton
-                          onClick={() => setShowEndDate(true)}
-                          className={pillClass}
-                        >
-                          {formatDateDisplay(endDate, i18n.language)}
-                        </BaseButton>
-                        {!allDay && (
-                          <BaseButton
-                            onClick={() => setShowEndTime(true)}
-                            className={pillClass}
-                          >
-                            {endTime}
-                          </BaseButton>
+                      <div className={rowInnerClass}>
+                        {mode === 'event' ? (
+                          <span className={labelClass}>
+                            {t('addEvent.starts')}
+                          </span>
+                        ) : (
+                          <span className={labelClass} aria-hidden="true" />
                         )}
+                        <div className="flex flex-wrap items-center justify-end gap-2">
+                          <button
+                            type="button"
+                            aria-expanded={expanded === 'startDate'}
+                            aria-label={`${
+                              mode === 'event'
+                                ? t('addEvent.starts')
+                                : t('addEvent.dueDate')
+                            }: ${formatDateDisplay(startDate, locale)}`}
+                            onClick={() => toggleExpanded('startDate')}
+                            className={pillClass(expanded === 'startDate')}
+                          >
+                            {formatDateDisplay(startDate, locale)}
+                          </button>
+                          {!allDay && (
+                            <button
+                              type="button"
+                              aria-expanded={expanded === 'startTime'}
+                              aria-label={`${
+                                mode === 'event'
+                                  ? t('addEvent.starts')
+                                  : t('addEvent.dueDate')
+                              }: ${formatTimeDisplay(startDate, startTime, locale, hour12)}`}
+                              onClick={() => toggleExpanded('startTime')}
+                              className={pillClass(expanded === 'startTime')}
+                            >
+                              {formatTimeDisplay(
+                                startDate,
+                                startTime,
+                                locale,
+                                hour12,
+                              )}
+                            </button>
+                          )}
+                        </div>
                       </div>
                     </div>
-                    {/* Duration pills */}
-                    {!allDay && (
-                      <div className="overflow-x-auto scrollbar-none px-4 py-3">
-                        <div className="flex gap-2 w-max">
-                          {DURATIONS.map((min) => (
-                            <BaseButton
-                              key={min}
-                              onClick={() => handleDuration(min)}
-                              size="small"
-                              outlined
-                              className={
-                                currentDuration === min
-                                  ? 'dark:bg-primary-dark !justify-center bg-primary-light text-xs! py-1! px-1! w-15!'
-                                  : 'text-xs! py-1! px-1! w-15! !justify-center'
-                              }
-                            >
-                              {durationLabel(min)}
-                            </BaseButton>
-                          ))}
-                        </div>
+
+                    {expanded === 'startDate' && (
+                      <div className={panelClass}>
+                        <BaseCalendarPicker
+                          value={fromInputs(startDate, startTime)}
+                          onChange={handleStartChange}
+                        />
+                      </div>
+                    )}
+
+                    {!allDay && expanded === 'startTime' && (
+                      <div className={panelClass}>
+                        <BaseWheelPicker
+                          bare
+                          mode="time"
+                          value={fromInputs(startDate, startTime)}
+                          onChange={handleStartChange}
+                        />
                       </div>
                     )}
                   </>
                 )}
-              </>
-            )}
-            <div className={rowClass}>
-              <span className="text-gray-900 dark:text-gray-100 shrink-0 flex flex-row items-center gap-1">
-                <BaseIcon
-                  icon="repeat"
-                  size="small"
-                  className="dark:stroke-gray-100 stroke-gray-900"
-                />
-                {t('addEvent.repeat')}
-              </span>
-              {repeatValue === 'none' ? (
-                <BaseSelect
-                  fullWidth={false}
-                  plain
-                  value={repeatValue}
-                  onChange={(v) => {
-                    if (v === 'custom') {
-                      setPrevRepeatValue(repeatValue);
-                      setPendingInterval(repeatCustomInterval);
-                      setPendingUnit(repeatCustomUnit);
-                      setShowCustomRepeat(true);
-                    } else {
-                      setRepeatValue(v);
-                    }
-                  }}
-                  options={repeatOptions(t)}
-                />
-              ) : (
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    className="flex items-center gap-2 px-3 py-1.5 rounded-full text-gray-900 dark:text-gray-100 text-sm font-medium"
-                    onClick={() => {
-                      if (repeatValue === 'custom') {
-                        setPendingInterval(repeatCustomInterval);
-                        setPendingUnit(repeatCustomUnit);
-                        setShowCustomRepeat(true);
-                      }
-                    }}
-                  >
-                    <span>
-                      {repeatDisplayLabel(
-                        repeatValue,
-                        repeatCustomInterval,
-                        repeatCustomUnit,
-                        t,
+
+                {mode === 'event' && (
+                  <>
+                    <div className={rowClass}>
+                      <div className={rowInnerClass}>
+                        <span className={labelClass}>{t('addEvent.ends')}</span>
+                        <div className="flex flex-wrap items-center justify-end gap-2">
+                          <button
+                            type="button"
+                            aria-expanded={expanded === 'endDate'}
+                            aria-label={`${t('addEvent.ends')}: ${formatDateDisplay(endDate, locale)}`}
+                            onClick={() => toggleExpanded('endDate')}
+                            className={pillClass(expanded === 'endDate')}
+                          >
+                            {formatDateDisplay(endDate, locale)}
+                          </button>
+                          {!allDay && (
+                            <button
+                              type="button"
+                              aria-expanded={expanded === 'endTime'}
+                              aria-label={`${t('addEvent.ends')}: ${formatTimeDisplay(endDate, endTime, locale, hour12)}`}
+                              onClick={() => toggleExpanded('endTime')}
+                              className={pillClass(expanded === 'endTime')}
+                            >
+                              {formatTimeDisplay(
+                                endDate,
+                                endTime,
+                                locale,
+                                hour12,
+                              )}
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {expanded === 'endDate' && (
+                      <div className={panelClass}>
+                        <BaseCalendarPicker
+                          value={fromInputs(endDate, endTime)}
+                          onChange={handleEndChange}
+                        />
+                      </div>
+                    )}
+
+                    {!allDay && expanded === 'endTime' && (
+                      <div className={panelClass}>
+                        <BaseWheelPicker
+                          bare
+                          mode="time"
+                          value={fromInputs(endDate, endTime)}
+                          onChange={handleEndChange}
+                        />
+                      </div>
+                    )}
+
+                    {!allDay && (
+                      <div
+                        role="group"
+                        aria-label={t('addEvent.duration')}
+                        className="mx-4 flex gap-2 overflow-x-auto border-b border-gray-200 py-3 scrollbar-none last:border-b-0 dark:border-gray-700"
+                      >
+                        {DURATIONS.map((min) => (
+                          <button
+                            key={min}
+                            type="button"
+                            aria-pressed={currentDuration === min}
+                            onClick={() => handleDuration(min)}
+                            className={`shrink-0 rounded-full px-3 py-1.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-dark ${
+                              currentDuration === min
+                                ? 'bg-btn-primary-dark text-white'
+                                : 'bg-gray-100 text-gray-700 active:bg-gray-200 dark:bg-gray-700 dark:text-gray-200 dark:active:bg-gray-600'
+                            }`}
+                          >
+                            {durationLabel(min)}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </>
+                )}
+
+                <div className={rowClass}>
+                  <div className={rowInnerClass}>
+                    <span className={labelClass}>{t('addEvent.allDay')}</span>
+                    <BaseToggleSwitch
+                      value={allDay}
+                      onChange={setAllDay}
+                      aria-label={t('addEvent.allDay')}
+                    />
+                  </div>
+                </div>
+
+                <div className={rowClass}>
+                  <div className={rowInnerClass}>
+                    <span className={labelClass}>{t('addEvent.repeat')}</span>
+                    <BaseMenu
+                      label={t('addEvent.repeat')}
+                      value={repeatValue}
+                      options={repeatOptions(t)}
+                      displayLabel={repeatDisplay}
+                      onChange={handleRepeatChange}
+                    />
+                  </div>
+                </div>
+
+                {expanded === 'repeatCustom' && repeatValue === 'custom' && (
+                  <div className={panelClass}>
+                    <BaseWheelPicker
+                      bare
+                      mode="custom"
+                      columns={[
+                        {
+                          key: 'interval',
+                          items: Array.from({ length: 30 }, (_, i) => ({
+                            value: i + 1,
+                            label: `${i + 1}`,
+                          })),
+                          value: repeatCustomInterval,
+                          onChange: setRepeatCustomInterval,
+                          loop: true,
+                        },
+                        {
+                          key: 'unit',
+                          items: ['day', 'week', 'month', 'year'].map(
+                            (unit) => ({
+                              value: unit,
+                              label: t(
+                                `addEvent.repeatUnit${unit.charAt(0).toUpperCase() + unit.slice(1)}`,
+                              ),
+                            }),
+                          ),
+                          value: repeatCustomUnit,
+                          onChange: setRepeatCustomUnit,
+                          loop: true,
+                        },
+                      ]}
+                    />
+                  </div>
+                )}
+
+                {repeatValue !== 'none' && (
+                  <>
+                    <div className={rowClass}>
+                      <div className={rowInnerClass}>
+                        <span className={labelClass}>
+                          {t('addEvent.endRepeat')}
+                        </span>
+                        <BaseMenu
+                          label={t('addEvent.endRepeat')}
+                          value={repeatEndMode}
+                          options={endRepeatOptions}
+                          displayLabel={endRepeatDisplay}
+                          onChange={handleRepeatEndChange}
+                        />
+                      </div>
+                    </div>
+
+                    {expanded === 'repeatEndDate' &&
+                      repeatEndMode === 'date' && (
+                        <div className={panelClass}>
+                          <BaseCalendarPicker
+                            value={fromInputs(
+                              repeatEndDate || startDate,
+                              '00:00',
+                            )}
+                            onChange={(d) => {
+                              setRepeatEndDate(toDateInput(d));
+                              setExpanded(null);
+                            }}
+                          />
+                        </div>
                       )}
-                    </span>
-                  </button>
-                  <BaseIcon
-                    icon="close"
-                    size="small"
-                    className="dark:fill-gray-400 fill-gray-500"
-                    wrapperClassName="p-1 rounded-full bg-gray-200 dark:bg-gray-600 cursor-pointer hover:bg-gray-300 dark:hover:bg-gray-500"
-                    onClick={() => {
-                      setRepeatValue('none');
-                      setRepeatEndMode('none');
-                    }}
-                  />
-                </div>
-              )}
-            </div>
-            <div className={rowClass}>
-              <span className="text-gray-900 dark:text-gray-100 shrink-0">
-                {t('addEvent.alert')}
-              </span>
-              {alertValue === 'none' ? (
-                <BaseSelect
-                  fullWidth={false}
-                  plain
-                  value={alertValue}
-                  onChange={(v) => {
-                    if (v === 'customDate') {
-                      setShowCustomAlert(true);
-                    } else {
-                      setAlertValue(v);
-                    }
-                  }}
-                  options={alertOptions(t)}
-                />
-              ) : (
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    className="flex items-center gap-2 px-3 py-1.5 rounded-full text-gray-900 dark:text-gray-100 text-sm font-medium"
-                    onClick={() => {
-                      if (alertValue === 'customDate') {
-                        setShowCustomAlert(true);
-                      }
-                    }}
-                  >
-                    <span>{alertLabel}</span>
-                  </button>
-                  <BaseIcon
-                    icon="close"
-                    size="small"
-                    className="dark:fill-gray-400 fill-gray-500"
-                    wrapperClassName="p-1 rounded-full bg-gray-200 dark:bg-gray-600 cursor-pointer hover:bg-gray-300 dark:hover:bg-gray-500"
-                    onClick={() => {
-                      setAlertValue('none');
-                      setAlertCustomDate('');
-                      setAlertValue2('none');
-                    }}
-                  />
-                </div>
-              )}
-            </div>
-            {mode === 'event' && alertValue !== 'none' && (
-              <div className={rowClass}>
-                <span className="text-gray-900 dark:text-gray-100 shrink-0">
-                  {t('addEvent.secondAlert')}
-                </span>
-                <BaseSelect
-                  fullWidth={false}
-                  plain
-                  value={alertValue2}
-                  onChange={setAlertValue2}
-                  options={secondAlertOptions(t)}
-                />
+
+                    {expanded === 'repeatEndCount' &&
+                      repeatEndMode === 'count' && (
+                        <div className={panelClass}>
+                          <BaseWheelPicker
+                            bare
+                            mode="number"
+                            numberMin={1}
+                            numberMax={50}
+                            value={repeatEndCount}
+                            onChange={setRepeatEndCount}
+                          />
+                        </div>
+                      )}
+                  </>
+                )}
               </div>
-            )}
-            {mode === 'event' && (
-              <div className={rowClass}>
-                <span className="text-gray-900 dark:text-gray-100 shrink-0">
-                  {t('addEvent.showAs')}
-                </span>
-                <BaseSelect
-                  fullWidth={false}
-                  plain
-                  value={availability}
-                  onChange={setAvailability}
-                  options={showAsOptions(t)}
-                />
-              </div>
-            )}
+            </div>
           </div>
 
-          {/* Calendar account (event only). When editing a device event, the
-              "local" pseudo-calendar is excluded — moving a device event to
-              app-local storage isn't supported, but switching between device
-              calendars is. */}
           {mode === 'event' && (
-            <div className={cardClass}>
-              <div className={rowClass}>
-                <span className="text-gray-900 dark:text-gray-100 shrink-0">
-                  {t('addEvent.calendar')}
-                </span>
-                <button
-                  type="button"
-                  disabled={loading}
-                  onClick={() => setShowCalendarPicker(true)}
-                  className="flex items-center gap-1 min-w-0 max-w-[65%] text-primary-dark dark:text-btn-primary text-sm disabled:opacity-60"
+            <section>
+              <h2 className={sectionTitleClass}>{t('calendar.location')}</h2>
+              <div className="relative">
+                <div
+                  className={`${cardClass} flex min-h-[3.25rem] items-center gap-4 px-4`}
                 >
-                  <span className="truncate">
-                    {selectedCalendar?.account
-                      ? `${selectedCalendar.name} · ${selectedCalendar.account}`
-                      : selectedCalendar?.name}
-                  </span>
                   <BaseIcon
-                    icon="arrowDown"
-                    size="xs"
-                    className="shrink-0 stroke-primary-dark dark:stroke-btn-primary"
+                    icon="navigation"
+                    size="large"
+                    strokeWidth={1.75}
+                    className={rowIconClass}
                   />
-                </button>
+                  <input
+                    ref={locationInputRef}
+                    type="text"
+                    value={location.replace(/\s*\n\s*/g, ', ')}
+                    onChange={(e) => {
+                      setLocation(e.target.value);
+                      setLocationCoords(null);
+                      setLocationQuery(e.target.value);
+                    }}
+                    placeholder={t('addEvent.location')}
+                    aria-label={t('addEvent.location')}
+                    autoComplete="off"
+                    enterKeyHint="search"
+                    className={fieldClass}
+                  />
+                  {location && (
+                    <BaseIcon
+                      icon="close"
+                      size="small"
+                      onClick={handleClearLocation}
+                      aria-label={t('addEvent.clearLocation')}
+                      className="box-content rounded-full bg-gray-400 p-0.5 fill-white dark:bg-gray-500 dark:fill-gray-800"
+                      wrapperClassName="-me-3 flex h-11 w-11 shrink-0 items-center justify-center rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-dark"
+                    />
+                  )}
+                </div>
+
+                {locationSuggestions.length > 0 && (
+                  <ul className="absolute inset-x-0 top-full z-30 mt-2 max-h-64 origin-top overflow-y-auto overscroll-contain rounded-3xl bg-white/90 py-1.5 shadow-2xl ring-1 ring-black/5 backdrop-blur-xl motion-safe:animate-menu-in motion-reduce:animate-fade-in dark:bg-gray-800/90 dark:ring-white/10">
+                    {locationSuggestions.map((place) => (
+                      <li key={place.id}>
+                        <button
+                          type="button"
+                          onClick={() => handleSelectLocation(place)}
+                          className="flex w-full items-start gap-3 px-4 py-2.5 text-start active:bg-black/5 focus-visible:bg-black/5 focus-visible:outline-none dark:active:bg-white/10 dark:focus-visible:bg-white/10"
+                        >
+                          <BaseIcon
+                            icon="locationOn"
+                            className="mt-0.5 shrink-0 fill-gray-500 dark:fill-gray-400"
+                          />
+                          <span className="min-w-0 flex-1">
+                            <span className="block truncate text-[17px] text-gray-900 dark:text-gray-100">
+                              {place.name}
+                            </span>
+                            {place.address && (
+                              <span className="line-clamp-2 text-sm text-gray-500 dark:text-gray-400">
+                                {place.address}
+                              </span>
+                            )}
+                          </span>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </div>
-            </div>
+            </section>
           )}
 
-          {/* Reminders list (reminder only, native iOS). */}
-          {mode === 'reminder' &&
-            supportsNativeReminders() &&
-            reminderLists.length > 0 && (
+          <section>
+            <h2 className={sectionTitleClass}>{t('addEvent.options')}</h2>
+            <div className="flex flex-col gap-2.5">
+              {mode === 'event' && (
+                <div className={cardClass}>
+                  <div className={rowClass}>
+                    <BaseIcon
+                      icon="calendar"
+                      size="large"
+                      strokeWidth={1.75}
+                      className={rowIconClass}
+                    />
+                    <div className={rowInnerClass}>
+                      <span className={labelClass}>
+                        {t('addEvent.calendar')}
+                      </span>
+                      <BaseMenu
+                        label={t('addEvent.calendar')}
+                        value={calendarId}
+                        options={calendarMenuOptions}
+                        onChange={setCalendarId}
+                        disabled={loading}
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {mode === 'reminder' &&
+                remindersSupported &&
+                reminderLists.length > 0 && (
+                  <div className={cardClass}>
+                    <div className={rowClass}>
+                      <BaseIcon
+                        icon="calendar"
+                        size="large"
+                        strokeWidth={1.75}
+                        className={rowIconClass}
+                      />
+                      <div className={rowInnerClass}>
+                        <span className={labelClass}>{t('addEvent.list')}</span>
+                        <BaseMenu
+                          label={t('addEvent.list')}
+                          value={reminderListId}
+                          options={reminderListOptions}
+                          onChange={setReminderListId}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
               <div className={cardClass}>
                 <div className={rowClass}>
-                  <span className="text-gray-900 dark:text-gray-100 shrink-0">
-                    {t('addEvent.list')}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => setShowReminderListPicker(true)}
-                    className="flex items-center gap-1 min-w-0 max-w-[65%] text-primary-dark dark:text-btn-primary text-sm"
-                  >
-                    <span className="truncate">
-                      {selectedReminderList?.title}
-                    </span>
-                    <BaseIcon
-                      icon="arrowDown"
-                      size="xs"
-                      className="shrink-0 stroke-primary-dark dark:stroke-btn-primary"
+                  <BaseIcon
+                    icon="bell"
+                    size="large"
+                    strokeWidth={1.75}
+                    className={rowIconClass}
+                  />
+                  <div className={rowInnerClass}>
+                    <span className={labelClass}>{t('addEvent.alert')}</span>
+                    <BaseMenu
+                      label={t('addEvent.alert')}
+                      value={alertValue}
+                      options={alertOptions(t)}
+                      displayLabel={alertDisplay}
+                      onChange={handleAlertChange}
                     />
-                  </button>
+                  </div>
+                </div>
+
+                {expanded === 'alertDate' && alertValue === 'customDate' && (
+                  <div className={panelClass}>
+                    <BaseCalendarPicker
+                      value={fromInputs(alertCustomDate || startDate, '00:00')}
+                      onChange={(d) => {
+                        setAlertCustomDate(toDateInput(d));
+                        setExpanded(null);
+                      }}
+                    />
+                  </div>
+                )}
+
+                {mode === 'event' && alertValue !== 'none' && (
+                  <div className={rowClass}>
+                    <BaseIcon
+                      icon="bell"
+                      size="large"
+                      strokeWidth={1.75}
+                      className={rowIconClass}
+                    />
+                    <div className={rowInnerClass}>
+                      <span className={labelClass}>
+                        {t('addEvent.secondAlert')}
+                      </span>
+                      <BaseMenu
+                        label={t('addEvent.secondAlert')}
+                        value={alertValue2}
+                        options={secondAlertOptions(t)}
+                        onChange={setAlertValue2}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {mode === 'event' && (
+                  <div className={rowClass}>
+                    <BaseIcon
+                      icon="eye"
+                      size="large"
+                      strokeWidth={1.75}
+                      className={rowIconClass}
+                    />
+                    <div className={rowInnerClass}>
+                      <span className={labelClass}>{t('addEvent.showAs')}</span>
+                      <BaseMenu
+                        label={t('addEvent.showAs')}
+                        value={availability}
+                        options={showAsOptions(t)}
+                        onChange={setAvailability}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {mode === 'reminder' && (
+                  <div className={rowClass}>
+                    <BaseIcon
+                      icon="alert"
+                      size="large"
+                      strokeWidth={1.75}
+                      className={rowIconClass}
+                    />
+                    <div className={rowInnerClass}>
+                      <span className={labelClass}>
+                        {t('addEvent.priority')}
+                      </span>
+                      <BaseMenu
+                        label={t('addEvent.priority')}
+                        value={priority}
+                        options={priorityOptions(t)}
+                        onChange={setPriority}
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </section>
+
+          <section>
+            <h2 className={sectionTitleClass}>{t('calendar.details')}</h2>
+            <div className={cardClass}>
+              <div className="group flex items-start gap-4 px-4">
+                <BaseIcon
+                  icon="notes"
+                  size="large"
+                  strokeWidth={1.75}
+                  className={`${rowIconClass} mt-3`}
+                />
+                <div className="flex min-h-[3.25rem] min-w-0 flex-1 items-start justify-between gap-3 border-b border-gray-200 py-3 dark:border-gray-700 group-last:border-b-0">
+                  <div className="grid min-w-0 flex-1 grid-cols-1">
+                    {/* Hidden copy sizes the textarea: grows with the text, up to 3 lines. */}
+                    <span
+                      aria-hidden="true"
+                      className="invisible col-start-1 row-start-1 max-h-[4.5rem] overflow-hidden whitespace-pre-wrap break-words text-[17px] leading-6"
+                    >
+                      {`${notes} `}
+                    </span>
+                    <textarea
+                      rows={1}
+                      value={notes}
+                      onChange={(e) => setNotes(e.target.value)}
+                      aria-label={t('addEvent.notes')}
+                      placeholder={t('addEvent.notes')}
+                      className={`${fieldClass} col-start-1 row-start-1 resize-none leading-6`}
+                    />
+                  </div>
                 </div>
               </div>
-            )}
 
-          {/* Reminder-only: priority */}
-          {mode === 'reminder' && (
-            <div className={cardClass}>
-              <div className={rowClass}>
-                <span className="text-gray-900 dark:text-gray-100 shrink-0">
-                  {t('addEvent.priority')}
-                </span>
-                <BaseSelect
-                  fullWidth={false}
-                  plain
-                  value={priority}
-                  onChange={setPriority}
-                  options={priorityOptions(t)}
-                />
-              </div>
+              {urlSupported && (
+                <div className={rowClass}>
+                  <BaseIcon
+                    icon="link"
+                    size="large"
+                    strokeWidth={1.75}
+                    className={rowIconClass}
+                  />
+                  <div className={rowInnerClass}>
+                    <input
+                      type="url"
+                      inputMode="url"
+                      autoCapitalize="none"
+                      autoCorrect="off"
+                      value={url}
+                      onChange={(e) => setUrl(e.target.value)}
+                      aria-label={t('addEvent.url')}
+                      placeholder={t('addEvent.url')}
+                      className={fieldClass}
+                    />
+                  </div>
+                </div>
+              )}
             </div>
-          )}
-
-          {/* URL + Notes */}
-          <div className={cardClass}>
-            <div className={rowClass}>
-              <input
-                type="url"
-                value={url}
-                onChange={(e) => setUrl(e.target.value)}
-                placeholder={t('addEvent.url')}
-                className={`${fieldClass} w-full placeholder-gray-400 dark:placeholder-gray-500`}
-              />
-            </div>
-            <div className="px-4 py-3">
-              <textarea
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                placeholder={t('addEvent.notes')}
-                rows={2}
-                className={`${fieldClass} w-full resize-none placeholder-gray-400 dark:placeholder-gray-500`}
-              />
-            </div>
-          </div>
+          </section>
 
           {!isNativePlatform() && (
-            <p className="text-xs text-gray-400 dark:text-gray-500 px-1">
+            <p className="px-4 text-[13px] leading-snug text-gray-500 dark:text-gray-400">
               {t('addEvent.webHint')}
             </p>
           )}
         </div>
       </div>
-
-      {/* Custom Repeat modal — Apple-style wheel picker */}
-      <BaseModal
-        visible={showCustomRepeat}
-        onClose={() => {
-          setShowCustomRepeat(false);
-          if (repeatValue === 'custom') return;
-          setRepeatValue(prevRepeatValue);
-        }}
-        title={t('addEvent.repeatCustom')}
-      >
-        <div className="flex flex-col gap-4">
-          <p className="text-center text-gray-900 dark:text-gray-100 text-sm">
-            {pendingInterval}{' '}
-            {t(
-              `addEvent.repeatUnit${pendingUnit.charAt(0).toUpperCase() + pendingUnit.slice(1)}`,
-            )}
-          </p>
-          <BaseWheelPicker
-            mode="custom"
-            columns={[
-              {
-                key: 'interval',
-                items: Array.from({ length: 30 }, (_, i) => ({
-                  value: i + 1,
-                  label: `${i + 1}`,
-                })),
-                value: pendingInterval,
-                onChange: setPendingInterval,
-              },
-              {
-                key: 'unit',
-                items: ['day', 'week', 'month', 'year'].map((u) => ({
-                  value: u,
-                  label: t(
-                    `addEvent.repeatUnit${u.charAt(0).toUpperCase() + u.slice(1)}`,
-                  ),
-                })),
-                value: pendingUnit,
-                onChange: setPendingUnit,
-              },
-            ]}
-          />
-          <BaseButton
-            onClick={() => {
-              setRepeatCustomInterval(pendingInterval);
-              setRepeatCustomUnit(pendingUnit);
-              setRepeatValue('custom');
-              setShowCustomRepeat(false);
-            }}
-            size="large"
-          >
-            {t('settings.done')}
-          </BaseButton>
-        </div>
-      </BaseModal>
-
-      {/* Custom Alert Date modal */}
-      <BaseModal
-        visible={showCustomAlert}
-        onClose={() => setShowCustomAlert(false)}
-        title={t('addEvent.alertCustomDate')}
-      >
-        <div className="flex flex-col gap-4">
-          <BaseWheelPicker
-            mode="date"
-            value={fromInputs(alertCustomDate, '00:00')}
-            onChange={(d) => setAlertCustomDate(toDateInput(d))}
-          />
-          <BaseButton
-            onClick={() => {
-              if (alertCustomDate) setAlertValue('customDate');
-              setShowCustomAlert(false);
-            }}
-          >
-            {t('settings.done')}
-          </BaseButton>
-        </div>
-      </BaseModal>
-
-      {/* End Repeat modal */}
-      <BaseModal
-        visible={showEndRepeat}
-        onClose={() => setShowEndRepeat(false)}
-        title={t('addEvent.endRepeat')}
-      >
-        <div className="flex flex-col gap-1">
-          <button
-            type="button"
-            className={`w-full text-left px-4 py-3 rounded-lg text-base ${
-              pendingEndMode === 'date'
-                ? 'font-medium text-gray-900 dark:text-gray-100'
-                : 'text-gray-900 dark:text-gray-100'
-            }`}
-            onClick={() => setPendingEndMode('date')}
-          >
-            {t('addEvent.endRepeatOnDate')}
-          </button>
-          {pendingEndMode === 'date' && (
-            <div className="px-4 pb-3">
-              <BaseWheelPicker
-                mode="date"
-                value={fromInputs(pendingEndDate, '00:00')}
-                onChange={(d) => setPendingEndDate(toDateInput(d))}
-              />
-            </div>
-          )}
-          <button
-            type="button"
-            className={`w-full text-left px-4 py-3 rounded-lg text-base ${
-              pendingEndMode === 'count'
-                ? 'font-medium text-gray-900 dark:text-gray-100'
-                : 'text-gray-900 dark:text-gray-100'
-            }`}
-            onClick={() => setPendingEndMode('count')}
-          >
-            {t('addEvent.endRepeatAfterCount')}
-          </button>
-          {pendingEndMode === 'count' && (
-            <div className="px-4 pb-3">
-              <BaseWheelPicker
-                mode="number"
-                numberMin={1}
-                numberMax={50}
-                value={pendingEndCount}
-                onChange={setPendingEndCount}
-              />
-            </div>
-          )}
-          <div className="px-4 pt-2">
-            <BaseButton onClick={commitEndRepeat}>
-              {t('settings.done')}
-            </BaseButton>
-          </div>
-        </div>
-      </BaseModal>
-
-      {/* Calendar picker — custom list so Android's native <select> popup
-          (oversized system font, uncontrollable via CSS) is never shown. */}
-      <BaseModal
-        visible={showCalendarPicker}
-        onClose={() => setShowCalendarPicker(false)}
-        title={t('addEvent.calendar')}
-      >
-        <div className="flex flex-col gap-1">
-          {(editEvent?.sourceType === 'device'
-            ? calendars.filter((c) => c.id !== 'local')
-            : calendars
-          ).map((c) => (
-            <button
-              key={c.id}
-              type="button"
-              className="w-full flex items-center justify-between gap-2 text-left px-4 py-3 rounded-lg text-gray-900 dark:text-gray-100"
-              onClick={() => {
-                setCalendarId(c.id);
-                setShowCalendarPicker(false);
-              }}
-            >
-              <span className="truncate">
-                {c.account ? `${c.name} · ${c.account}` : c.name}
-              </span>
-              {c.id === calendarId && (
-                <BaseIcon
-                  icon="check"
-                  size="small"
-                  className="shrink-0 stroke-primary-dark dark:stroke-btn-primary"
-                />
-              )}
-            </button>
-          ))}
-        </div>
-      </BaseModal>
-
-      {/* Reminders list picker */}
-      <BaseModal
-        visible={showReminderListPicker}
-        onClose={() => setShowReminderListPicker(false)}
-        title={t('addEvent.list')}
-      >
-        <div className="flex flex-col gap-1">
-          {reminderLists.map((l) => (
-            <button
-              key={l.id}
-              type="button"
-              className="w-full flex items-center justify-between gap-2 text-left px-4 py-3 rounded-lg text-gray-900 dark:text-gray-100"
-              onClick={() => {
-                setReminderListId(l.id);
-                setShowReminderListPicker(false);
-              }}
-            >
-              <span className="flex items-center gap-2 min-w-0">
-                {l.color && (
-                  <BaseIcon icon="circle" size="xs" color={l.color} />
-                )}
-                <span className="truncate">{l.title}</span>
-              </span>
-              {l.id === reminderListId && (
-                <BaseIcon
-                  icon="check"
-                  size="small"
-                  className="shrink-0 stroke-primary-dark dark:stroke-btn-primary"
-                />
-              )}
-            </button>
-          ))}
-        </div>
-      </BaseModal>
-
-      {/* Start date picker (calendar) */}
-      <BaseModal
-        visible={showStartDate}
-        onClose={() => setShowStartDate(false)}
-        title={t('addEvent.starts')}
-      >
-        <div className="flex flex-col gap-4">
-          <BaseCalendarPicker
-            value={fromInputs(startDate, startTime)}
-            onChange={handleStartChange}
-          />
-          <BaseButton onClick={() => setShowStartDate(false)}>
-            {t('settings.done')}
-          </BaseButton>
-        </div>
-      </BaseModal>
-
-      {/* Start time picker (wheel) */}
-      <BaseModal
-        visible={showStartTime}
-        onClose={() => setShowStartTime(false)}
-        title={t('addEvent.starts')}
-      >
-        <div className="flex flex-col gap-4">
-          <BaseWheelPicker
-            mode="time"
-            value={fromInputs(startDate, startTime)}
-            onChange={handleStartChange}
-          />
-          <BaseButton onClick={() => setShowStartTime(false)}>
-            {t('settings.done')}
-          </BaseButton>
-        </div>
-      </BaseModal>
-
-      {/* End date picker (calendar) */}
-      <BaseModal
-        visible={showEndDate}
-        onClose={() => setShowEndDate(false)}
-        title={t('addEvent.ends')}
-      >
-        <div className="flex flex-col gap-4">
-          <BaseCalendarPicker
-            value={fromInputs(endDate, endTime)}
-            onChange={handleEndChange}
-          />
-          <BaseButton onClick={() => setShowEndDate(false)}>
-            {t('settings.done')}
-          </BaseButton>
-        </div>
-      </BaseModal>
-
-      {/* End time picker (wheel) */}
-      <BaseModal
-        visible={showEndTime}
-        onClose={() => setShowEndTime(false)}
-        title={t('addEvent.ends')}
-      >
-        <div className="flex flex-col gap-4">
-          <BaseWheelPicker
-            mode="time"
-            value={fromInputs(endDate, endTime)}
-            onChange={handleEndChange}
-          />
-          <BaseButton onClick={() => setShowEndTime(false)}>
-            {t('settings.done')}
-          </BaseButton>
-        </div>
-      </BaseModal>
     </BaseModal>
   );
 }

@@ -1,63 +1,44 @@
-# Component Creation & Hierarchy
+# React Components
 
-> **Stack-specific skill** (React 19 function components + TailwindCSS v4). No UI library — the project has its own base components. See `.github/instructions/base-components.instructions.md`, `.github/instructions/frontend-icons.instructions.md`, and `.github/instructions/cross-calendar.instructions.md`.
+This project uses React 19 function components, custom primitives in `src/components/base/`, TailwindCSS v4, and `react-i18next`.
 
-## Hierarchy
+## Structure
 
-```
-src/components/
-├── base/        ← reusable UI primitives (Base*.jsx) + icons/
-│   └── icons/   ← SVG icon components + registry
-└── *.jsx        ← feature components (calendar views, headers, modals, pages)
-```
+- `src/components/base/`: reusable primitives and the icon barrel.
+- `src/components/`: calendar views, modals, headers, and feature components.
+- `src/hooks/`: reusable reactive logic.
+- `src/context/`: shared state providers.
 
-1. **Base components** (`src/components/base/`) — `BaseButton`, `BaseTextInput`, `BaseNumberInput`, `BaseSelect`, `BaseSelectInput`, `BaseMultiSelectInput`, `BaseCheckbox`, `BaseToggle`, `BaseToggleSwitch`, `BaseModal`, `BaseIcon`, `BaseSearchBar`, `BaseTag`, `BaseSpinner`, `BaseTooltip`, `BaseExpandableSection`, `BaseForm`, `BaseFormDateField`, `BaseLabel`, `BaseAnchor`, etc.
-2. **Feature components** (`src/components/`) — calendar views (`GregorianCalendar`, `CompactCalendar`, `MixedCalendar`, `BadiCalendar`), `CalendarHeader`, `CalendarBottomBar`, switchers, modals, page components.
+Before creating a component, search for an existing base primitive or neighboring feature with the same behavior. Keep reusable behavior in base components and domain behavior in feature components.
 
-## Mandatory Rules
+## Component Rules
 
-- **Always use a base component instead of a raw HTML element** when one exists (`<button>`, `<input>`, `<select>`, `<textarea>`, `<a>`, `<svg>` …). No raw primitives in `src/` outside `src/components/base/`.
-- **Every icon goes through `BaseIcon`** — never inline `<svg>` or import `react-icons/*` in feature components. Clickable icon → pass `onClick` to `BaseIcon` (never wrap in `<button>`).
-- **No inline `style={{}}`** — Tailwind classes only.
-- **Import base components from the barrel**: `import { BaseButton, BaseSelect } from '../base'`.
-- If a base component is missing → create `Base<Name>.jsx` in `src/components/base/`, export it from `src/components/base/index.js`, then use it.
-
-## Cross-Calendar Parity (hard rule)
-
-Any user-facing feature, option, or interaction added to one calendar view **must** be added to all four (`GregorianCalendar`, `CompactCalendar`, `MixedCalendar`, `BadiCalendar`). Prefer a shared component/hook over duplicating logic. See `.github/instructions/cross-calendar.instructions.md`.
-
-## Component Conventions
+- Use function components with explicit destructured props.
+- Use `.jsx` for components and JavaScript conventions; do not introduce TypeScript source.
+- Use `BaseIcon` and the existing icon registry for icons.
+- Use `useTranslation()` for every user-facing label.
+- Prefer semantic HTML and keyboard-operable controls.
+- Keep business logic in contexts, hooks, services, or pure helpers rather than complex JSX.
+- Preserve parity across Gregorian, Compact, Mixed, and Badíʿ calendar views when changing shared calendar behavior.
+- Use Tailwind utilities and existing `src/index.css` tokens; avoid inline styles.
 
 ```jsx
 import { useTranslation } from 'react-i18next';
-import { BaseButton } from './base';
 
-export default function UpcomingEvents({ events, onSelect }) {
+export function ExampleButton({ disabled = false, onClick }) {
   const { t } = useTranslation();
-  if (!events.length)
-    return <p className="text-gray-500">{t('shared.noEvents')}</p>;
   return (
-    <ul className="flex flex-col gap-2">
-      {events.map((e) => (
-        <li key={e.id}>
-          <BaseButton onClick={() => onSelect(e)}>{e.title}</BaseButton>
-        </li>
-      ))}
-    </ul>
+    <button type="button" disabled={disabled} onClick={onClick}>
+      {t('shared.save')}
+    </button>
   );
 }
 ```
 
-- Function components, PascalCase `.jsx`, default export for feature components.
-- Destructure props explicitly; keep components focused on rendering + interaction.
-- Move data/logic into hooks (`src/hooks/`), contexts (`src/context/`), services (`src/services/`), or utils (`src/utils/`).
-- Keys on lists must be stable and unique.
-
 ## Review Checklist
 
-- [ ] Uses base components, never raw HTML primitives
-- [ ] Every icon rendered via `BaseIcon`
-- [ ] No inline `style={{}}`; Tailwind classes only
-- [ ] Cross-calendar parity respected for calendar features
-- [ ] All labels translated (`t()`), across six locales
-- [ ] Logic extracted to hooks/context/services/utils; component stays focused
+- Existing base components and similar features were searched.
+- Props and callbacks are clear and stable.
+- Labels are translated and icons use `BaseIcon`.
+- Focus, keyboard, RTL, mobile, and reduced-motion states are considered.
+- Changed behavior is mirrored across affected calendar views.

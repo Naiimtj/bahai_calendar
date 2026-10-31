@@ -9,6 +9,7 @@ import {
   gregorianToBadi,
   isWorkSuspendedHolyDay,
   nawRuzDate,
+  sunsetTimestamp,
   toISODate,
 } from './badiCalendar';
 import { resolveTranslations } from './badiCalendarData';
@@ -223,5 +224,42 @@ describe('translations', () => {
     );
     expect(nawruz.event).toBe('Naw-Rúz');
     expect(nawruz.desc).toContain('Nouvel An');
+  });
+});
+
+describe('sunsetTimestamp', () => {
+  const toleranceMs = 3 * 60 * 1000;
+
+  it('matches verified sunsets within 3 minutes', () => {
+    const cases = [
+      {
+        label: 'Madrid summer solstice',
+        input: [2026, 6, 21, 40.4168, -3.7038],
+        expectedUtc: '2026-06-21T19:48:00Z',
+      },
+      {
+        label: 'Los Angeles summer solstice (next UTC day)',
+        input: [2026, 6, 21, 34.0522, -118.2437],
+        expectedUtc: '2026-06-22T03:08:00Z',
+      },
+      {
+        label: 'Sydney summer solstice',
+        input: [2026, 12, 21, -33.8688, 151.2093],
+        expectedUtc: '2026-12-21T09:05:00Z',
+      },
+      {
+        label: 'New York winter solstice',
+        input: [2026, 12, 21, 40.7128, -74.006],
+        expectedUtc: '2026-12-21T21:32:00Z',
+      },
+    ];
+
+    for (const { label, input, expectedUtc } of cases) {
+      const result = sunsetTimestamp(...input);
+      const expected = new Date(expectedUtc).getTime();
+      expect(Math.abs(result - expected), label).toBeLessThanOrEqual(
+        toleranceMs,
+      );
+    }
   });
 });

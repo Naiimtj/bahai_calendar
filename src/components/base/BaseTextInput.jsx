@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import BaseLabel from './BaseLabel';
+import { BaseButton } from '.';
 
 const BaseTextInput = ({
   label,
@@ -12,6 +13,8 @@ const BaseTextInput = ({
   hint,
   variant = 'outlined',
   className = '',
+  clearable = true,
+  clearAriaLabel = 'Clear input',
   appendIcon,
   prependIcon,
   appendIconComponent,
@@ -79,34 +82,48 @@ const BaseTextInput = ({
     }
   };
 
+  const handleClear = () => {
+    if (props.field) {
+      props.field.onChange('');
+    } else {
+      setTempValue('');
+      if (onChange) {
+        onChange('');
+      }
+    }
+  };
+
   // Determine error state (from react-hook-form or legacy prop)
   const hasError = !!error || errorMessages?.length > 0;
   const errorMessage = error?.message || errorMessages?.[0] || '';
+  const showClearIcon = clearable && displayValue;
 
   const variantClasses = {
     filled:
-      'bg-gray-100 dark:bg-gray-700 border-b-2 border-gray-300 dark:border-gray-600 focus-within:border-textPrimary',
+      'bg-gray-100 dark:bg-gray-700 border-b-2 border-input-border dark:border-gray-600 hover:border-primary-dark dark:hover:border-primary focus-within:border-primary-dark dark:focus-within:border-primary',
     underlined:
-      'border-b-2 border-gray-300 dark:border-gray-600 focus-within:border-textPrimary',
+      'border-b-2 border-input-border dark:border-gray-600 hover:border-primary-dark dark:hover:border-primary focus-within:border-primary-dark dark:focus-within:border-primary',
     outlined:
-      'border-2 border-gray-300 dark:border-gray-600 rounded-md focus-within:border-textPrimary',
+      'bg-white dark:bg-gray-900 text-primary-dark dark:text-primary border border-input-border rounded-md hover:border-primary-dark dark:hover:border-primary focus-within:border-input-focus focus-within:ring-1 focus-within:ring-input-focus',
     plain: 'border-none',
-    solo: 'bg-white dark:bg-gray-800 border-2 border-gray-300 dark:border-gray-600 rounded-md focus-within:border-textPrimary',
+    solo: 'bg-white dark:bg-gray-800 border-2 border-input-border dark:border-gray-600 rounded hover:border-primary-dark dark:hover:border-primary focus-within:border-primary-dark dark:focus-within:border-primary',
     'solo-inverted':
-      'bg-gray-100 dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600 rounded-md focus-within:border-textPrimary',
+      'bg-gray-100 dark:bg-gray-700 border-2 border-input-border dark:border-gray-600 rounded hover:border-primary-dark dark:hover:border-primary focus-within:border-primary-dark dark:focus-within:border-primary',
     'solo-filled':
-      'bg-gray-100 dark:bg-gray-700 border-none rounded-md focus-within:ring-2 focus-within:ring-blue-500',
+      'bg-gray-100 dark:bg-gray-700 border-none rounded focus-within:ring-2 focus-within:ring-primary',
   };
 
   // Styling for input when inside container (with icons)
-  const inputInContainerClass = `flex-1 bg-transparent outline-none border-none text-base sm:text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 ${
+  const inputInContainerClass = `flex-1 bg-transparent outline-none border-none text-base sm:text-sm text-primary-dark dark:text-primary placeholder-gray-400 dark:placeholder-gray-500 ${
     disabled ? 'cursor-not-allowed opacity-60' : ''
   } ${hasError ? 'border-alert focus:border-alert' : ''} ${
-    prependIconComponent || appendIconComponent ? 'p-2' : 'px-0'
+    prependIconComponent || appendIconComponent || showClearIcon
+      ? 'p-2'
+      : 'px-0'
   } ${className}`;
 
   // Styling for standalone input (no icons)
-  const standaloneInputClass = `w-full px-3 py-2 text-base sm:text-sm outline-none transition-colors bg-transparent text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 ${
+  const standaloneInputClass = `w-full px-3 py-2 text-base sm:text-sm font-medium outline-none transition-colors bg-transparent text-primary-dark dark:text-primary placeholder-gray-400 dark:placeholder-gray-500 ${
     variantClasses[variant] || variantClasses.outlined
   } ${disabled ? 'bg-gray-100 dark:bg-gray-700 cursor-not-allowed opacity-60' : ''} ${
     hasError ? 'border-alert focus:border-alert' : ''
@@ -120,7 +137,8 @@ const BaseTextInput = ({
         {(prependIcon ||
           appendIcon ||
           prependIconComponent ||
-          appendIconComponent) && (
+          appendIconComponent ||
+          showClearIcon) && (
           <div
             className={`flex items-center w-full ${
               variantClasses[variant] || variantClasses.outlined
@@ -165,26 +183,39 @@ const BaseTextInput = ({
                 {appendIconComponent}
               </button>
             )}
+            {showClearIcon && (
+              <BaseButton
+                icon="close"
+                size="small"
+                text
+                aria-label={clearAriaLabel}
+                onClick={handleClear}
+                className="mr-2"
+              />
+            )}
           </div>
         )}
 
         {!prependIcon &&
           !appendIcon &&
           !prependIconComponent &&
-          !appendIconComponent && (
-            <input
-              ref={ref}
-              type="text"
-              value={displayValue}
-              placeholder={placeholder}
-              onChange={handleChange}
-              onBlur={handleBlur}
-              onKeyUp={handleKeyUp}
-              disabled={disabled}
-              maxLength={maxLength}
-              className={standaloneInputClass}
-              {...(props.field ? {} : { ...props })}
-            />
+          !appendIconComponent &&
+          !showClearIcon && (
+            <div className="flex flex-row w-full">
+              <input
+                ref={ref}
+                type="text"
+                value={displayValue}
+                placeholder={placeholder}
+                onChange={handleChange}
+                onBlur={handleBlur}
+                onKeyUp={handleKeyUp}
+                disabled={disabled}
+                maxLength={maxLength}
+                className={standaloneInputClass}
+                {...(props.field ? {} : { ...props })}
+              />
+            </div>
           )}
       </div>
 

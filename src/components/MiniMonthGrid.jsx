@@ -42,16 +42,18 @@ export function getEventStyle(
 export default function MiniMonthGrid({ cells, headers, keyPrefix = '' }) {
   return (
     <>
+      {/* Weekday headers */}
       <div className="grid grid-cols-7 gap-0 w-full">
-        {headers.map((h, i) => (
+        {headers.map((weekday, i) => (
           <div
             key={`${keyPrefix}hdr-${i}`}
-            className="text-center lg:text-base md:text-sm text-[8px] text-gray-400 dark:text-gray-600"
+            className="text-center lg:text-base md:text-base text-[10px] text-gray-400 dark:text-gray-600"
           >
-            {h}
+            {weekday}
           </div>
         ))}
       </div>
+      {/* Day cells */}
       <div className="grid grid-cols-7 gap-0 w-full">
         {cells.map((cell, i) => (
           <div
@@ -61,28 +63,28 @@ export default function MiniMonthGrid({ cells, headers, keyPrefix = '' }) {
             {cell && (
               <div className="flex flex-col items-center h-5.5 md:h-7">
                 <span
-                  className={`lg:text-lg md:text-sm text-[10px] leading-none w-4 h-4 md:w-6 md:h-6 flex items-center justify-center rounded-full
+                  className={`lg:text-lg md:text-sm text-[11px] !font-bold leading-none w-4.5 h-4.5 md:w-7 md:h-7 flex items-center justify-center rounded-full
                     ${cell.isToday ? 'bg-red-500 text-white' : cell.evStyle ? cell.evStyle.text : 'text-gray-700 dark:text-gray-300'}
                   `}
                 >
                   {cell.day}
                 </span>
                 {(cell.evStyle || cell.personalEventColors?.length > 0) && (
-                    <div className="flex gap-px mt-px">
-                      {cell.evStyle && (
-                        <span
-                          className={`w-1 h-1 rounded-full ${cell.evStyle.dot}`}
-                        />
-                      )}
-                      {cell.personalEventColors?.slice(0, 2).map((color, idx) => (
-                        <span
-                          key={`${idx}-${color}`}
-                          className="w-1 h-1 rounded-full"
-                          style={{ backgroundColor: color }}
-                        />
-                      ))}
-                    </div>
-                  )}
+                  <div className="flex gap-px mt-px">
+                    {cell.evStyle && (
+                      <span
+                        className={`w-1 h-1 rounded-full ${cell.evStyle.dot}`}
+                      />
+                    )}
+                    {cell.personalEventColors?.slice(0, 2).map((color, idx) => (
+                      <span
+                        key={`${idx}-${color}`}
+                        className="w-1 h-1 rounded-full"
+                        style={{ backgroundColor: color }}
+                      />
+                    ))}
+                  </div>
+                )}
               </div>
             )}
           </div>

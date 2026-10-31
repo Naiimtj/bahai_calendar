@@ -1,3 +1,6 @@
+import { useTranslation } from 'react-i18next';
+import { BaseIcon } from './base';
+
 const ONE_DAY_MS = 24 * 60 * 60 * 1000;
 const DEFAULT_MAX_PER_DAY = 4;
 
@@ -118,39 +121,69 @@ function buildLaneGrid(cells, getCellEvents, columnCount) {
     });
   }
 
-  // Top lanes reserved for Bahá'í events across the whole week, so multi-day
-  // bars stay aligned one lane below them on every day.
-  const reservedLanes = bahaiByColumn.reduce(
-    (max, list) => Math.max(max, list.length),
-    0,
-  );
+  const bars = [...barSegments.values()].sort((a, b) => {
+    const durationA = a.lastColumn - a.firstColumn;
+    const durationB = b.lastColumn - b.firstColumn;
 
-  const bars = [...barSegments.values()].sort(
-    (a, b) =>
-      a.firstColumn - b.firstColumn ||
-      b.lastColumn - b.firstColumn - (a.lastColumn - a.firstColumn),
-  );
+    return durationB - durationA || a.firstColumn - b.firstColumn;
+  });
 
   const lanes = [];
+
   const laneRow = (lane) => {
-    if (!lanes[lane]) lanes[lane] = new Array(columnCount).fill(null);
+    if (!lanes[lane]) {
+      lanes[lane] = new Array(columnCount).fill(null);
+    }
+
     return lanes[lane];
   };
+
   const laneIsFree = (lane, from, to) => {
     const row = lanes[lane];
+
     if (!row) return true;
-    for (let c = from; c <= to; c++) if (row[c]) return false;
+
+    for (let column = from; column <= to; column++) {
+      if (row[column]) return false;
+    }
+
     return true;
   };
+
   const placeItem = (lane, from, to, item) => {
     const row = laneRow(lane);
-    for (let c = from; c <= to; c++) row[c] = item;
+
+    for (let column = from; column <= to; column++) {
+      row[column] = item;
+    }
   };
 
-  // 1. Bahá'í events fill the reserved top lanes (one per lane, per column).
+  // 1. Los eventos de varios días ocupan primero las filas,
+  //    empezando por el evento de mayor duración.
+  bars.forEach((segment) => {
+    let lane = 0;
+
+    while (!laneIsFree(lane, segment.firstColumn, segment.lastColumn)) {
+      lane++;
+    }
+
+    placeItem(lane, segment.firstColumn, segment.lastColumn, {
+      ...segment,
+      type: 'bar',
+    });
+  });
+
+  // 2. Los eventos bahá’ís se colocan después de los eventos largos
+  //    cuando coinciden. Si no hay un evento largo, ocupan la primera fila.
   bahaiByColumn.forEach((events, column) => {
     events.forEach((event, index) => {
-      placeItem(index, column, column, {
+      let lane = 0;
+
+      while (!laneIsFree(lane, column, column)) {
+        lane++;
+      }
+
+      placeItem(lane, column, column, {
         key: `bahai-${column}-${index}-${event.name}`,
         event,
         firstColumn: column,
@@ -160,22 +193,15 @@ function buildLaneGrid(cells, getCellEvents, columnCount) {
     });
   });
 
-  // 2. Multi-day bars below the reserved lanes, aligned across their span.
-  bars.forEach((segment) => {
-    let lane = reservedLanes;
-    while (!laneIsFree(lane, segment.firstColumn, segment.lastColumn)) lane++;
-    placeItem(lane, segment.firstColumn, segment.lastColumn, {
-      ...segment,
-      type: 'bar',
-    });
-  });
-
-  // 3. Remaining single-day personal events fill the lowest free lane below
-  //    the reserved Bahá'í lanes.
+  // 3. Los eventos personales de un solo día ocupan la siguiente fila libre.
   personalByColumn.forEach((events, column) => {
     events.forEach((event, index) => {
-      let lane = reservedLanes;
-      while (!laneIsFree(lane, column, column)) lane++;
+      let lane = 0;
+
+      while (!laneIsFree(lane, column, column)) {
+        lane++;
+      }
+
       placeItem(lane, column, column, {
         key: `single-${column}-${index}-${event.name}`,
         event,
@@ -211,6 +237,7 @@ function chipColor(color) {
 }
 
 function EventChip({ item, visibleStartColumn, visibleColumnCount }) {
+  const { t } = useTranslation();
   const relativeStart = item.firstColumn - visibleStartColumn;
   const clampedLast = Math.min(
     item.lastColumn,
@@ -221,9 +248,31 @@ function EventChip({ item, visibleStartColumn, visibleColumnCount }) {
   return (
     <span
       style={style}
-      className={`${START_COLUMN_CLASSES[relativeStart + 1]} ${SPAN_COLUMN_CLASSES[span]} ${className} min-w-0 truncate rounded-sm px-1 text-[10px] font-medium leading-tight`}
+      className={`${START_COLUMN_CLASSES[relativeStart + 1]} ${SPAN_COLUMN_CLASSES[span]} ${className} min-w-0 flex items-center gap-0.5 rounded-sm px-1 text-[10px] font-medium leading-tight`}
     >
-      {item.event.name}
+      {item.event._raw?.isReminder && (
+        <span
+          role="img"
+          aria-label={t(
+            item.event._raw.isCompleted
+              ? 'calendar.reminderCompleted'
+              : 'calendar.reminderPending',
+          )}
+          className="shrink-0"
+        >
+          {item.event._raw.isCompleted ? (
+            <BaseIcon icon="check" size="x-small" className="size-2.5" />
+          ) : (
+            <span
+              aria-hidden="true"
+              className="block size-2 border border-current rounded-[1px]"
+            />
+          )}
+        </span>
+      )}
+      <span className="min-w-0 overflow-hidden whitespace-nowrap">
+        {item.event.name}
+      </span>
     </span>
   );
 }

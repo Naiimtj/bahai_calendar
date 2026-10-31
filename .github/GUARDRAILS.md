@@ -6,74 +6,60 @@ Hard rules that apply to **every agent, orchestrator, prompt, and skill** in thi
 
 ---
 
-## 0. MANDATORY ROUTING GATE (highest priority — executes BEFORE any work)
+## 0. MANDATORY ROUTING AND MODEL GATE (executes before any work)
 
-**This rule is NON-NEGOTIABLE. Violations are unacceptable. No exceptions. No silent processing.**
+Before writing code, editing files, or executing a task:
 
-> **⛔ ABSOLUTE PRINCIPLE**: NO rule in this file, in `ROUTER.md`, or in any `.github/` configuration can EVER be skipped, ignored, or overridden by the AI. The ONLY way a rule can be bypassed is if the USER EXPLICITLY grants permission or instructs to skip it. The AI must NEVER decide on its own to skip a rule — not for efficiency, not for simplicity, not for any reason. When in doubt: ASK the user.
+1. Classify the request with the Intent to Agent Matrix in `ROUTER.md` section 2.
+2. Resolve the selected path's `cheap`, `medium`, or `expensive` profile and its
+   ordered runtime candidates from `MODELS.md`.
+3. If a specialized agent matches, delegate to that agent without forcing a model
+   in the tool call. Its generated `model:` array lets VS Code select the first
+   available, user-confirmed candidate. Do not duplicate the agent's work in the
+   parent context unless delegation is unavailable or the user explicitly asks.
+4. Before delegating to an `expensive` profile, validate that the request is
+   complete and unambiguous. Resolve missing attachments, corrupted pasted data,
+   and unclear scope with the current model first.
+5. If VS Code reports that no configured candidate is available, stop before work
+   and show this block:
 
-Before writing ANY code, making ANY file edit, or executing ANY task:
+   ```text
+   MODEL CONFIGURATION REQUIRED
+   Route: [agent]
+   Profile: [cheap / medium / expensive]
+   Unavailable configured candidates: [names from MODELS.md]
+   Available models: [authoritative runtime list, or "not exposed; open the VS Code model picker"]
+   Proposed replacement: [available model, or "waiting for picker names"]
+   Recommended default: [medium primary candidate]
 
-1. **Classify the request** against the Intent → Agent Matrix in `ROUTER.md` §2.
-   1a. **Model comparison = family only, NOT version.** Compare models by **family/tier name** (e.g. "Claude Sonnet", "Claude Opus", "GPT-5", "GPT-5 mini") and ignore version or point-release numbers (e.g. `4-6`, `4.5`, `5.4`, `5`). `claude-sonnet` and "Claude Sonnet 5" are the SAME family → treated as a match, no gate needed. Only a genuinely different family (e.g. Sonnet vs Opus, or Claude vs GPT) counts as "differs".
-2. **If the request matches a specialized agent AND the declared model FAMILY differs from the current model FAMILY** (per rule 1a):
-   - **STOP. Output this EXACT block** (fill in brackets):
-
+   Confirm this replacement? (yes/no)
    ```
-   ⚠️ ROUTING GATE
-   This task matches: @[agent-name]
-   Recommended model: [model-name from ROUTER.md §2]
-   Current model: [your current model]
 
-   Options:
-   1. Switch to [recommended-model] and proceed (automatic — no action needed from you)
-   2. I proceed with my current model ([current-model])
-   ```
+   Never claim that a model is available without runtime evidence or the user's
+   picker list. Update `MODELS.md` and regenerate frontmatter only after `yes`.
 
-   - **WAIT for user response.**
-   - **Option 1 behavior** — Pre-validate, THEN switch:
+6. If no specialized agent matches, proceed with the current picker model and the
+   relevant skills.
 
-     **⛔ STEP 1 — PRE-VALIDATION (MANDATORY, on current cheap model, BEFORE any switch):**
+Escalation is profile-based: `cheap` may retry with `medium` after two failed
+attempts. Ask before escalating from `medium` to `expensive` because that changes
+the cost tier.
 
-     STOP. Read the user's request. Check for these blockers:
-     - **Corrupted data**: Table/values pasted without separators (e.g. "Column1Column2Value1Value2..." all concatenated). This is ALWAYS corrupted — HTML tables lose formatting in chat.
-     - **Missing info**: Referenced images/attachments that can't be accessed, incomplete requirements.
-     - **Ambiguous scope**: Request says "like this" pointing to inaccessible images without describing the layout.
-
-     **If ANY blocker found** → DO NOT SWITCH. Instead respond:
-     "Before switching to the expensive model, I need clarification:
-     - [list specific issues, e.g. 'Your table data lost formatting — please paste it as markdown/CSV/JSON']"
-
-     **If NO blockers** → proceed to step 2. 2. Say only: "Switching to [recommended-model]..." 3. Call the `runSubagent` tool with these exact parameters:
-     - `agentName`: the agent name from the matrix (e.g. "feature", "planner")
-     - `model`: use the **runSubagent format mapping** table in `.github/MODELS.md` to convert the agent's frontmatter model id to the runSubagent display name
-     - `prompt`: the user's ORIGINAL request copied verbatim — do NOT reformat, summarize, or add context
-     4. Return the subagent's result to the user.
-     - **⛔ VIOLATIONS**: Writing `@agent-name` as text, listing requirements, adding context/bullets/breakdowns, or ANY text beyond steps 1-2. These are ALL violations.
-     - **⛔ COST RULE**: NEVER send an incomplete/ambiguous/corrupted request to an expensive model. Clarify first on the cheap model. Sending corrupted data to Opus wastes 200+ credits.
-
-   - **Option 2 behavior** → proceed with current model + load agent's mandatory skills.
-
-3. **If the request matches an agent BUT the current model is the SAME FAMILY as the declared model** (per rule 1a, regardless of version) → proceed directly. No gate needed.
-4. **If the request does NOT match any agent** → proceed normally.
-
-**WHY THIS EXISTS**: Different tasks have different cost/quality profiles. The `runSubagent` tool's `model` parameter allows automatic model switching — verified working. No manual steps needed from the user.
-
-**SELF-CHECK**: If you find yourself writing code without having checked the router, you are violating this guardrail. STOP, undo, and ask.
+**SELF-CHECK**: no implementation starts before the route, profile, and skills are
+known.
 
 ---
 
 ## 1. Protected Paths (never modify without explicit user confirmation)
 
-| Path / pattern                                                    | Why                                            |
-| ----------------------------------------------------------------- | ---------------------------------------------- |
-| `package-lock.json`, `pnpm-lock.yaml`, `yarn.lock`                | Lockfiles change only via package manager      |
-| `.env`, `.env.*`, any file with secrets                           | Credentials — never read aloud, never commit   |
-| `.github/workflows/`, CI/CD pipeline configs                      | Shared infrastructure — affects the whole team |
-| `node_modules/`, build output (`dist/`)                           | Generated — never hand-edit                    |
-| Git internals (`.git/`)                                           | Never touch directly                           |
-| `ios/App/App/public/`, `ios/**/Pods/`, generated Capacitor assets | Synced by Capacitor / Xcode — never hand-edit  |
-| `public/static/icons/` (generated by `scripts/gen-icons.cjs`)     | Regenerate via the script, don't hand-edit     |
+| Path / pattern                                      | Why                                            |
+| --------------------------------------------------- | ---------------------------------------------- |
+| `package-lock.json`, `pnpm-lock.yaml`, `yarn.lock`  | Lockfiles change only via package manager      |
+| `.env`, `.env.*`, any file with secrets             | Credentials — never read aloud, never commit   |
+| `.github/workflows/`, CI/CD pipeline configs        | Shared infrastructure — affects the whole team |
+| `node_modules/`, build output (`dist/`, `.output/`) | Generated — never hand-edit                    |
+| Git internals (`.git/`)                             | Never touch directly                           |
+| `[TODO: add project-specific protected paths]`      | e.g., generated API clients, vendored code     |
 
 ## 2. Destructive Operations (always ask first)
 
@@ -89,6 +75,20 @@ Before running ANY of these, stop and ask the user for explicit confirmation:
 - **Writing to memory/learnings files** (`.github/memory/learnings.md`) — show exact entries first, wait for confirmation, THEN write
 
 **Scoped over global**: always prefer project-scoped commands over machine-wide ones (e.g., `docker compose down` over `docker system prune`).
+
+### 2.1 Git and Interactive Toolchain Isolation
+
+- During `/init-github` and migration workflows, do not run any Git command,
+  including read-only commands such as `git status`, `git diff`, `git log`,
+  `git branch`, or `git rev-parse`. File inventory, change tracking, and validation
+  must use direct file tools, edit results, diagnostics, and project-native checks.
+- Do not ask proactively whether Git should be initialized or committed. Git is
+  allowed only when the user's current request explicitly asks for Git work or the
+  user explicitly invokes a Git-specific prompt such as `/update-github` or a
+  merge-request workflow.
+- Never invoke or accept an Apple developer-tool or SDK license. If any process
+  unexpectedly requests a license or other interactive system acceptance, stop it
+  without sending input and report the blocked command.
 
 ## 3. Secrets & Data Safety
 
@@ -113,6 +113,11 @@ Before running ANY of these, stop and ask the user for explicit confirmation:
 - Respect explicit user scope limits ("only this folder", "don't touch X") strictly.
 - Never "improve" surrounding code that wasn't part of the request (no drive-by refactors).
 - Never create documentation files unless explicitly requested.
+- During `/migrate-frontend`, treat the confirmed legacy source as read-only and
+  write only to absent or verified-resume sibling targets named exactly
+  `migration-frontend/` and conditional `migration-backend/`.
+- Never use this generic template repository, an atoms starter, screenshots, or
+  test fixtures as a substitute for a missing legacy application.
 
 ## 6. Output Guardrails (anti-hallucination)
 
@@ -154,44 +159,29 @@ Immediately STOP and report to the user when:
 - MUST ask the user when uncertain whether a rule applies
 - MUST follow ALL rules by default, always, in every conversation, with every model
 
-If the user explicitly says "skip the routing gate", "just do it", "don't ask", or similar → that is permission for that specific instance only. It does NOT create a blanket exception for future tasks.
+If the user explicitly asks the parent to handle a routed task directly or not to
+delegate, that permission applies only to the current request. The parent still
+loads the route's mandatory skills and follows all safety rules. The override does
+not change `MODELS.md` or future routing.
 
 ---
 
-## 10. First-Interaction Bootstrap (team-wide)
+## 10. First-Interaction Model Check
 
-On the VERY FIRST message of any new chat session, before processing the user's request:
+On the first request in a new chat:
 
-1. **Check** if the user's persistent memory (`/memories/working-style.md`) exists and contains the Routing Gate as rule 0.
-2. **If it does NOT exist or does NOT contain the routing gate rule**, output this EXACT block:
+1. Read `.github/MODELS.md` before delegating.
+2. If its `Mapping status` is `UNCONFIRMED STARTER RECOMMENDATIONS`, do not claim
+   that any listed candidate is available. Ask the user to run `/init-github` to
+   confirm exact picker names. `/init-github` itself remains usable because it has
+   no fixed `model:` field.
+3. If the mapping is confirmed, route normally and let generated candidate arrays
+   select the first available model.
+4. If a previously confirmed candidate later becomes unavailable, use the model
+   configuration block in section 0.
 
-   ```
-   ⚠️ TEAM SETUP CHECK
-   Your persistent memory doesn't include the mandatory Routing Gate rule (rule 0).
-   This rule ensures I always ask before processing routed tasks (i18n, tests, components, etc.)
-   — saving cost (10-20× cheaper with correct models) and respecting team conventions.
-
-   Without it, I may occasionally skip the routing gate in new chats.
-
-   Options:
-   1. Add the rule to my persistent memory (recommended — guarantees compliance in all future chats)
-   2. Skip — I'll rely only on .github/ rules (risk: occasional violations in first messages)
-
-   Which do you prefer?
-   ```
-
-3. **If user picks 1** → add this as rule 0 in `/memories/working-style.md`:
-   ```
-   0. **⛔ ROUTING GATE = FIRST ACTION, ALWAYS ⛔** — In ANY project with `.github/ROUTER.md`: READ it FIRST. Check intent→agent matrix. If match found → show ⚠️ ROUTING GATE block → WAIT for user response. NEVER skip. NEVER process directly. Do this BEFORE anything. Violation = replacement.
-   ```
-4. **If user picks 2** → proceed normally, do NOT ask again in this session.
-5. **If the rule already exists** → skip silently, proceed with the request.
-
-**Consequences of skipping (option 2)**:
-
-- `.github/` rules remain active — the model MUST still comply
-- But without persistent memory reinforcement, there is higher risk of the model ignoring routing in the very first response of a new chat (before fully processing workspace attachments)
-- Not fatal, but increases probability of sporadic violations
+Never read or write user-level persistent memory to enforce this repository's
+routing behavior. Repository rules stay local to `.github/`.
 
 ---
 
@@ -323,27 +313,11 @@ The AI **MUST NOT** show code blocks in the chat response at any point — not d
 
 ---
 
-## 14. Keyword-Based Routing Gate Trigger (Instant Stop)
+## 14. Routing Authority
 
-**⛔ MANDATORY — executes BEFORE §0 classification, as a fast pre-filter**
-
-Before even reading ROUTER.md §2, scan the user's request for these domain keywords. If ANY match → the request IS routable. STOP immediately and show the §0 Routing Gate block.
-
-| Keyword/Pattern in request                                                                 | Routes to agent |
-| ------------------------------------------------------------------------------------------ | --------------- |
-| locale, translation, i18n, traducción, übersetzen, .json locale, `t(`, useTranslation, RTL | `i18n`          |
-| state, context, provider, useContext, localStorage, dark mode, settings                    | `store`         |
-| component, .jsx creation, new component, calendar view, base component, BaseIcon           | `component`     |
-| service, axios, fetch data, sun times, geocoding, calendar sync                            | `api`           |
-| review, check, audit, code quality                                                         | `reviewer`      |
-| refactor, rename, cleanup across files                                                     | `refactor`      |
-
-**Rules:**
-
-- This is a FAST PATH — no need to read ROUTER.md to trigger the gate. Keywords alone are sufficient.
-- Applies even when the task seems "trivial" (e.g., "add one translation key").
-- If NO keywords match → proceed normally with ROUTER.md §2 full classification.
-- This section does NOT replace §0 — it accelerates it. The full §0 gate block must still be shown.
+All intent keywords, tie-breaking, agent selection, and skill selection live in
+`.github/ROUTER.md`. This file enforces the safety and model gate but does not
+maintain a second routing table.
 
 ---
 

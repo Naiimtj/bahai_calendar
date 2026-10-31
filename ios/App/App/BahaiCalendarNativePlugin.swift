@@ -1,9 +1,11 @@
 import Capacitor
+import Contacts
 import CoreLocation
 import EventKit
 import Foundation
 import MapKit
 import UIKit
+import WidgetKit
 
 /**
  * In-house replacement for `@ebarooni/capacitor-calendar` (iOS side).
@@ -12,6 +14,7 @@ import UIKit
  * JS bridge: src/native/bahaiCalendarNative.js
  * Android counterpart: android/app/src/main/java/com/bahaicalendar/app/BahaiCalendarNativePlugin.java
  * (Reminders are iOS-only — not implemented on Android.)
+ * Home Screen widgets are updated through `updateWidgetSnapshot` (iOS-only).
  */
 @objc(BahaiCalendarNativePlugin)
 public class BahaiCalendarNativePlugin: CAPPlugin, CAPBridgedPlugin {
@@ -33,9 +36,50 @@ public class BahaiCalendarNativePlugin: CAPPlugin, CAPBridgedPlugin {
         CAPPluginMethod(name: "createReminder", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "modifyReminder", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "deleteReminder", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "updateWidgetSnapshot", returnType: CAPPluginReturnPromise),
     ]
 
     private let store = EKEventStore()
+    private static let widgetSnapshotMaxBytes = 1_000_000
+
+    override public func load() {
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleEventStoreChanged),
+            name: .EKEventStoreChanged,
+            object: store
+        )
+    }
+
+    /// Lets JS re-read calendars and reminders changed by other apps or iCloud sync.
+    @objc private func handleEventStoreChanged() {
+        notifyListeners("eventStoreChanged", data: [:])
+    }
+
+    // MARK: - Home Screen widgets
+
+    @objc func updateWidgetSnapshot(_ call: CAPPluginCall) {
+        guard let snapshot = call.getString("snapshot"), !snapshot.isEmpty else {
+            call.reject("Missing 'snapshot'")
+            return
+        }
+        let data = Data(snapshot.utf8)
+        guard data.count <= Self.widgetSnapshotMaxBytes else {
+            call.reject("Widget snapshot too large")
+            return
+        }
+        guard let url = WidgetStore.snapshotURL else {
+            call.reject("App Group container unavailable")
+            return
+        }
+        do {
+            try data.write(to: url, options: .atomic)
+            WidgetCenter.shared.reloadAllTimelines()
+            call.resolve()
+        } catch {
+            call.reject("Failed to save widget snapshot: \(error.localizedDescription)")
+        }
+    }
 
     // MARK: - Calendar permissions
 
@@ -100,18 +144,28 @@ public class BahaiCalendarNativePlugin: CAPPlugin, CAPBridgedPlugin {
         let end = Date(timeIntervalSince1970: to / 1000)
         let predicate = store.predicateForEvents(withStart: start, end: end, calendars: nil)
         let events = store.events(matching: predicate).map { event -> [String: Any] in
-            [
+            var item: [String: Any] = [
                 "id": event.eventIdentifier ?? "",
                 "calendarId": event.calendar.calendarIdentifier,
                 "title": event.title ?? "",
+                "isBirthday": event.calendar.type == .birthday,
                 "description": event.notes ?? "",
                 "location": event.location ?? "",
+                "url": event.url?.absoluteString ?? "",
                 "isAllDay": event.isAllDay,
                 "startDate": event.startDate.timeIntervalSince1970 * 1000,
                 "endDate": event.endDate.timeIntervalSince1970 * 1000,
                 "availability": availabilityFromNative(event.availability),
                 "alerts": alarmsToMinutes(event.alarms),
             ]
+            if let geo = event.structuredLocation?.geoLocation {
+                item["structuredLocation"] = [
+                    "title": event.structuredLocation?.title ?? "",
+                    "latitude": geo.coordinate.latitude,
+                    "longitude": geo.coordinate.longitude,
+                ]
+            }
+            return item
         }
         call.resolve(["result": events])
     }
@@ -169,6 +223,7 @@ public class BahaiCalendarNativePlugin: CAPPlugin, CAPBridgedPlugin {
                 return [
                     "id": "\(idx)-\(lat)-\(lon)",
                     "name": name,
+                    "address": Self.fullAddress(of: item),
                     "admin1": admin1,
                     "country": country,
                     "latitude": lat,
@@ -179,42 +234,114 @@ public class BahaiCalendarNativePlugin: CAPPlugin, CAPBridgedPlugin {
         }
     }
 
+    /// Single-line address as Apple Calendar shows it, e.g. "Calle de Severo Ochoa, 4, 28932 Móstoles, Madrid, España".
+    private static func fullAddress(of item: MKMapItem) -> String {
+        if #available(iOS 26.0, *),
+           let address = item.addressRepresentations?.fullAddress(includingRegion: true, singleLine: true),
+           !address.isEmpty {
+            return address
+        }
+        guard let postalAddress = item.placemark.postalAddress else { return "" }
+        return CNPostalAddressFormatter.string(from: postalAddress, style: .mailingAddress)
+            .components(separatedBy: .newlines)
+            .filter { !$0.isEmpty }
+            .joined(separator: ", ")
+    }
+
     @objc func appleMapsPreview(_ call: CAPPluginCall) {
-        guard let rawQuery = call.getString("query")?.trimmingCharacters(in: .whitespacesAndNewlines),
-              !rawQuery.isEmpty else {
+        let width = max(120, min(call.getInt("width") ?? 340, 1024))
+        let height = max(80, min(call.getInt("height") ?? 176, 1024))
+        let scale = max(1.0, min(call.getDouble("scale") ?? 2.0, 3.0))
+        let zoom = max(3.0, min(call.getDouble("zoom") ?? 16.0, 19.0))
+        let dark = call.getBool("dark") ?? false
+
+        if let latitude = call.getDouble("latitude"),
+           let longitude = call.getDouble("longitude") {
+            let coordinate = CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
+            if CLLocationCoordinate2DIsValid(coordinate) {
+                renderAppleMapSnapshot(
+                    call: call,
+                    coordinate: coordinate,
+                    width: width,
+                    height: height,
+                    scale: scale,
+                    zoom: zoom,
+                    dark: dark
+                )
+                return
+            }
+        }
+
+        let query = call.getString("query")?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        guard !query.isEmpty else {
             call.reject("Missing 'query'")
             return
         }
 
-        let width = max(240, min(call.getInt("width") ?? 768, 2048))
-        let height = max(160, min(call.getInt("height") ?? 320, 2048))
-
-        CLGeocoder().geocodeAddressString(rawQuery) { [weak self] placemarks, error in
-            if let error {
-                call.reject("Failed to geocode location: \(error.localizedDescription)")
-                return
-            }
-            guard let coordinate = placemarks?.first?.location?.coordinate else {
+        resolveCoordinate(for: query) { [weak self] coordinate in
+            guard let coordinate else {
                 call.reject("Could not resolve location")
                 return
             }
-            self?.renderAppleMapSnapshot(call: call, coordinate: coordinate, width: width, height: height)
+            self?.renderAppleMapSnapshot(
+                call: call,
+                coordinate: coordinate,
+                width: width,
+                height: height,
+                scale: scale,
+                zoom: zoom,
+                dark: dark
+            )
         }
     }
 
-    private func renderAppleMapSnapshot(call: CAPPluginCall, coordinate: CLLocationCoordinate2D, width: Int, height: Int) {
+    private func resolveCoordinate(for query: String, completion: @escaping (CLLocationCoordinate2D?) -> Void) {
+        // POIs resolve better with MKLocalSearch; CLGeocoder covers plain postal addresses.
+        let request = MKLocalSearch.Request()
+        request.naturalLanguageQuery = query
+        request.resultTypes = [.pointOfInterest, .address]
+
+        MKLocalSearch(request: request).start { response, error in
+            if error == nil,
+               let coordinate = response?.mapItems.first?.placemark.coordinate,
+               CLLocationCoordinate2DIsValid(coordinate) {
+                completion(coordinate)
+                return
+            }
+            CLGeocoder().geocodeAddressString(query) { placemarks, _ in
+                guard let coordinate = placemarks?.first?.location?.coordinate,
+                      CLLocationCoordinate2DIsValid(coordinate) else {
+                    completion(nil)
+                    return
+                }
+                completion(coordinate)
+            }
+        }
+    }
+
+    private func renderAppleMapSnapshot(
+        call: CAPPluginCall,
+        coordinate: CLLocationCoordinate2D,
+        width: Int,
+        height: Int,
+        scale: Double,
+        zoom: Double,
+        dark: Bool
+    ) {
+        let metersPerPoint = 156_543.033_92 * cos(coordinate.latitude * .pi / 180) / pow(2, zoom)
         let options = MKMapSnapshotter.Options()
         options.size = CGSize(width: width, height: height)
-        options.scale = UIScreen.main.scale
-        options.mapType = .mutedStandard
         options.region = MKCoordinateRegion(
             center: coordinate,
-            latitudinalMeters: 1200,
-            longitudinalMeters: 1200
+            latitudinalMeters: Double(height) * metersPerPoint,
+            longitudinalMeters: Double(width) * metersPerPoint
         )
+        options.traitCollection = UITraitCollection(traitsFrom: [
+            UITraitCollection(displayScale: scale),
+            UITraitCollection(userInterfaceStyle: dark ? .dark : .light),
+        ])
 
-        let snapshotter = MKMapSnapshotter(options: options)
-        snapshotter.start { [weak self] snapshot, error in
+        MKMapSnapshotter(options: options).start { snapshot, error in
             if let error {
                 call.reject("Failed to render map snapshot: \(error.localizedDescription)")
                 return
@@ -224,40 +351,17 @@ public class BahaiCalendarNativePlugin: CAPPlugin, CAPBridgedPlugin {
                 return
             }
 
-            DispatchQueue.main.async {
-                let image = self?.drawMapMarker(on: snapshot, coordinate: coordinate) ?? snapshot.image
-                guard let data = image.jpegData(compressionQuality: 0.88) else {
-                    call.reject("Failed to encode map snapshot")
-                    return
-                }
-                let payload: [String: Any] = [
-                    "imageDataUrl": "data:image/jpeg;base64,\(data.base64EncodedString())",
-                    "latitude": coordinate.latitude,
-                    "longitude": coordinate.longitude,
-                ]
-                call.resolve(["result": payload])
+            guard let data = snapshot.image.jpegData(compressionQuality: 0.85) else {
+                call.reject("Failed to encode map snapshot")
+                return
             }
+            let payload: [String: Any] = [
+                "imageDataUrl": "data:image/jpeg;base64,\(data.base64EncodedString())",
+                "latitude": coordinate.latitude,
+                "longitude": coordinate.longitude,
+            ]
+            call.resolve(["result": payload])
         }
-    }
-
-    private func drawMapMarker(on snapshot: MKMapSnapshotter.Snapshot, coordinate: CLLocationCoordinate2D) -> UIImage {
-        let base = snapshot.image
-        let point = snapshot.point(for: coordinate)
-
-        UIGraphicsBeginImageContextWithOptions(base.size, true, base.scale)
-        base.draw(at: .zero)
-
-        let pin = UIImage(systemName: "mappin.circle.fill")?
-            .withTintColor(.systemRed, renderingMode: .alwaysOriginal)
-        if let pin {
-            let x = point.x - pin.size.width / 2
-            let y = point.y - pin.size.height
-            pin.draw(at: CGPoint(x: x, y: y))
-        }
-
-        let out = UIGraphicsGetImageFromCurrentImageContext()
-        UIGraphicsEndImageContext()
-        return out ?? base
     }
 
     @objc func modifyEvent(_ call: CAPPluginCall) {
@@ -297,7 +401,20 @@ public class BahaiCalendarNativePlugin: CAPPlugin, CAPBridgedPlugin {
     private func applyEventFields(_ event: EKEvent, call: CAPPluginCall, startMs: Double, endMs: Double) {
         if let title = call.getString("title") { event.title = title }
         if let notes = call.getString("description") { event.notes = notes }
-        if let location = call.getString("location") { event.location = location }
+        if let url = call.getString("url") { event.url = url.isEmpty ? nil : URL(string: url) }
+        if let location = call.getString("location"), location != (event.location ?? "") {
+            if !location.isEmpty,
+               let latitude = call.getDouble("latitude"),
+               let longitude = call.getDouble("longitude"),
+               CLLocationCoordinate2DIsValid(CLLocationCoordinate2D(latitude: latitude, longitude: longitude)) {
+                // Same shape Apple Calendar saves ("Name\nAddress" + coordinates), so it also shows the map.
+                let structured = EKStructuredLocation(title: location)
+                structured.geoLocation = CLLocation(latitude: latitude, longitude: longitude)
+                event.structuredLocation = structured
+            } else {
+                event.location = location
+            }
+        }
         if let allDay = call.getBool("isAllDay") { event.isAllDay = allDay }
         event.startDate = Date(timeIntervalSince1970: startMs / 1000)
         event.endDate = Date(timeIntervalSince1970: endMs / 1000)
@@ -404,31 +521,67 @@ public class BahaiCalendarNativePlugin: CAPPlugin, CAPBridgedPlugin {
     }
 
     private func applyReminderFields(_ reminder: EKReminder, call: CAPPluginCall) {
+        // EventKit reads reminder date components as Gregorian, whatever calendar the device uses.
+        let gregorian = Calendar(identifier: .gregorian)
+        let previousDue = reminder.dueDateComponents.flatMap { gregorian.date(from: $0) }
         if let listId = call.getString("listId"),
            let list = store.calendar(withIdentifier: listId) {
             reminder.calendar = list
         }
         if let title = call.getString("title") { reminder.title = title }
         if let notes = call.getString("notes") { reminder.notes = notes }
-        if let url = call.getString("url"), !url.isEmpty { reminder.url = URL(string: url) }
+        if let url = call.getString("url") { reminder.url = url.isEmpty ? nil : URL(string: url) }
         if let location = call.getString("location") { reminder.location = location }
         if let priority = call.getInt("priority") { reminder.priority = priority }
-        if let dueMs = call.getDouble("dueDate") {
-            let date = Date(timeIntervalSince1970: dueMs / 1000)
-            reminder.dueDateComponents = Calendar.current.dateComponents(
-                [.year, .month, .day, .hour, .minute, .second],
-                from: date
-            )
-        }
         if let recurrence = call.getObject("recurrence") {
             reminder.recurrenceRules = [buildRecurrenceRule(recurrence)]
         }
-        if let alerts = call.getArray("alerts", NSNumber.self) {
-            reminder.alarms = alerts.map { EKAlarm(relativeOffset: TimeInterval(truncating: $0) * 60) }
+        if let dueMs = call.getDouble("dueDate") {
+            let due = Date(timeIntervalSince1970: dueMs / 1000)
+            let isAllDay = call.getBool("isAllDay") ?? false
+            // Leaving out the time is how EventKit marks an all-day reminder.
+            let units: Set<Calendar.Component> = isAllDay
+                ? [.year, .month, .day]
+                : [.year, .month, .day, .hour, .minute, .second]
+            reminder.dueDateComponents = gregorian.dateComponents(units, from: due)
+            if let previousDue {
+                shiftAbsoluteAlarms(of: reminder, by: due.timeIntervalSince(previousDue))
+            }
+            // Relative alarms count from a start date these reminders lack, so they would never fire.
+            if let alerts = call.getArray("alerts", NSNumber.self) {
+                reminder.alarms = alerts.map { EKAlarm(absoluteDate: due.addingTimeInterval(TimeInterval(truncating: $0) * 60)) }
+            }
+            syncDueAlarm(on: reminder, at: due, isAllDay: isAllDay)
         }
         if let completed = call.getBool("isCompleted"), completed {
             reminder.completionDate = Date()
         }
+    }
+
+    /// Absolute alarms don't follow the due date, so move them along with it.
+    private func shiftAbsoluteAlarms(of reminder: EKReminder, by delta: TimeInterval) {
+        guard delta != 0,
+              let alarms = reminder.alarms,
+              alarms.contains(where: { $0.absoluteDate != nil }) else { return }
+        reminder.alarms = alarms.map { alarm in
+            guard let absoluteDate = alarm.absoluteDate else { return alarm }
+            return EKAlarm(absoluteDate: absoluteDate.addingTimeInterval(delta))
+        }
+    }
+
+    /// The Reminders app only notifies through alarms; all-day reminders rely on its Today notification instead.
+    private func syncDueAlarm(on reminder: EKReminder, at due: Date, isAllDay: Bool) {
+        var alarms = (reminder.alarms ?? []).filter { alarm in
+            if let absoluteDate = alarm.absoluteDate {
+                return abs(absoluteDate.timeIntervalSince(due)) >= 1
+            }
+            // Drops the relative due alarm older builds added, which never fires.
+            return alarm.structuredLocation != nil || alarm.relativeOffset != 0
+        }
+        if !isAllDay {
+            alarms.append(EKAlarm(absoluteDate: due))
+        }
+        reminder.alarms = alarms
     }
 
     // MARK: - Shared mapping helpers

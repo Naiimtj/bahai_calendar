@@ -3,6 +3,8 @@ description: 'Distill the current chat (work done + user corrections/feedback) i
 name: 'update-chat-github'
 argument-hint: "Optional: focus area to scope the review (e.g. 'styling', 'api', 'the store refactor'). If omitted, the whole conversation is reviewed."
 tools: [read, search, edit]
+# Generated from .github/MODELS.md by .github/scripts/sync-agent-models.sh. Do not edit.
+model: ["GPT-5.3-Codex", "GPT-5.6 Luna"]
 ---
 
 # /update-chat-github — Persist Chat Knowledge into .github/

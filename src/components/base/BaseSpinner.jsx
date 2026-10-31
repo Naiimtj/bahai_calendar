@@ -80,7 +80,7 @@ const BaseSpinner = ({ size = 'md', noCurrentQuote = false, ...props }) => {
   return (
     <div {...props} className="flex flex-col items-center">
       <svg
-        className="animate-spin text-btn-primary"
+        className="animate-spin text-btn-primary-dark  dark:text-btn-primary"
         style={{
           width: sizeClasses[size] || sizeClasses.md,
           height: sizeClasses[size] || sizeClasses.md,
@@ -103,7 +103,7 @@ const BaseSpinner = ({ size = 'md', noCurrentQuote = false, ...props }) => {
         />
       </svg>
       {!noCurrentQuote && (
-        <div className="mt-4 text-sm italic text-gray-600 max-w-md text-center">
+        <div className="mt-4 text-sm italic text-gray-600 dark:text-gray-500 w-full text-center">
           &quot;{t(currentQuote)}&quot;
         </div>
       )}

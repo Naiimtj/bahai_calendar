@@ -1,6 +1,8 @@
 ---
 description: 'Review, clean up, and organize the project learnings file'
 name: 'learnings'
+# Generated from .github/MODELS.md by .github/scripts/sync-agent-models.sh. Do not edit.
+model: ["GPT-5.3-Codex", "GPT-5.6 Luna"]
 ---
 
 # /learnings - Review & Manage Project Learnings

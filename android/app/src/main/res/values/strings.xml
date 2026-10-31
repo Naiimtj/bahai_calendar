@@ -4,4 +4,11 @@
     <string name="title_activity_main">Bahá\'í Calendar</string>
     <string name="package_name">com.bahaicalendar.app</string>
     <string name="custom_url_scheme">com.bahaicalendar.app</string>
+    <string name="widget_badi_date">Badíʿ date</string>
+    <string name="widget_gregorian_date">Gregorian date</string>
+    <string name="widget_badi_month">Badíʿ month</string>
+    <string name="widget_gregorian_month">Gregorian month</string>
+    <string name="widget_four_weeks">Four weeks</string>
+    <string name="widget_full_gregorian_month">Full Gregorian month</string>
+    <string name="widget_full_badi_month">Full Badíʿ month</string>
 </resources>

@@ -1,63 +1,34 @@
-# API Integration
+# Fetch Services
 
-> **Stack-specific skill** (native `fetch` + service modules in `src/services/`). This app has **no custom backend** — it consumes public third-party APIs. Badí' calendar data is computed locally in `src/lib/badiCalendar.js` (no network call). Fetch stays out of components.
+This project has no custom backend. Network access uses native `fetch` in `src/services/`; Badíʿ calendar calculations are local in `src/lib/`.
 
-Best practices for data access in this project.
+## Service Boundaries
 
-## Architecture
+- Keep HTTP access in `src/services/`.
+- Reuse the existing service modules and response handling before adding a new helper.
+- Do not invent endpoints, base URLs, authentication, or response shapes.
+- Validate response status and shape before consuming data.
+- Handle offline mode, aborts, timeouts, and user-visible failures consistently with neighboring services.
+- Keep calendar calculations out of network services.
 
-All network calls live in **service modules** under `src/services/` (native `fetch`). Components and contexts call service functions; they never call `fetch` directly.
+Current external integrations are evidenced in the repository as sunrise/sunset, geocoding, calendar sync, and personal-calendar helpers. Confirm the exact URL and payload in the existing service before changing one.
 
-| Service               | Purpose                                                     |
-| --------------------- | ----------------------------------------------------------- |
-| `badiApi.js`          | Bahá'í calendar / holy day data (local compute, no network) |
-| `sunTimesApi.js`      | Sunrise / sunset times (for sunset-based day boundaries)    |
-| `geocodingApi.js`     | Location lookup / geocoding                                 |
-| `calendarSync.js`     | Device calendar sync (Capacitor calendar plugin)            |
-| `personalCalendar.js` | Personal event storage helpers                              |
-
-## Rules
-
-1. **Never call `fetch` directly in components or JSX** — add or use a function in the relevant `src/services/*.js` module.
-2. **One service module per external concern** — keep a service focused on a single API/domain.
-3. **Handle errors in the service** — return a typed/normalized result or throw a clear error; don't leak raw `fetch`/network errors to the UI. Surface user-facing failures via UI state, not silent catches.
-4. **No hardcoded secrets** — none are needed for the public APIs; never embed keys in source.
-5. **Respect offline** — use `useOnlineStatus` before network-dependent actions where relevant.
-
-## Adding a New Service Call — Checklist
-
-1. Pick the correct service module (or create `src/services/<name>.js` for a new external concern).
-2. Implement the call with the native `fetch` API, keeping the base URL and params inside the module.
-3. Normalize the response into the shape the app expects before returning.
-4. Handle network/HTTP errors explicitly; return a predictable value or throw.
-5. Call the service from a context action or a hook — not from a component render path.
-6. Guard for offline / missing geolocation permission where applicable.
-
-## Example
+## Safe Fetch Pattern
 
 ```js
-// src/services/sunTimesApi.js
-export async function getSunTimes({ lat, lng, date }) {
-  try {
-    const res = await fetch(
-      `https://api.sunrisesunset.io/json?lat=${lat}&lng=${lng}&date=${date}`,
-    );
-    const data = await res.json();
-    return { sunrise: data.results.sunrise, sunset: data.results.sunset };
-  } catch (err) {
-    throw new Error('Failed to fetch sun times');
-  }
+export async function fetchJson(url, options = {}) {
+  const response = await fetch(url, options);
+  if (!response.ok) throw new Error(`Request failed: ${response.status}`);
+  return response.json();
 }
 ```
 
-```jsx
-// consumed from a hook / context action, not inline in JSX
-const times = await getSunTimes({ lat, lng, date });
-```
+Use the project-specific service implementation rather than copying this helper when an existing equivalent is present.
 
-## Anti-Patterns — Do NOT
+## Review Checklist
 
-- Call `fetch` directly inside components or effects scattered across the UI.
-- Duplicate the same request in multiple places — put it in a service and reuse.
-- Swallow errors silently — always surface or rethrow.
-- Hardcode environment/base URLs in components.
+- Endpoint and payload are evidenced by existing code or official project documentation.
+- No credentials or environment-specific URLs are hardcoded.
+- Errors and offline behavior are handled.
+- External data is validated before use.
+- Focused tests cover mapping and failure paths.

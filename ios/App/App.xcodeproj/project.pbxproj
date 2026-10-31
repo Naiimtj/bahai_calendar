@@ -17,9 +17,51 @@
 		50B271D11FEDC1A000F3C39B /* public in Resources */ = {isa = PBXBuildFile; fileRef = 50B271D01FEDC1A000F3C39B /* public */; };
 		52D29972657AB9ADF97D4E54 /* fasting_alarm.wav in Resources */ = {isa = PBXBuildFile; fileRef = E81A6F17EAED1639C13AEF42 /* fasting_alarm.wav */; };
 		AA001101AA000000AA000001 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA001100AA000000AA000001 /* SceneDelegate.swift */; };
+		BC57A1000000000000000012 /* BahaiCalendarWidgetsBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC57A1000000000000000002 /* BahaiCalendarWidgetsBundle.swift */; };
+		BC57A1000000000000000013 /* WidgetSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC57A1000000000000000003 /* WidgetSnapshot.swift */; };
+		BC57A1000000000000000014 /* CalendarTimelineProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC57A1000000000000000004 /* CalendarTimelineProvider.swift */; };
+		BC57A1000000000000000015 /* WidgetStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC57A1000000000000000005 /* WidgetStyle.swift */; };
+		BC57A1000000000000000016 /* BadiDateWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC57A1000000000000000006 /* BadiDateWidget.swift */; };
+		BC57A1000000000000000017 /* BadiMonthWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC57A1000000000000000007 /* BadiMonthWidget.swift */; };
+		BC57A1000000000000000018 /* FourWeeksWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC57A1000000000000000008 /* FourWeeksWidget.swift */; };
+		BC57A1000000000000000019 /* WidgetPreviews.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC57A1000000000000000009 /* WidgetPreviews.swift */; };
+		BC57A100000000000000001A /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = BC57A100000000000000000A /* Assets.xcassets */; };
+		BC57A100000000000000001B /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = BC57A100000000000000000B /* Localizable.xcstrings */; };
+		BC57A100000000000000001C /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BC57A100000000000000000F /* WidgetKit.framework */; };
+		BC57A100000000000000001D /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BC57A1000000000000000010 /* SwiftUI.framework */; };
+		BC57A100000000000000001E /* BahaiCalendarWidgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = BC57A1000000000000000001 /* BahaiCalendarWidgets.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		BC57A100000000000000001F /* WidgetStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC57A1000000000000000011 /* WidgetStore.swift */; };
+		BC57A1000000000000000020 /* WidgetStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC57A1000000000000000011 /* WidgetStore.swift */; };
+		BC57A1000000000000000043 /* GregorianDateWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC57A1000000000000000041 /* GregorianDateWidget.swift */; };
+		BC57A1000000000000000044 /* GregorianMonthWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC57A1000000000000000042 /* GregorianMonthWidget.swift */; };
+		BC57A1000000000000000046 /* FullMonthWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC57A1000000000000000045 /* FullMonthWidget.swift */; };
 		DE6B53130D31380212C53B6D /* MainViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6DF87D04AB0CC521815FAAFD /* MainViewController.swift */; };
 		F63E0781A340689F6A2BBD64 /* BahaiCalendarNativePlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B3E8DCCC6CDE56D07BCACD2 /* BahaiCalendarNativePlugin.swift */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		BC57A1000000000000000036 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 504EC2FC1FED79650016851F /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = BC57A1000000000000000031;
+			remoteInfo = BahaiCalendarWidgets;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		BC57A1000000000000000035 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				BC57A100000000000000001E /* BahaiCalendarWidgets.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		2B3E8DCCC6CDE56D07BCACD2 /* BahaiCalendarNativePlugin.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = BahaiCalendarNativePlugin.swift; sourceTree = "<group>"; };
@@ -35,6 +77,26 @@
 		6DF87D04AB0CC521815FAAFD /* MainViewController.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MainViewController.swift; sourceTree = "<group>"; };
 		958DCC722DB07C7200EA8C5F /* debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = debug.xcconfig; path = ../debug.xcconfig; sourceTree = SOURCE_ROOT; };
 		AA001100AA000000AA000001 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
+		BC57A1000000000000000001 /* BahaiCalendarWidgets.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = BahaiCalendarWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		BC57A1000000000000000002 /* BahaiCalendarWidgetsBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BahaiCalendarWidgetsBundle.swift; sourceTree = "<group>"; };
+		BC57A1000000000000000003 /* WidgetSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetSnapshot.swift; sourceTree = "<group>"; };
+		BC57A1000000000000000004 /* CalendarTimelineProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarTimelineProvider.swift; sourceTree = "<group>"; };
+		BC57A1000000000000000005 /* WidgetStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetStyle.swift; sourceTree = "<group>"; };
+		BC57A1000000000000000006 /* BadiDateWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BadiDateWidget.swift; sourceTree = "<group>"; };
+		BC57A1000000000000000007 /* BadiMonthWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BadiMonthWidget.swift; sourceTree = "<group>"; };
+		BC57A1000000000000000008 /* FourWeeksWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FourWeeksWidget.swift; sourceTree = "<group>"; };
+		BC57A1000000000000000009 /* WidgetPreviews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetPreviews.swift; sourceTree = "<group>"; };
+		BC57A100000000000000000A /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		BC57A100000000000000000B /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
+		BC57A100000000000000000C /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		BC57A100000000000000000D /* BahaiCalendarWidgets.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = BahaiCalendarWidgets.entitlements; sourceTree = "<group>"; };
+		BC57A100000000000000000E /* App.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = App.entitlements; sourceTree = "<group>"; };
+		BC57A100000000000000000F /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
+		BC57A1000000000000000010 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
+		BC57A1000000000000000011 /* WidgetStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetStore.swift; sourceTree = "<group>"; };
+		BC57A1000000000000000041 /* GregorianDateWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GregorianDateWidget.swift; sourceTree = "<group>"; };
+		BC57A1000000000000000042 /* GregorianMonthWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GregorianMonthWidget.swift; sourceTree = "<group>"; };
+		BC57A1000000000000000045 /* FullMonthWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FullMonthWidget.swift; sourceTree = "<group>"; };
 		E81A6F17EAED1639C13AEF42 /* fasting_alarm.wav */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = audio.wav; path = fasting_alarm.wav; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -47,6 +109,15 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		BC57A1000000000000000033 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				BC57A100000000000000001D /* SwiftUI.framework in Frameworks */,
+				BC57A100000000000000001C /* WidgetKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -55,6 +126,8 @@
 			children = (
 				958DCC722DB07C7200EA8C5F /* debug.xcconfig */,
 				504EC3061FED79650016851F /* App */,
+				BC57A1000000000000000021 /* BahaiCalendarWidgets */,
+				BC57A1000000000000000022 /* Frameworks */,
 				504EC3051FED79650016851F /* Products */,
 			);
 			sourceTree = "<group>";
@@ -63,6 +136,7 @@
 			isa = PBXGroup;
 			children = (
 				504EC3041FED79650016851F /* Bahai Calendar.app */,
+				BC57A1000000000000000001 /* BahaiCalendarWidgets.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -77,6 +151,7 @@
 				504EC30E1FED79650016851F /* Assets.xcassets */,
 				504EC3101FED79650016851F /* LaunchScreen.storyboard */,
 				504EC3131FED79650016851F /* Info.plist */,
+				BC57A100000000000000000E /* App.entitlements */,
 				2FAD9762203C412B000D30F8 /* config.xml */,
 				50B271D01FEDC1A000F3C39B /* public */,
 				2B3E8DCCC6CDE56D07BCACD2 /* BahaiCalendarNativePlugin.swift */,
@@ -84,6 +159,38 @@
 				E81A6F17EAED1639C13AEF42 /* fasting_alarm.wav */,
 			);
 			path = App;
+			sourceTree = "<group>";
+		};
+		BC57A1000000000000000021 /* BahaiCalendarWidgets */ = {
+			isa = PBXGroup;
+			children = (
+				BC57A1000000000000000002 /* BahaiCalendarWidgetsBundle.swift */,
+				BC57A1000000000000000011 /* WidgetStore.swift */,
+				BC57A1000000000000000003 /* WidgetSnapshot.swift */,
+				BC57A1000000000000000004 /* CalendarTimelineProvider.swift */,
+				BC57A1000000000000000005 /* WidgetStyle.swift */,
+				BC57A1000000000000000006 /* BadiDateWidget.swift */,
+				BC57A1000000000000000007 /* BadiMonthWidget.swift */,
+				BC57A1000000000000000041 /* GregorianDateWidget.swift */,
+				BC57A1000000000000000042 /* GregorianMonthWidget.swift */,
+				BC57A1000000000000000008 /* FourWeeksWidget.swift */,
+				BC57A1000000000000000045 /* FullMonthWidget.swift */,
+				BC57A1000000000000000009 /* WidgetPreviews.swift */,
+				BC57A100000000000000000A /* Assets.xcassets */,
+				BC57A100000000000000000B /* Localizable.xcstrings */,
+				BC57A100000000000000000C /* Info.plist */,
+				BC57A100000000000000000D /* BahaiCalendarWidgets.entitlements */,
+			);
+			path = BahaiCalendarWidgets;
+			sourceTree = "<group>";
+		};
+		BC57A1000000000000000022 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				BC57A1000000000000000010 /* SwiftUI.framework */,
+				BC57A100000000000000000F /* WidgetKit.framework */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -96,10 +203,12 @@
 				504EC3001FED79650016851F /* Sources */,
 				504EC3011FED79650016851F /* Frameworks */,
 				504EC3021FED79650016851F /* Resources */,
+				BC57A1000000000000000035 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				BC57A1000000000000000037 /* PBXTargetDependency */,
 			);
 			name = App;
 			packageProductDependencies = (
@@ -108,6 +217,25 @@
 			productName = App;
 			productReference = 504EC3041FED79650016851F /* Bahai Calendar.app */;
 			productType = "com.apple.product-type.application";
+		};
+		BC57A1000000000000000031 /* BahaiCalendarWidgets */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = BC57A1000000000000000038 /* Build configuration list for PBXNativeTarget "BahaiCalendarWidgets" */;
+			buildPhases = (
+				BC57A1000000000000000032 /* Sources */,
+				BC57A1000000000000000033 /* Frameworks */,
+				BC57A1000000000000000034 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = BahaiCalendarWidgets;
+			packageProductDependencies = (
+			);
+			productName = BahaiCalendarWidgets;
+			productReference = BC57A1000000000000000001 /* BahaiCalendarWidgets.appex */;
+			productType = "com.apple.product-type.app-extension";
 		};
 /* End PBXNativeTarget section */
 
@@ -124,6 +252,9 @@
 						LastSwiftMigration = 1100;
 						ProvisioningStyle = Automatic;
 					};
+					BC57A1000000000000000031 = {
+						CreatedOnToolsVersion = 27.0;
+					};
 				};
 			};
 			buildConfigurationList = 504EC2FF1FED79650016851F /* Build configuration list for PBXProject "App" */;
@@ -131,7 +262,12 @@
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
+				ar,
+				de,
 				en,
+				es,
+				fa,
+				fr,
 				Base,
 			);
 			mainGroup = 504EC2FB1FED79650016851F;
@@ -143,6 +279,7 @@
 			projectRoot = "";
 			targets = (
 				504EC3031FED79650016851F /* App */,
+				BC57A1000000000000000031 /* BahaiCalendarWidgets */,
 			);
 		};
 /* End PBXProject section */
@@ -162,6 +299,15 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		BC57A1000000000000000034 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				BC57A100000000000000001A /* Assets.xcassets in Resources */,
+				BC57A100000000000000001B /* Localizable.xcstrings in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -173,10 +319,38 @@
 				AA001101AA000000AA000001 /* SceneDelegate.swift in Sources */,
 				F63E0781A340689F6A2BBD64 /* BahaiCalendarNativePlugin.swift in Sources */,
 				DE6B53130D31380212C53B6D /* MainViewController.swift in Sources */,
+				BC57A1000000000000000020 /* WidgetStore.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		BC57A1000000000000000032 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				BC57A1000000000000000012 /* BahaiCalendarWidgetsBundle.swift in Sources */,
+				BC57A1000000000000000013 /* WidgetSnapshot.swift in Sources */,
+				BC57A1000000000000000014 /* CalendarTimelineProvider.swift in Sources */,
+				BC57A1000000000000000015 /* WidgetStyle.swift in Sources */,
+				BC57A1000000000000000016 /* BadiDateWidget.swift in Sources */,
+				BC57A1000000000000000017 /* BadiMonthWidget.swift in Sources */,
+				BC57A1000000000000000043 /* GregorianDateWidget.swift in Sources */,
+				BC57A1000000000000000044 /* GregorianMonthWidget.swift in Sources */,
+				BC57A1000000000000000018 /* FourWeeksWidget.swift in Sources */,
+				BC57A1000000000000000046 /* FullMonthWidget.swift in Sources */,
+				BC57A1000000000000000019 /* WidgetPreviews.swift in Sources */,
+				BC57A100000000000000001F /* WidgetStore.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		BC57A1000000000000000037 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = BC57A1000000000000000031 /* BahaiCalendarWidgets */;
+			targetProxy = BC57A1000000000000000036 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin PBXVariantGroup section */
 		504EC30B1FED79650016851F /* Main.storyboard */ = {
@@ -322,8 +496,9 @@
 			baseConfigurationReference = 958DCC722DB07C7200EA8C5F /* debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = App/App.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 9;
+				CURRENT_PROJECT_VERSION = 3;
 				INFOPLIST_FILE = App/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "Bahá'í Calendar";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
@@ -332,7 +507,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.2;
 				OTHER_SWIFT_FLAGS = "$(inherited) \"-D\" \"COCOAPODS\" \"-DDEBUG\"";
 				PRODUCT_BUNDLE_IDENTIFIER = com.bahaicalendar.app;
 				PRODUCT_NAME = "Bahai Calendar";
@@ -346,8 +521,9 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = App/App.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 9;
+				CURRENT_PROJECT_VERSION = 3;
 				INFOPLIST_FILE = App/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "Bahá'í Calendar";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
@@ -356,10 +532,71 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.2;
 				PRODUCT_BUNDLE_IDENTIFIER = com.bahaicalendar.app;
 				PRODUCT_NAME = "Bahai Calendar";
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		BC57A1000000000000000039 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_ENTITLEMENTS = BahaiCalendarWidgets/BahaiCalendarWidgets.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 3;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = BahaiCalendarWidgets/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Bahá'í Calendar";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.2;
+				PRODUCT_BUNDLE_IDENTIFIER = com.bahaicalendar.app.widgets;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		BC57A100000000000000003A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_ENTITLEMENTS = BahaiCalendarWidgets/BahaiCalendarWidgets.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 3;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = BahaiCalendarWidgets/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Bahá'í Calendar";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.2;
+				PRODUCT_BUNDLE_IDENTIFIER = com.bahaicalendar.app.widgets;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -382,6 +619,15 @@
 			buildConfigurations = (
 				504EC3171FED79650016851F /* Debug */,
 				504EC3181FED79650016851F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		BC57A1000000000000000038 /* Build configuration list for PBXNativeTarget "BahaiCalendarWidgets" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				BC57A1000000000000000039 /* Debug */,
+				BC57A100000000000000003A /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

@@ -1,6 +1,8 @@
 ---
 description: 'Quick access to information about available skills'
 name: 'skills'
+# Generated from .github/MODELS.md by .github/scripts/sync-agent-models.sh. Do not edit.
+model: ["GPT-5.6 Luna", "GPT-5.3-Codex"]
 ---
 
 # /skills - Skills Information Access
@@ -191,10 +193,10 @@ Dispatching Parallel Agents
 **Response:**
 
 ```
-**Name:** Test-Driven Development
-**Description:** Write tests before implementation code
-**Primary Goal:** NO PRODUCTION CODE WITHOUT A FAILING TEST FIRST
-**Link:** .github/skills/testing/test-driven-development/SKILL.md
+**Name:** Testing
+**Description:** Test patterns, mocks, coverage, and regression prevention
+**Primary Goal:** Verify changed behavior with the project's testing stack
+**Link:** .github/skills/testing/SKILL.md
 ```
 
 ## Implementation Notes

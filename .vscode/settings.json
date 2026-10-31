@@ -1,0 +1,8 @@
+{
+  "i18n-ally.localesPaths": ["src/i18n/locales"],
+  "i18n-ally.keystyle": "nested",
+  "tailwindCSS.experimental.configFile": "tailwind.config.js",
+  "tailwindCSS.includeLanguages": { "javascript": "javascript" },
+  "chat.planAgent.defaultModel": "Auto (copilot)",
+  "inlineChat.defaultModel": "Auto (copilot)"
+}

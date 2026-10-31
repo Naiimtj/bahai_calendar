@@ -1,7 +1,10 @@
 ---
 name: legacy-merger
 description: Specialized agent for exhaustive .github-old/ absorption during /init-github
-model: claude-sonnet
+tools: [read, search, edit]
+user-invocable: false
+# Generated from .github/MODELS.md by .github/scripts/sync-agent-models.sh. Do not edit.
+model: ["GPT-5.3-Codex", "GPT-5.6 Luna"]
 ---
 
 # Legacy Merger Agent

@@ -6,6 +6,7 @@ import android.content.ContentValues;
 import android.database.Cursor;
 import android.net.Uri;
 import android.provider.CalendarContract;
+import android.util.AtomicFile;
 import com.getcapacitor.JSArray;
 import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;
@@ -17,6 +18,10 @@ import com.getcapacitor.annotation.Permission;
 import com.getcapacitor.annotation.PermissionCallback;
 import java.util.Calendar;
 import java.util.TimeZone;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -38,6 +43,40 @@ import org.json.JSONObject;
     }
 )
 public class BahaiCalendarNativePlugin extends Plugin {
+
+    @PluginMethod
+    public void updateWidgetSnapshot(PluginCall call) {
+        String snapshot = call.getString("snapshot");
+        if (snapshot == null || snapshot.isEmpty()) {
+            call.reject("Missing 'snapshot'");
+            return;
+        }
+        byte[] data = snapshot.getBytes(StandardCharsets.UTF_8);
+        if (data.length > 1_000_000) {
+            call.reject("Widget snapshot too large");
+            return;
+        }
+        try {
+            JSONObject parsed = new JSONObject(snapshot);
+            if (parsed.optInt("version") != 2 || parsed.optJSONArray("days") == null) {
+                call.reject("Invalid widget snapshot");
+                return;
+            }
+            AtomicFile file = new AtomicFile(new File(getContext().getFilesDir(), "widget-snapshot.json"));
+            FileOutputStream stream = file.startWrite();
+            try {
+                stream.write(data);
+                file.finishWrite(stream);
+            } catch (IOException error) {
+                file.failWrite(stream);
+                throw error;
+            }
+            BahaiWidgetProvider.refreshAll(getContext());
+            call.resolve();
+        } catch (JSONException | IOException error) {
+            call.reject("Failed to save widget snapshot", error);
+        }
+    }
 
     private boolean hasCalendarPermission() {
         return getPermissionState("calendar") == PermissionState.GRANTED;

@@ -77,7 +77,7 @@ const BaseToastNotification = ({
     <div
       className={`fixed w-full p-4 transition-all duration-500 z-50 ${
         display
-          ? 'bottom-0 opacity-100'
+          ? 'bottom-[var(--app-system-navigation-bottom,0px)] opacity-100'
           : '-bottom-40 opacity-0 pointer-events-none'
       }`}
       aria-live={type === 'error' ? 'assertive' : 'polite'}

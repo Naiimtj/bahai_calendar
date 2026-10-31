@@ -1,0 +1,193 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "widget.reminder.completed" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : { "stringUnit" : { "state" : "translated", "value" : "تذكير مكتمل" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Erledigte Erinnerung" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Completed reminder" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Recordatorio completado" } },
+        "fa" : { "stringUnit" : { "state" : "translated", "value" : "یادآوری انجام‌شده" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Rappel terminé" } }
+      }
+    },
+    "widget.reminder.pending" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : { "stringUnit" : { "state" : "translated", "value" : "تذكير غير مكتمل" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Offene Erinnerung" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Pending reminder" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Recordatorio pendiente" } },
+        "fa" : { "stringUnit" : { "state" : "translated", "value" : "یادآوری انجام‌نشده" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Rappel en attente" } }
+      }
+    },
+    "widget.fullBadiMonth.description" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : { "stringUnit" : { "state" : "translated", "value" : "الشهر البديع كاملاً مع الأيام المقدسة والأعياد وأحداثك." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Der ganze Badí'-Monat mit Heiligen Tagen, Festen und deinen Terminen." } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "The full Badí' month with Holy Days, Feasts and your events." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "El mes Badí' completo con Días Sagrados, Fiestas y tus eventos." } },
+        "fa" : { "stringUnit" : { "state" : "translated", "value" : "ماه کامل بدیع با ایام مقدس، جشن‌ها و رویدادهای شما." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Le mois badí' entier avec les Jours saints, les Fêtes et vos événements." } }
+      }
+    },
+    "widget.fullBadiMonth.name" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : { "stringUnit" : { "state" : "translated", "value" : "الشهر البديع الكامل" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Ganzer Badí'-Monat" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Full Badí' Month" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Mes Badí' completo" } },
+        "fa" : { "stringUnit" : { "state" : "translated", "value" : "ماه کامل بدیع" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Mois badí' entier" } }
+      }
+    },
+    "widget.fullGregorianMonth.description" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : { "stringUnit" : { "state" : "translated", "value" : "الشهر الميلادي كاملاً مع الأيام المقدسة والأعياد وأحداثك." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Der ganze gregorianische Monat mit Heiligen Tagen, Festen und deinen Terminen." } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "The full Gregorian month with Holy Days, Feasts and your events." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "El mes gregoriano completo con Días Sagrados, Fiestas y tus eventos." } },
+        "fa" : { "stringUnit" : { "state" : "translated", "value" : "ماه کامل میلادی با ایام مقدس، جشن‌ها و رویدادهای شما." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Le mois grégorien entier avec les Jours saints, les Fêtes et vos événements." } }
+      }
+    },
+    "widget.fullGregorianMonth.name" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : { "stringUnit" : { "state" : "translated", "value" : "الشهر الميلادي الكامل" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Ganzer gregorianischer Monat" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Full Gregorian Month" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Mes gregoriano completo" } },
+        "fa" : { "stringUnit" : { "state" : "translated", "value" : "ماه کامل میلادی" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Mois grégorien entier" } }
+      }
+    },
+    "widget.date.description" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : { "stringUnit" : { "state" : "translated", "value" : "اعرض التاريخ البديع لليوم." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Zeigt das heutige Badí'-Datum." } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "See today's Badí' date." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Consulta la fecha Badí' de hoy." } },
+        "fa" : { "stringUnit" : { "state" : "translated", "value" : "تاریخ بدیع امروز را ببینید." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Consultez la date Badí' du jour." } }
+      }
+    },
+    "widget.date.name" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : { "stringUnit" : { "state" : "translated", "value" : "التاريخ البديع" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Badí'-Datum" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Badí' Date" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Fecha Badí'" } },
+        "fa" : { "stringUnit" : { "state" : "translated", "value" : "تاریخ بدیع" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Date Badí'" } }
+      }
+    },
+    "widget.gregorianDate.description" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : { "stringUnit" : { "state" : "translated", "value" : "اعرض تاريخ اليوم مع التاريخ البديع." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Zeigt das heutige Datum mit dem Badí'-Datum." } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "See today's date with its Badí' date." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Consulta la fecha de hoy junto a su fecha Badí'." } },
+        "fa" : { "stringUnit" : { "state" : "translated", "value" : "تاریخ امروز را همراه با تاریخ بدیع ببینید." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Consultez la date du jour avec sa date Badí'." } }
+      }
+    },
+    "widget.gregorianDate.name" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : { "stringUnit" : { "state" : "translated", "value" : "التاريخ الميلادي" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Gregorianisches Datum" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Gregorian Date" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Fecha gregoriana" } },
+        "fa" : { "stringUnit" : { "state" : "translated", "value" : "تاریخ میلادی" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Date grégorienne" } }
+      }
+    },
+    "widget.gregorianMonth.description" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : { "stringUnit" : { "state" : "translated", "value" : "يعرض الشهر الحالي مع الأيام المقدسة والأعياد." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Zeigt den aktuellen Monat mit Heiligen Tagen und Festen." } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Shows the current month with Holy Days and Feasts." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Muestra el mes actual con los Días Sagrados y las Fiestas." } },
+        "fa" : { "stringUnit" : { "state" : "translated", "value" : "ماه جاری را با ایام مقدس و جشن‌ها نشان می‌دهد." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Affiche le mois en cours avec les Jours saints et les Fêtes." } }
+      }
+    },
+    "widget.gregorianMonth.name" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : { "stringUnit" : { "state" : "translated", "value" : "الشهر الميلادي" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Gregorianischer Monat" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Gregorian Month" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Mes gregoriano" } },
+        "fa" : { "stringUnit" : { "state" : "translated", "value" : "ماه میلادی" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Mois grégorien" } }
+      }
+    },
+    "widget.fourWeeks.description" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : { "stringUnit" : { "state" : "translated", "value" : "يعرض الأسابيع الأربعة القادمة مع الأيام المقدسة والأعياد وأحداثك." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Zeigt die nächsten vier Wochen mit Heiligen Tagen, Festen und deinen Terminen." } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Shows the next four weeks with Holy Days, Feasts and your events." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Muestra las próximas cuatro semanas con Días Sagrados, Fiestas y tus eventos." } },
+        "fa" : { "stringUnit" : { "state" : "translated", "value" : "چهار هفتهٔ آینده را با ایام مقدس، جشن‌ها و رویدادهای شما نشان می‌دهد." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Affiche les quatre prochaines semaines avec les Jours saints, les Fêtes et vos événements." } }
+      }
+    },
+    "widget.fourWeeks.name" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : { "stringUnit" : { "state" : "translated", "value" : "أربعة أسابيع" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Vier Wochen" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Four Weeks" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Cuatro semanas" } },
+        "fa" : { "stringUnit" : { "state" : "translated", "value" : "چهار هفته" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Quatre semaines" } }
+      }
+    },
+    "widget.month.description" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : { "stringUnit" : { "state" : "translated", "value" : "يعرض الشهر البديع الحالي على الشاشة الرئيسية." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Zeigt den aktuellen Badí'-Monat auf dem Home-Bildschirm." } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Shows the current Badí' month on your Home Screen." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Muestra el mes Badí' actual en la pantalla de inicio." } },
+        "fa" : { "stringUnit" : { "state" : "translated", "value" : "ماه بدیع جاری را در صفحهٔ اصلی نشان می‌دهد." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Affiche le mois Badí' en cours sur l'écran d'accueil." } }
+      }
+    },
+    "widget.month.name" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : { "stringUnit" : { "state" : "translated", "value" : "الشهر البديع" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Badí'-Monat" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Badí' Month" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Mes Badí'" } },
+        "fa" : { "stringUnit" : { "state" : "translated", "value" : "ماه بدیع" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Mois Badí'" } }
+      }
+    },
+    "widget.openApp" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : { "stringUnit" : { "state" : "translated", "value" : "افتح التقويم البهائي لتحديث هذه الأداة." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Öffne Bahá'í-Kalender, um dieses Widget zu aktualisieren." } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Open Bahá'í Calendar to update this widget." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Abre Calendario Bahá'í para actualizar este widget." } },
+        "fa" : { "stringUnit" : { "state" : "translated", "value" : "برای به‌روزرسانی این ابزارک، تقویم بهائی را باز کنید." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Ouvrez Calendrier Bahá'í pour mettre à jour ce widget." } }
+      }
+    }
+  },
+  "version" : "1.0"
+}

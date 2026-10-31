@@ -40,7 +40,7 @@ export default function DensitySwitcher() {
 
   return (
     <div
-      className="relative flex items-center gap-3 justify-center transition-colors cursor-pointer flex-row z-10 px-4 py-2.5 max-lg:min-h-12 max-lg:px-5 max-lg:py-3 border border-btn-primary md:hover:bg-btn-primary/10 bg-white/10 rounded-full text-sm font-semibold  active:bg-gray-100 text-gray-900 active:dark:bg-gray-800 dark:text-gray-100 backdrop-blur-sm md:hover:text-btn-primary-dark md:hover:dark:text-btn-primary"
+      className="relative flex items-center gap-3 justify-center transition-colors cursor-pointer flex-row z-10 px-4 py-2.5 max-lg:min-h-12 max-lg:px-5 max-lg:py-3 shadow-md md:hover:bg-btn-primary/10 bg-gray-100/30 dark:bg-gray-100/5 rounded-full text-sm font-semibold  active:bg-gray-100 text-gray-900 active:dark:bg-gray-800 dark:text-gray-100 backdrop-blur-sm md:hover:text-btn-primary-dark md:hover:dark:text-btn-primary"
       ref={menuRef}
       onClick={() => setOpen((v) => !v)}
     >
@@ -48,7 +48,7 @@ export default function DensitySwitcher() {
         icon="optionViewCalendar"
         size="md"
         className="rounded-full text-gray-500 dark:fill-gray-100 cursor-pointer max-lg:h-7 max-lg:w-7"
-        title={t('calendar.density')}
+        title={t('calendar.visualization')}
       />
 
       {open && (

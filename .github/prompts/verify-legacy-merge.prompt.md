@@ -1,5 +1,9 @@
 ---
-description: Exhaustive verification that .github-old/ was completely absorbed into .github/ with zero content loss
+description: 'Exhaustive verification that .github-old/ was completely absorbed into .github/ with zero content loss'
+name: 'verify-legacy-merge'
+tools: [read, search]
+# Generated from .github/MODELS.md by .github/scripts/sync-agent-models.sh. Do not edit.
+model: ["GPT-5.3-Codex", "GPT-5.6 Luna"]
 ---
 
 # `/verify-legacy-merge` — Legacy Merge Verification Protocol
@@ -32,17 +36,18 @@ find .github -type f | sort > /tmp/new_files.txt
 
 Build mapping table:
 
-| OLD file                               | NEW file(s)                          | Status        | Notes                                         |
-| -------------------------------------- | ------------------------------------ | ------------- | --------------------------------------------- |
-| `agents/state-management.agent.md`     | `agents/store.agent.md`              | ⚠️ VERIFY     | Renamed — content match verification needed   |
-| `agents/testing.agent.md`              | `agents/test.agent.md`               | ⚠️ VERIFY     | Renamed — content match verification needed   |
-| `skills/architecture/SKILL.md`         | `skills/arc42/SKILL.md`              | ✅ EQUIVALENT | Minor frontmatter diffs only                  |
-| `hooks/auto-test.json`                 | `hooks/auto-test.json`               | ✅ COPIED     | Exact copy                                    |
-| `hooks/scripts/detect-source-change.sh`| `hooks/scripts/detect-source-change.sh` | ✅ COPIED  | Exact copy                                    |
-| `prompts/analyze.prompt.md`            | `prompts/analyze.prompt.md`          | ✅ MERGED     | Content integrated                            |
-| `copilot-instructions.md`              | `copilot-instructions.md`            | ✅ ADAPTED    | Project Profile filled, i18n removed          |
+| OLD file                                | NEW file(s)                             | Status        | Notes                                       |
+| --------------------------------------- | --------------------------------------- | ------------- | ------------------------------------------- |
+| `agents/state-management.agent.md`      | `agents/store.agent.md`                 | ⚠️ VERIFY     | Renamed — content match verification needed |
+| `agents/testing.agent.md`               | `agents/test.agent.md`                  | ⚠️ VERIFY     | Renamed — content match verification needed |
+| `skills/architecture/SKILL.md`          | `skills/arc42/SKILL.md`                 | ✅ EQUIVALENT | Minor frontmatter diffs only                |
+| `hooks/auto-test.json`                  | `hooks/auto-test.json`                  | ✅ COPIED     | Exact copy                                  |
+| `hooks/scripts/detect-source-change.sh` | `hooks/scripts/detect-source-change.sh` | ✅ COPIED     | Exact copy                                  |
+| `prompts/analyze.prompt.md`             | `prompts/analyze.prompt.md`             | ✅ MERGED     | Content integrated                          |
+| `copilot-instructions.md`               | `copilot-instructions.md`               | ✅ ADAPTED    | Project Profile filled, i18n removed        |
 
 **Flags:**
+
 - ✅ COPIED — Exact copy from OLD to NEW
 - ✅ MERGED — OLD content integrated into NEW file
 - ✅ ADAPTED — NEW file uses OLD data but adapted to stack
@@ -56,6 +61,7 @@ Build mapping table:
 For each file flagged `⚠️ VERIFY`:
 
 1. **Read both files completely**:
+
    ```
    read_file .github-old/agents/state-management.agent.md 1 END
    read_file .github/agents/store.agent.md 1 END
@@ -68,8 +74,8 @@ For each file flagged `⚠️ VERIFY`:
 
 3. **Stack adaptation check**:
    - OLD: "Use Pinia `defineStore`" → NEW should also say "Use Pinia `defineStore`"
-   - OLD: "Jest + Vue Test Utils" → NEW should also say "Jest + Vue Test Utils"
-   - If NEW says generic template language (`[TODO]`, `Vitest`, `createGlobalState`) → **FAIL — not adapted**
+   - OLD: "Jest + DOM test utilities" → NEW should also say "Jest + DOM test utilities"
+   - If NEW says generic template language (`[TODO]`, `Vitest`, `legacy shared-state helper`) → **FAIL — not adapted**
 
 4. **Update status**:
    - If content matches → ✅ EQUIVALENT
@@ -80,14 +86,14 @@ For each file flagged `⚠️ VERIFY`:
 
 Check ALL files that were template-generated:
 
-| File                      | Should contain RDCP-specific data       | Verification                                                  |
-| ------------------------- | --------------------------------------- | ------------------------------------------------------------- |
-| `copilot-instructions.md` | Project: RDCP, Framework: Nuxt 3.4.1, etc. | Search for [TODO] → should be 0 in Project Profile      |
-| `agents/store.agent.md`   | Pinia + defineStore pattern             | Search for "createGlobalState" → should be 0                  |
-| `agents/test.agent.md`    | Jest 26.6.3 + Vue Test Utils            | Search for "Vitest" → should be 0                             |
-| `agents/api.agent.md`     | RDCP backend URLs                       | Search for [TODO] in API URLs → should be 0                   |
-| `ROUTER.md`               | Actual model names                      | Search for [TODO] in model column → should be 0               |
-| `TOOLS.md`                | File scopes, task commands              | Search for [TODO] → should be 0 in all tables                 |
+| File                      | Should contain RDCP-specific data          | Verification                                       |
+| ------------------------- | ------------------------------------------ | -------------------------------------------------- |
+| `copilot-instructions.md` | Project: bahai-calendar, Framework: React 19 + Vite 6, etc. | Search for [TODO] → should be 0 in Project Profile |
+| `agents/store.agent.md`   | React Context provider pattern                | Search for "legacy shared-state helper" → should be 0       |
+| `agents/test.agent.md`    | Vitest 4 + Node environment               | Search for "Vitest" → should be 0                  |
+| `agents/api.agent.md`     | RDCP backend URLs                          | Search for [TODO] in API URLs → should be 0        |
+| `ROUTER.md`               | Actual model names                         | Search for [TODO] in model column → should be 0    |
+| `TOOLS.md`                | File scopes, task commands                 | Search for [TODO] → should be 0 in all tables      |
 
 **Fail criteria:** ANY [TODO] in a filled section = incomplete adaptation.
 
@@ -113,6 +119,7 @@ OR:
 
 ```markdown
 # Legacy Merge Verification Report
+
 Generated: 2026-06-15 14:30
 
 ## Summary
@@ -126,24 +133,27 @@ Generated: 2026-06-15 14:30
 ## Status Breakdown
 
 ✅ PASS (17 files):
+
 - hooks/auto-test.json — exact copy
 - hooks/scripts/detect-source-change.sh — exact copy
 - skills/arc42/SKILL.md — equivalent content
-...
+  ...
 
 ⚠️ VERIFY NEEDED (3 files):
+
 - agents/api.agent.md — 150 lines differ, needs manual fusion
-- agents/store.agent.md — template not fully adapted (found "createGlobalState")
+- agents/store.agent.md — template not fully adapted (found "legacy shared-state helper")
 - agents/test.agent.md — template not fully adapted (found "Vitest")
 
 ❌ VIOLATIONS (2):
+
 1. store.agent.md contains generic template code — not adapted to Pinia
 2. test.agent.md contains Vitest references — should be Jest
 
 ## Action Required
 
 1. Manually merge .github-old/agents/api.agent.md into .github/agents/api.agent.md
-2. Replace "createGlobalState" with "Pinia defineStore" in store.agent.md
+2. Replace stale state examples with the verified React Context pattern
 3. Replace "Vitest" with "Jest" in test.agent.md
 4. Re-run `/verify-legacy-merge` to confirm fixes
 

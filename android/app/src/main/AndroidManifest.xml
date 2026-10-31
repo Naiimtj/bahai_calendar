@@ -21,6 +21,35 @@
             </intent-filter>
         </activity>
 
+        <receiver android:name=".BahaiWidgetProvider$BadiDate" android:label="@string/widget_badi_date" android:exported="true">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /><action android:name="android.intent.action.DATE_CHANGED" /><action android:name="android.intent.action.TIMEZONE_CHANGED" /></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_small_info" />
+        </receiver>
+        <receiver android:name=".BahaiWidgetProvider$GregorianDate" android:label="@string/widget_gregorian_date" android:exported="true">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /><action android:name="android.intent.action.DATE_CHANGED" /><action android:name="android.intent.action.TIMEZONE_CHANGED" /></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_small_info" />
+        </receiver>
+        <receiver android:name=".BahaiWidgetProvider$BadiMonth" android:label="@string/widget_badi_month" android:exported="true">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /><action android:name="android.intent.action.DATE_CHANGED" /><action android:name="android.intent.action.TIMEZONE_CHANGED" /></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_small_calendar_info" />
+        </receiver>
+        <receiver android:name=".BahaiWidgetProvider$GregorianMonth" android:label="@string/widget_gregorian_month" android:exported="true">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /><action android:name="android.intent.action.DATE_CHANGED" /><action android:name="android.intent.action.TIMEZONE_CHANGED" /></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_small_calendar_info" />
+        </receiver>
+        <receiver android:name=".BahaiWidgetProvider$FourWeeks" android:label="@string/widget_four_weeks" android:exported="true">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /><action android:name="android.intent.action.DATE_CHANGED" /><action android:name="android.intent.action.TIMEZONE_CHANGED" /></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_large_info" />
+        </receiver>
+        <receiver android:name=".BahaiWidgetProvider$FullGregorianMonth" android:label="@string/widget_full_gregorian_month" android:exported="true">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /><action android:name="android.intent.action.DATE_CHANGED" /><action android:name="android.intent.action.TIMEZONE_CHANGED" /></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_large_info" />
+        </receiver>
+        <receiver android:name=".BahaiWidgetProvider$FullBadiMonth" android:label="@string/widget_full_badi_month" android:exported="true">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /><action android:name="android.intent.action.DATE_CHANGED" /><action android:name="android.intent.action.TIMEZONE_CHANGED" /></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_large_info" />
+        </receiver>
+
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"
@@ -38,4 +67,10 @@
     <uses-permission android:name="android.permission.READ_CALENDAR" />
     <uses-permission android:name="android.permission.WRITE_CALENDAR" />
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+
+    <!-- Location permission implies required GPS/network-location hardware by default;
+         mark not required so Play Store doesn't filter out devices lacking that hardware. -->
+    <uses-feature android:name="android.hardware.location" android:required="false" />
+    <uses-feature android:name="android.hardware.location.gps" android:required="false" />
+    <uses-feature android:name="android.hardware.location.network" android:required="false" />
 </manifest>

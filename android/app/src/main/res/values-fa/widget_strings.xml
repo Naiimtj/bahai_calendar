@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_badi_date">تاریخ بدیع</string>
+    <string name="widget_gregorian_date">تاریخ میلادی</string>
+    <string name="widget_badi_month">ماه بدیع</string>
+    <string name="widget_gregorian_month">ماه میلادی</string>
+    <string name="widget_four_weeks">چهار هفته</string>
+    <string name="widget_full_gregorian_month">ماه کامل میلادی</string>
+    <string name="widget_full_badi_month">ماه کامل بدیع</string>
+</resources>

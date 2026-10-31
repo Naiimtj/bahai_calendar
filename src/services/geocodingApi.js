@@ -2,6 +2,95 @@ import { Capacitor } from '@capacitor/core';
 import { CapacitorCalendar } from '../native/bahaiCalendarNative';
 
 const BASE_URL = 'https://geocoding-api.open-meteo.com/v1';
+const PLACES_URL = 'https://photon.komoot.io/api/';
+// Public Photon rejects unsupported lang values with HTTP 400.
+const PLACES_LANGUAGES = ['en', 'de', 'fr'];
+
+function textValue(value) {
+  return typeof value === 'string' ? value.trim() : '';
+}
+
+function joinAddress(parts, name) {
+  return [...new Set(parts.map(textValue))]
+    .filter((part) => part && part !== name)
+    .join(', ');
+}
+
+function toPlace(item, index) {
+  const name = textValue(item?.name);
+  const address = textValue(item?.address);
+  const latitude = item?.latitude;
+  const longitude = item?.longitude;
+
+  if (
+    !name ||
+    !(typeof latitude === 'number' && Number.isFinite(latitude)) ||
+    !(typeof longitude === 'number' && Number.isFinite(longitude))
+  ) {
+    return null;
+  }
+
+  return {
+    id: String(item.id ?? `place-${index}`),
+    name,
+    address:
+      (address.startsWith(`${name}, `)
+        ? address.slice(name.length + 2)
+        : address) || joinAddress([item.admin1, item.country], name),
+    latitude,
+    longitude,
+  };
+}
+
+function photonFeatureToPlace(feature, index) {
+  const coordinates = feature?.geometry?.coordinates;
+  if (!Array.isArray(coordinates)) return null;
+
+  const [longitude, latitude] = coordinates;
+  if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) return null;
+
+  const props = feature?.properties ?? {};
+  const street = [textValue(props.street), textValue(props.housenumber)]
+    .filter(Boolean)
+    .join(' ');
+  const locality = [textValue(props.postcode), textValue(props.city)]
+    .filter(Boolean)
+    .join(' ');
+  const name =
+    textValue(props.name) ||
+    street ||
+    locality ||
+    textValue(props.state) ||
+    textValue(props.country);
+
+  if (!name) return null;
+
+  return {
+    id:
+      props.osm_type && props.osm_id
+        ? `${props.osm_type}${props.osm_id}`
+        : `place-${index}`,
+    name,
+    address: joinAddress([street, locality, props.state, props.country], name),
+    latitude,
+    longitude,
+  };
+}
+
+async function searchPlaces(query, { count = 5, language = 'es' } = {}) {
+  const params = new URLSearchParams({
+    q: query,
+    limit: String(count),
+    lang: PLACES_LANGUAGES.includes(language) ? language : 'default',
+  });
+  const res = await fetch(`${PLACES_URL}?${params}`);
+  if (!res.ok) {
+    throw new Error(`Place search failed: ${res.status}`);
+  }
+  const data = await res.json();
+  const features = Array.isArray(data?.features) ? data.features : [];
+  return features.map(photonFeatureToPlace).filter(Boolean);
+}
 
 function supportsNativeIosPlaceSearch() {
   return (
@@ -28,11 +117,11 @@ export async function searchLocations(
 }
 
 /**
- * Search places for Add Event using native iOS Maps when available,
- * otherwise fall back to Open-Meteo geocoding.
+ * Search places (POIs, addresses, cities) for Add Event using native iOS MapKit
+ * when available, then OpenStreetMap (Photon), then Open-Meteo cities if Photon fails.
  * @param {string} name
  * @param {{ count?: number, language?: string }} options
- * @returns {Promise<Array>}
+ * @returns {Promise<Array<{ id: string, name: string, address: string, latitude: number, longitude: number }>>}
  */
 export async function searchEventLocations(
   name,
@@ -50,13 +139,19 @@ export async function searchEventLocations(
       const nativeList = Array.isArray(nativeRes?.result)
         ? nativeRes.result
         : [];
-      if (nativeList.length > 0) return nativeList;
+      const places = nativeList.map(toPlace).filter(Boolean);
+      if (places.length > 0) return places;
     } catch {
-      // Fall back to Open-Meteo when native search fails.
+      // Fall back to OpenStreetMap search when native search fails.
     }
   }
 
-  return searchLocations(query, { count, language });
+  try {
+    return await searchPlaces(query, { count, language });
+  } catch {
+    const cities = await searchLocations(query, { count, language });
+    return cities.map(toPlace).filter(Boolean);
+  }
 }
 
 /**

@@ -109,7 +109,7 @@ Compare OLD section vs. CURRENT section:
 
 | Section           | OLD Content Summary                                   | CURRENT Content Summary                   | Delta (what's unique in OLD?)                     |
 | ----------------- | ----------------------------------------------------- | ----------------------------------------- | ------------------------------------------------- |
-| Project Profile   | Project name "LabConnect", stack Nuxt 4 + Vue 3 + ... | Generic template with [TODO] placeholders | Specific project name, stack details, conventions |
+| Project Profile   | Project name "LabConnect", stack legacy framework 4  + React 19 + ... | Generic template with [TODO] placeholders | Specific project name, stack details, conventions |
 | Conventions § API | 15 bullet points + 3 code examples                    | 8 bullet points + 1 code example          | 7 extra bullets, 2 extra examples                 |
 | Anti-patterns     | 12 forbidden patterns with explanations               | 6 forbidden patterns                      | 6 unique anti-patterns not in current             |
 

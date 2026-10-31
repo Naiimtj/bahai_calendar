@@ -2,7 +2,9 @@
 description: 'Analyze recent code changes and identify which .github/ files are affected indirectly'
 name: 'check-impact'
 argument-hint: "Optional: commit hash, branch name, or timeframe (e.g. '7 days', 'HEAD~5', 'development'). If omitted, you will be asked."
-tools: [read, search, run]
+tools: [read, search, execute]
+# Generated from .github/MODELS.md by .github/scripts/sync-agent-models.sh. Do not edit.
+model: ["GPT-5.3-Codex", "GPT-5.6 Luna"]
 ---
 
 # /check-impact — .github Indirect Impact Checker
@@ -66,25 +68,25 @@ Collect the **full list of changed files**, excluding `.github/` itself.
 
 ## Step 2 — Categorize changed files
 
-Classify each changed file by type using these path patterns (all relative to `src/`).
+Derive a path map before classifying. Read the Project Profile and project-overview
+skill, inspect root manifests/configuration, and use the changed paths themselves.
+Record actual paths for every detected role; never assume `src/`, `app/`, `pages/`,
+or a framework-specific extension.
 
-| Category          | Path pattern                                                | Severity if new/renamed/deleted |
-| ----------------- | ----------------------------------------------------------- | ------------------------------- |
-| Context / state   | `src/context/*.jsx`                                         | HIGH                            |
-| Hook              | `src/hooks/use*.js`                                         | HIGH                            |
-| Utility           | `src/utils/*.js`                                            | HIGH                            |
-| lib (date logic)  | `src/lib/*.jsx`                                             | HIGH                            |
-| Service           | `src/services/*.js`                                         | CRITICAL                        |
-| Base component    | `src/components/base/Base*.jsx`                             | HIGH                            |
-| Feature component | `src/components/*.jsx`                                      | MEDIUM                          |
-| Calendar view     | `src/components/{Badi,Compact,Gregorian,Mixed}Calendar.jsx` | HIGH (cross-calendar parity)    |
-| i18n locale       | `src/i18n/locales/*.json`                                   | MEDIUM                          |
-| App shell / entry | `src/App.jsx`, `src/main.jsx`                               | HIGH                            |
-| Dependencies      | `package.json`                                              | HIGH                            |
-| Build config      | `vite.config.js`                                            | MEDIUM                          |
-| Styling / theme   | `src/index.css`                                             | MEDIUM                          |
-| Capacitor / iOS   | `capacitor.config.ts`, `ios/**`                             | MEDIUM                          |
-| Non-structural    | anything else                                               | LOW                             |
+| Category                      | Detection signal                                               | Severity if new/renamed/deleted |
+| ----------------------------- | -------------------------------------------------------------- | ------------------------------- |
+| State/store                   | State library imports, store naming, or documented state roots | HIGH                            |
+| Composable/hook               | Reusable reactive or hook naming and documented logic roots    | HIGH                            |
+| Utility                       | Pure/helper roots and imports                                  | HIGH                            |
+| Base/design-system component  | Component roots identified as primitives or base wrappers      | HIGH                            |
+| Shared/feature component      | Component roots and import usage                               | MEDIUM                          |
+| Page/route/layout             | Router configuration or framework route conventions            | HIGH                            |
+| Interface/type/schema         | Type roots and exported contracts                              | MEDIUM                          |
+| Middleware/plugin             | Framework registration and middleware roots                    | MEDIUM                          |
+| HTTP/API helper               | Shared HTTP client, auth wrapper, or request helper imports    | CRITICAL                        |
+| Dependency manifest           | Detected package/dependency manifests and lockfiles            | HIGH                            |
+| Framework/styling/test config | Files loaded by detected framework and scripts                 | MEDIUM                          |
+| Non-structural                | No durable routing, contract, convention, or path impact       | LOW                             |
 
 For each changed file, record: **Added / Modified / Deleted / Renamed**.
 
@@ -104,9 +106,11 @@ Check for each changed file:
 - **Deleted** → Is it still listed? If yes → needs removal via `/refresh-overview`
 - **Renamed** → Is the old name still in the overview? → needs update
 
-### 3b. New/changed base components → `components/SKILL.md`
+### 3b. New/changed base components → detected design-system/component skill
 
-Read `.github/skills/components/SKILL.md`.
+Locate the installed skill that owns components or the design system from
+`SKILLS-DIGEST.md`. If none exists, report the missing coverage instead of
+inventing a path.
 
 Check:
 
@@ -114,56 +118,62 @@ Check:
 - Any deleted base component → should be removed from the list
 - Look for usage examples that reference renamed components
 
-### 3c. Data-access pattern changes → `api/SKILL.md` + `agents/api.agent.md`
+### 3c. API pattern changes → `api/SKILL.md` + `agents/api.agent.md`
 
-If any file in `src/services/` changed significantly:
+If the detected shared HTTP client or auth helper changed significantly:
 
 - Read `.github/skills/api/SKILL.md`
-- Check if the service module list (`badiApi.js`, `sunTimesApi.js`, `geocodingApi.js`, `calendarSync.js`, `personalCalendar.js`) is still accurate
-- Check if any new service was added and reflected in the skill
+- Compare documented helper signatures with the actual exported functions
+- Check if the environment URL detection pattern in the skill matches the code
 
-If new components/hooks call services directly (bypassing `src/services/`):
+If new store/service files were added that call APIs:
 
-- Flag it — network calls belong in service modules per `api/SKILL.md`
+- Verify the pattern shown in `api/SKILL.md` (store integration section) still matches
 
-### 3d. State/context pattern changes → `state-management/SKILL.md`
+### 3d. State/store pattern changes → `state-management/SKILL.md`
 
-If any `src/context/*.jsx` changed significantly (new provider, changed action surface):
+If any `stores/*.ts` changed significantly (not just new computed/actions but structural pattern change):
 
 - Read `.github/skills/state-management/SKILL.md`
-- Check if the provider pattern (createContext + provider + `useXxx()` hook) is still the standard
-- Check if state is still exposed as read values + action functions with a memoized `value`
+- Check if the documented store pattern is still the project standard
+- Check if the documented state exposure pattern is still used
 
-### 3f. Styling/theme changes → `styling/SKILL.md`
+### 3e. Test setup changes → `testing/SKILL.md`
 
-If `src/index.css` changed (new `@theme` tokens, new utilities):
+If a detected test configuration, setup file, fixture root, or mock root changed:
+
+- Read `.github/skills/testing/SKILL.md`
+- Check if documented mock setup and state initialization patterns are still accurate
+
+### 3f. Styling/config changes → `styling/SKILL.md`
+
+If a detected styling, theme, or design-token configuration changed:
 
 - Read `.github/skills/styling/SKILL.md`
-- Check if the theme-token guidance is still accurate
+- Check if the color token table and reusable class table are still accurate
 
 ### 3g. Dependencies → `copilot-instructions.md` Project Profile
 
-If `package.json` changed:
+If `package.json` (or `pyproject.toml`, `Cargo.toml`, etc.) changed:
 
-- Run: `cat package.json | grep -E 'react|vite|tailwind|i18next|axios|capacitor'`
+- Read the changed manifest with a structured parser or file-reading tool and
+  identify framework, UI, state, i18n, HTTP, and test dependencies
 - Compare against the Project Profile table in `.github/copilot-instructions.md`
-- Flag any version or dependency mismatches
+- Flag any version mismatches
 
-### 3h. App shell / view changes → `copilot-instructions.md` App Structure section
+### 3h. Layout changes → `copilot-instructions.md` Layouts section
 
-If `src/App.jsx` view routing changed (added/removed a page):
+If a page or view component changed (added/deleted):
 
-- Check the "App Structure & Routing" section in `copilot-instructions.md`
-- Verify the described views/headers still match
+- Check the "Layouts & Pages" section in `copilot-instructions.md`
+- Verify listed layouts still exist
 
 ### 3i. Feature folder renames → agent file scopes → `TOOLS.md`
 
-If a major folder under `src/` was renamed:
+If the diff reports a major feature-folder rename:
 
 - Read `.github/TOOLS.md`
 - Check if any agent's file scope declaration references the old path
-
----
 
 ## Step 4 — Generate impact report
 
@@ -224,6 +234,7 @@ Prompts to run:
 
 1. **Read-only** — do NOT modify any file, only report
 2. **Focus on indirect impact** — skip files that only changed internal logic with no structural/naming effect
-3. **Severity = scope of the change** — a renamed context/service is more impactful than a modified one
+3. **Severity = scope of the change** — a renamed store is more impactful than a modified one
 4. **When unsure** — mark as ⚠️ Needs review, not ✅ No impact
-5. **If no changes found** — report "No indirect impact detected" and suggest running `/refresh-overview` as a sanity check
+5. **Skip test files** as changed targets — they don't affect `.github/` (they are affected BY `.github/skills/testing/SKILL.md`, not the reverse)
+6. **If no changes found** — report "No indirect impact detected" and suggest running `/refresh-overview` as a sanity check

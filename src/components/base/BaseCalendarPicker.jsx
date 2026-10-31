@@ -14,17 +14,10 @@ function getFirstDayOfWeek(year, month) {
   return day === 0 ? 6 : day - 1;
 }
 
-const cellBase =
-  'w-9 h-9 rounded-full text-sm transition-colors md:cursor-pointer flex items-center justify-center';
-const gridButtonBase =
-  'py-2 rounded-lg text-sm capitalize transition-colors md:cursor-pointer';
-
-function stateClass(isSelected, isToday) {
-  if (isSelected) return 'bg-btn-primary text-white font-semibold';
-  if (isToday)
-    return 'border border-btn-primary text-primary-dark dark:text-btn-primary font-medium';
-  return 'text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800';
-}
+const dayButtonBase =
+  'flex aspect-square w-full max-w-10 items-center justify-center rounded-full text-xl transition-colors md:cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-dark';
+const monthYearButtonBase =
+  'rounded-xl py-2.5 text-base capitalize transition-colors md:cursor-pointer';
 
 /**
  * Apple-style month-grid calendar. Tap the header to zoom out to
@@ -33,25 +26,21 @@ function stateClass(isSelected, isToday) {
  * value/onChange use `Date`.
  */
 export default function BaseCalendarPicker({ value, onChange }) {
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation();
   const locale = i18n.language || undefined;
 
-  const selected =
-    value instanceof Date && !Number.isNaN(value.getTime())
-      ? value
-      : new Date();
+  const selected = useMemo(
+    () =>
+      value instanceof Date && !Number.isNaN(value.getTime())
+        ? value
+        : new Date(),
+    [value],
+  );
   const today = new Date();
 
   const [viewYear, setViewYear] = useState(selected.getFullYear());
   const [viewMonth, setViewMonth] = useState(selected.getMonth());
   const [viewMode, setViewMode] = useState('days');
-
-  const monthNames = useMemo(() => {
-    const fmt = new Intl.DateTimeFormat(locale, { month: 'long' });
-    return Array.from({ length: 12 }, (_, i) =>
-      fmt.format(new Date(2020, i, 1)),
-    );
-  }, [locale]);
 
   const monthShortNames = useMemo(() => {
     const fmt = new Intl.DateTimeFormat(locale, { month: 'short' });
@@ -64,9 +53,19 @@ export default function BaseCalendarPicker({ value, onChange }) {
     const fmt = new Intl.DateTimeFormat(locale, { weekday: 'short' });
     // 2020-06-01 is a Monday.
     return Array.from({ length: 7 }, (_, i) =>
-      fmt.format(new Date(2020, 5, 1 + i)),
+      fmt.format(new Date(2020, 5, 1 + i)).replace(/\.$/, ''),
     );
   }, [locale]);
+
+  const dayAriaLabelFormatter = useMemo(
+    () => new Intl.DateTimeFormat(locale, { dateStyle: 'full' }),
+    [locale],
+  );
+
+  const monthYearFormatter = useMemo(
+    () => new Intl.DateTimeFormat(locale, { month: 'long', year: 'numeric' }),
+    [locale],
+  );
 
   const emitDay = useCallback(
     (day) => {
@@ -118,7 +117,11 @@ export default function BaseCalendarPicker({ value, onChange }) {
     today.getDate() === d;
 
   const headerLabel = {
-    days: `${monthNames[viewMonth]} ${viewYear}`,
+    days: (() => {
+      const full = monthYearFormatter.format(new Date(viewYear, viewMonth, 1));
+      if (!full) return full;
+      return full.charAt(0).toLocaleUpperCase(locale) + full.slice(1);
+    })(),
     months: `${viewYear}`,
     years: `${yearRangeStart} \u2013 ${yearRangeStart + 11}`,
   }[viewMode];
@@ -127,31 +130,44 @@ export default function BaseCalendarPicker({ value, onChange }) {
 
   return (
     <div className="select-none w-full">
-      {/* Header with navigation */}
-      <div className="flex items-center justify-between mb-3">
-        <BaseIcon
-          icon="arrowLeft"
-          size="small"
-          onClick={canNavigate ? handlePrev : undefined}
-          className={`stroke-gray-500 dark:stroke-gray-400 hover:stroke-primary-dark ${
-            canNavigate ? '' : 'opacity-0 pointer-events-none'
-          }`}
-        />
+      <div className="flex items-center justify-between gap-2 mb-2">
         <button
           type="button"
+          aria-expanded={viewMode !== 'days'}
           onClick={() => setViewMode(NEXT_VIEW_MODE[viewMode])}
-          className="text-base font-semibold text-gray-900 dark:text-gray-100 capitalize px-3 py-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 md:cursor-pointer"
+          className="flex items-center gap-1 rounded-lg py-1 text-[17px] font-semibold text-gray-900 transition-opacity active:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-dark dark:text-gray-100"
         >
-          {headerLabel}
+          <span>{headerLabel}</span>
+          <BaseIcon
+            icon="arrowRight"
+            size="small"
+            strokeWidth={2.5}
+            className={`stroke-primary-dark transition-transform duration-200 dark:stroke-btn-primary ${viewMode === 'days' ? 'rtl:rotate-180' : 'rotate-90'}`}
+          />
         </button>
-        <BaseIcon
-          icon="arrowRight"
-          size="small"
-          onClick={canNavigate ? handleNext : undefined}
-          className={`stroke-gray-500 dark:stroke-gray-400 hover:stroke-primary-dark ${
-            canNavigate ? '' : 'opacity-0 pointer-events-none'
-          }`}
-        />
+
+        <div
+          className={`flex items-center gap-1 ${canNavigate ? '' : 'invisible'}`}
+        >
+          <BaseIcon
+            icon="arrowLeft"
+            size="large"
+            strokeWidth={2.5}
+            aria-label={t('calendar.previous')}
+            onClick={canNavigate ? handlePrev : undefined}
+            className="stroke-primary-dark dark:stroke-btn-primary rtl:rotate-180"
+            wrapperClassName="flex h-10 w-10 items-center justify-center rounded-full transition-colors active:bg-gray-100 md:hover:bg-gray-100 dark:active:bg-gray-700/60 dark:md:hover:bg-gray-700/60"
+          />
+          <BaseIcon
+            icon="arrowRight"
+            size="large"
+            strokeWidth={2.5}
+            aria-label={t('calendar.next')}
+            onClick={canNavigate ? handleNext : undefined}
+            className="stroke-primary-dark dark:stroke-btn-primary rtl:rotate-180"
+            wrapperClassName="flex h-10 w-10 items-center justify-center rounded-full transition-colors active:bg-gray-100 md:hover:bg-gray-100 dark:active:bg-gray-700/60 dark:md:hover:bg-gray-700/60"
+          />
+        </div>
       </div>
 
       {viewMode === 'days' && (
@@ -160,7 +176,7 @@ export default function BaseCalendarPicker({ value, onChange }) {
             {weekdayHeaders.map((w) => (
               <span
                 key={w}
-                className="text-center text-xs font-medium text-gray-400 dark:text-gray-500 capitalize py-1"
+                className="py-1 text-center text-xs font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500"
               >
                 {w}
               </span>
@@ -177,7 +193,18 @@ export default function BaseCalendarPicker({ value, onChange }) {
                   key={day}
                   type="button"
                   onClick={() => emitDay(day)}
-                  className={`${cellBase} ${stateClass(isSameDay(day), isTodayCell(day))}`}
+                  aria-label={dayAriaLabelFormatter.format(
+                    new Date(viewYear, viewMonth, day),
+                  )}
+                  aria-pressed={isSameDay(day)}
+                  aria-current={isTodayCell(day) ? 'date' : undefined}
+                  className={`${dayButtonBase} ${
+                    isSameDay(day)
+                      ? 'bg-btn-primary-dark font-semibold text-white'
+                      : isTodayCell(day)
+                        ? 'font-semibold text-primary-dark active:bg-gray-100 dark:text-btn-primary dark:active:bg-gray-700/60'
+                        : 'text-gray-900 active:bg-gray-100 md:hover:bg-gray-100 dark:text-gray-100 dark:active:bg-gray-700/60 dark:md:hover:bg-gray-700/60'
+                  }`}
                 >
                   {day}
                 </button>
@@ -197,7 +224,11 @@ export default function BaseCalendarPicker({ value, onChange }) {
                 setViewMonth(i);
                 setViewMode('days');
               }}
-              className={`${gridButtonBase} ${stateClass(i === viewMonth, false)}`}
+              className={`${monthYearButtonBase} ${
+                i === viewMonth
+                  ? 'bg-btn-primary-dark font-semibold text-white'
+                  : 'text-gray-900 active:bg-gray-100 md:hover:bg-gray-100 dark:text-gray-100 dark:active:bg-gray-700/60 dark:md:hover:bg-gray-700/60'
+              }`}
             >
               {m}
             </button>
@@ -217,7 +248,11 @@ export default function BaseCalendarPicker({ value, onChange }) {
                   setViewYear(year);
                   setViewMode('months');
                 }}
-                className={`${gridButtonBase} ${stateClass(year === viewYear, false)}`}
+                className={`${monthYearButtonBase} ${
+                  year === viewYear
+                    ? 'bg-btn-primary-dark font-semibold text-white'
+                    : 'text-gray-900 active:bg-gray-100 md:hover:bg-gray-100 dark:text-gray-100 dark:active:bg-gray-700/60 dark:md:hover:bg-gray-700/60'
+                }`}
               >
                 {year}
               </button>

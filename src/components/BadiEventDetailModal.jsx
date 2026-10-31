@@ -37,14 +37,10 @@ export default function BadiEventDetailModal({ visible, event, onClose }) {
   };
   return (
     <BaseModal visible={visible} onClose={onClose} closeButtonHidden>
-      <div className="flex flex-col gap-4 -m-6 p-4 bg-gray-50 dark:bg-gray-900 rounded-lg sm:min-w-md">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <BaseButton text icon="arrowLeft" size="md" onClick={onClose} />
-        </div>
+      <div className="flex flex-col gap-4 px-4 bg-gray-50 dark:bg-gray-900 rounded-lg sm:min-w-md">
 
         {/* Title + time note */}
-        <div className="flex md:flex-row flex-col md:gap-4 gap-2 md:items-end">
+        <div className="flex flex-col md:gap-4 gap-2">
           <h2 className={`text-2xl font-bold text-gray-700 dark:text-gray-300`}>
             {event.name}
           </h2>

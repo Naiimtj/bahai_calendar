@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Capacitor } from '@capacitor/core';
 import { useSettings } from '../context/SettingsContext';
 import { usePersonalEvents } from '../context/PersonalEventsContext';
 import {
@@ -11,15 +10,28 @@ import {
   SOURCE_COLORS,
   colorForIndex,
 } from '../services/personalCalendar';
-import { supportsNativeReminders } from '../services/calendarSync';
-import { reverseGeocode } from '../services/geocodingApi';
+import {
+  getAvailableCalendars,
+  supportsNativeReminders,
+} from '../services/calendarSync';
 import BaseSelectInput from './base/BaseSelectInput';
-import { BaseIcon, BaseSegmentedControl } from './base';
+import { BaseIcon, BaseMenu, BaseSegmentedControl } from './base';
 import BaseButton from './base/BaseButton';
 import BaseModal from './base/BaseModal';
 import BaseSpinner from './base/BaseSpinner';
 import BaseTextInput from './base/BaseTextInput';
 import BaseToggleSwitch from './base/BaseToggleSwitch';
+import About from './About';
+import FastingAlarmsModal from './FastingAlarmsModal';
+import { useFastingAlarms } from '../hooks/useFastingAlarms';
+import { useFastingSunTimes } from '../hooks/useFastingSunTimes';
+import { shouldPreviewNativeSettings } from '../utils/devPreview';
+import LocationPicker from './LocationPicker';
+import {
+  buildEventCalendars,
+  resolveDefaultCalendarId,
+  toCalendarMenuOptions,
+} from '../lib/eventCalendars';
 
 const HEX_RE = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i;
 
@@ -74,7 +86,7 @@ function ColorPicker({ value, onChange }) {
                 size="sm"
                 className={
                   isCustom
-                    ? 'fill-white filter-[drop-shadow(0_0_1px_rgba(0,0,0,0.5))]'
+                    ? 'fill-white [filter:drop-shadow(0_0_1px_rgba(0,0,0,0.5))]'
                     : 'fill-gray-500 hover:fill-gray-800 dark:hover:fill-gray-200'
                 }
               />
@@ -161,7 +173,7 @@ function DeviceCalendarList() {
                     customName: v.trim() || undefined,
                   })
                 }
-                className="px-0! py-0! text-sm!"
+                className="!px-0 !py-0 !text-sm"
               />
               {cal.sourceName && (
                 <p className="truncate text-xs text-gray-400 dark:text-gray-500">
@@ -184,6 +196,57 @@ function DeviceCalendarList() {
           )}
         </div>
       ))}
+    </div>
+  );
+}
+
+function DefaultCalendarSelect() {
+  const { t } = useTranslation();
+  const { settings, updateSetting } = useSettings();
+  const { config } = usePersonalEvents();
+  const [deviceCalendars, setDeviceCalendars] = useState([]);
+
+  useEffect(() => {
+    let active = true;
+    getAvailableCalendars().then((list) => {
+      if (active) setDeviceCalendars(list);
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const calendars = buildEventCalendars(
+    deviceCalendars.filter(
+      (calendar) => config.deviceCalendars?.[calendar.id]?.enabled !== false,
+    ),
+    config,
+    t('addEvent.localCalendar'),
+  );
+
+  if (calendars.length < 2) return null;
+
+  return (
+    <div className="rounded-lg px-3 py-3 mb-3">
+      <div className="flex items-center justify-between gap-3">
+        <span className="text-sm text-gray-900 dark:text-gray-100">
+          {t('settings.defaultCalendar')}
+        </span>
+        <BaseMenu
+          label={t('settings.defaultCalendar')}
+          value={resolveDefaultCalendarId(
+            calendars,
+            settings.defaultCalendarId,
+            config,
+          )}
+          options={toCalendarMenuOptions(calendars)}
+          onChange={(id) => updateSetting('defaultCalendarId', id)}
+          className="!text-sm"
+        />
+      </div>
+      <p className="text-xs mt-1 text-gray-400 dark:text-gray-500">
+        {t('settings.defaultCalendarHint')}
+      </p>
     </div>
   );
 }
@@ -238,14 +301,14 @@ function CalendarSourcesSection() {
   };
 
   return (
-    <div className="px-4 pt-6 pb-3">
+    <div className="px-4 py-3 mb-8">
       <label className="text-xs font-semibold tracking-wider block mb-2 text-gray-400 dark:text-gray-500">
         {t('settings.personalCalendars')}
       </label>
-
-      {isNativePlatform() && (
+      {config.deviceCalendarEnabled && <DefaultCalendarSelect />}
+      {(isNativePlatform() || shouldPreviewNativeSettings()) && (
         <>
-          <div className="flex items-center justify-between rounded-lg px-3 py-3 mb-3 bg-gray-200 dark:bg-gray-800">
+          <div className="flex items-center justify-between rounded-lg px-3 py-3 mb-3 ">
             <span className="text-sm text-gray-900 dark:text-gray-100">
               {t('settings.deviceCalendar')}
             </span>
@@ -266,7 +329,7 @@ function CalendarSourcesSection() {
           hideDetails
           updateOnBlur
           onChange={(v) => setLocalCalendarName(v.trim() || undefined)}
-          className="px-0! py-0! mb-2 text-sm!"
+          className="!px-0 !py-0 mb-2 !text-sm"
         />
         <ColorPicker
           value={config.localCalendarColor ?? colorForIndex(0)}
@@ -306,7 +369,11 @@ function CalendarSourcesSection() {
         )}
       </div>
 
-      <BaseButton onClick={() => setShowAddModal(true)} className="w-full">
+      <BaseButton
+        surface
+        onClick={() => setShowAddModal(true)}
+        className="w-full"
+      >
         {t('settings.addCalendarSource')}
       </BaseButton>
 
@@ -331,7 +398,12 @@ function CalendarSourcesSection() {
             placeholder={t('settings.calendarSourceUrl')}
             type="url"
           />
-          <BaseButton onClick={handleAdd} disabled={!url.trim()}>
+          <BaseButton
+            surface
+            className="w-full"
+            onClick={handleAdd}
+            disabled={!url.trim()}
+          >
             {t('settings.addCalendarSource')}
           </BaseButton>
         </div>
@@ -352,11 +424,8 @@ function CalendarSourcesSection() {
             ? t('settings.deviceCalendarConfirmHint')
             : t('settings.deviceCalendarRevokeHint')}
         </p>
-        <div className="flex gap-3 justify-center">
-          <BaseButton variant="secondary" onClick={handleConfirmCancel}>
-            {t('search.cancel')}
-          </BaseButton>
-          <BaseButton onClick={handleConfirm}>
+        <div className="flex gap-3">
+          <BaseButton surface className="flex-1" onClick={handleConfirm}>
             {t('settings.confirm')}
           </BaseButton>
         </div>
@@ -418,6 +487,110 @@ function RemindersListItems({ lists, loading }) {
   );
 }
 
+/** Shortcut to the same Fasting-alarms editor shown on the Fasting page, so
+ * sunrise/sunset alerts can be reviewed from either screen. */
+function FastingAlarmsSection() {
+  const { t } = useTranslation();
+  const { lang } = useSettings();
+  const { supported } = useFastingAlarms();
+  const { location, saveLocation, clearLocation, sunTimes } =
+    useFastingSunTimes();
+  const [showAlarms, setShowAlarms] = useState(false);
+
+  if (!supported && !shouldPreviewNativeSettings()) return null;
+
+  return (
+    <div className="px-4 py-4 mb-8">
+      <div className="text-xs font-semibold tracking-wider block mb-2 text-gray-400 dark:text-gray-500 uppercase">
+        {t('fasting.alarms.title')}
+      </div>
+      <p className="text-xs mb-3 text-gray-400 dark:text-gray-500">
+        {t('settings.fastingAlarmsHint')}
+      </p>
+
+      {location && (
+        <div className="flex flex-row items-center gap-3">
+          <div className="flex flex-row items-center w-full gap-3">
+            <div className="flex flex-row items-center">
+              <BaseIcon icon="locationOn" size="xs" className="fill-gray-400" />
+              <span className="text-xs text-gray-400">{location.name}</span>
+            </div>
+            <BaseIcon
+              icon="delete"
+              className="stroke-primary-text md:hover:stroke-red-500 cursor-pointer md:size-4 size-6"
+              onClick={clearLocation}
+            />
+          </div>
+
+          <div className="flex justify-end w-full">
+            <BaseButton
+              label={t('settings.openFastingAlarms')}
+              icon="alarm"
+              outlined
+              onClick={() => setShowAlarms(true)}
+              className="text-xs"
+            />
+          </div>
+        </div>
+      )}
+      {!location && (
+        <LocationPicker
+          location={location}
+          language={lang}
+          onLocationChange={saveLocation}
+          onClear={clearLocation}
+          className="flex-1 gap-2 w-full"
+        />
+      )}
+
+      <FastingAlarmsModal
+        visible={showAlarms}
+        onClose={() => setShowAlarms(false)}
+        sunTimes={sunTimes}
+        lang={lang}
+      />
+    </div>
+  );
+}
+
+function DefaultReminderListSelect({ lists }) {
+  const { t } = useTranslation();
+  const { settings, updateSetting } = useSettings();
+  const { config } = usePersonalEvents();
+  const prefs = config.deviceCalendars || {};
+  const shownLists = lists.filter((list) => prefs[list.id]?.enabled !== false);
+
+  if (shownLists.length < 2) return null;
+
+  return (
+    <div className="mt-3 rounded-lg px-3 py-3">
+      <div className="flex items-center justify-between gap-3">
+        <span className="text-sm text-gray-900 dark:text-gray-100">
+          {t('settings.defaultReminderList')}
+        </span>
+        <BaseMenu
+          label={t('settings.defaultReminderList')}
+          value={resolveDefaultCalendarId(
+            lists,
+            settings.defaultReminderListId,
+            config,
+          )}
+          options={shownLists.map((list) => ({
+            value: list.id,
+            label: list.title,
+            color: prefs[list.id]?.color ?? list.color,
+          }))}
+          onChange={(id) => updateSetting('defaultReminderListId', id)}
+          className="!text-sm"
+        />
+      </div>
+      <p className="text-xs mt-1 text-gray-400 dark:text-gray-500">
+        {t('settings.defaultReminderListHint')}
+      </p>
+    </div>
+  );
+}
+
 function RemindersListSection() {
   const { t } = useTranslation();
   const { config } = usePersonalEvents();
@@ -443,10 +616,12 @@ function RemindersListSection() {
   if (!enabled) return null;
 
   return (
-    <div className="px-4 pt-6 pb-3 border-t border-gray-200 dark:border-gray-800">
-      <label className="text-xs font-semibold tracking-wider block mb-2 text-gray-400 dark:text-gray-500">
+    <div className="px-4 pt-6 pb-3">
+      <label className="text-xs font-semibold tracking-wider block mb-2 text-gray-400 dark:text-gray-500 uppercase">
         {t('settings.reminders')}
       </label>
+      {!loading && <DefaultReminderListSelect lists={lists} />}
+
       <RemindersListItems lists={lists} loading={loading} />
       <p className="text-xs mt-2 text-gray-400 dark:text-gray-500">
         {t('settings.remindersHint')}
@@ -456,454 +631,348 @@ function RemindersListSection() {
 }
 
 export default function Settings() {
-  const { settings, updateSetting, lang, refreshEffectiveToday } =
-    useSettings();
+  const { settings, updateSetting } = useSettings();
   const { t } = useTranslation();
+  const remindersSupported = supportsNativeReminders();
 
-  const [savedLocation, setSavedLocation] = useState(() => {
-    try {
-      const s = localStorage.getItem('bahai-location');
-      return s ? JSON.parse(s) : null;
-    } catch {
-      return null;
-    }
-  });
-  const [showLocationSearch, setShowLocationSearch] = useState(false);
-  const [locationQuery, setLocationQuery] = useState('');
-  const [locationSuggestions, setLocationSuggestions] = useState([]);
-  const [loadingLocationCities, setLoadingLocationCities] = useState(false);
-  const [loadingLocationGPS, setLoadingLocationGPS] = useState(false);
-  const [locationError, setLocationError] = useState(null);
+  const [showAboutModal, setShowAboutModal] = useState(false);
+  const [activeTab, setActiveTab] = useState('general');
 
   useEffect(() => {
-    if (!locationQuery.trim() || locationQuery.length < 2) {
-      setLocationSuggestions([]);
-      setLoadingLocationCities(false);
-      return;
-    }
-    setLoadingLocationCities(true);
-    const timer = setTimeout(() => {
-      fetch(
-        `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(locationQuery)}&count=5&language=${lang}`,
-      )
-        .then((r) => r.json())
-        .then((data) => setLocationSuggestions(data.results || []))
-        .catch(() => setLocationSuggestions([]))
-        .finally(() => setLoadingLocationCities(false));
-    }, 400);
-    return () => clearTimeout(timer);
-  }, [locationQuery, lang]);
+    if (remindersSupported || activeTab !== 'reminder') return;
+    setActiveTab('general');
+  }, [activeTab, remindersSupported]);
 
-  const saveLocationToStorage = (loc) => {
-    localStorage.setItem('bahai-location', JSON.stringify(loc));
-    setSavedLocation(loc);
-    setShowLocationSearch(false);
-    setLocationQuery('');
-    setLocationSuggestions([]);
-    setLocationError(null);
-    refreshEffectiveToday();
-  };
-
-  const handleLocationGPS = () => {
-    if (loadingLocationGPS) return;
-    setLocationError(null);
-    setLoadingLocationGPS(true);
-    const onSuccess = async (coords) => {
-      const name =
-        (await reverseGeocode(coords.latitude, coords.longitude, lang)) ||
-        t('fasting.myLocation');
-      saveLocationToStorage({
-        lat: coords.latitude,
-        lon: coords.longitude,
-        name,
-      });
-      setLoadingLocationGPS(false);
-    };
-    const onError = () => {
-      setLocationError(t('fasting.locationError'));
-      setLoadingLocationGPS(false);
-    };
-    if (Capacitor.isNativePlatform()) {
-      import('@capacitor/geolocation').then(({ Geolocation }) =>
-        Geolocation.requestPermissions()
-          .then(() =>
-            Geolocation.getCurrentPosition({ enableHighAccuracy: true }),
-          )
-          .then((pos) => onSuccess(pos.coords))
-          .catch(onError),
-      );
-    } else {
-      navigator.geolocation.getCurrentPosition(
-        (pos) => onSuccess(pos.coords),
-        onError,
-      );
-    }
-  };
-
-  const gpsAvailable =
-    Capacitor.isNativePlatform() ||
-    (window.isSecureContext && 'geolocation' in navigator);
-
-  const handleSelectLocationCity = (city) => {
-    saveLocationToStorage({
-      lat: city.latitude,
-      lon: city.longitude,
-      name: `${city.name}${city.admin1 ? `, ${city.admin1}` : ''}, ${city.country}`,
-    });
-  };
-
-  const handleClearSettingsLocation = () => {
-    localStorage.removeItem('bahai-location');
-    setSavedLocation(null);
-    setLocationError(null);
-    refreshEffectiveToday();
-  };
+  const tabOptions = [
+    {
+      value: 'general',
+      label: t('settings.generalSettings'),
+    },
+    {
+      value: 'calendar',
+      label: t('settings.calendarAndLocation'),
+    },
+    ...(remindersSupported
+      ? [
+          {
+            value: 'reminder',
+            label: t('settings.reminderSettings'),
+          },
+        ]
+      : []),
+    {
+      value: 'notification',
+      label: t('settings.notificationSettings'),
+    },
+  ];
 
   return (
-    <div className="flex flex-col h-full bg-gray-50 dark:bg-gray-950">
+    <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-800">
-        <div className="w-12" />
+      <div className="flex items-center justify-between px-4 py-3">
+        <div />
         <h2 className="text-lg font-semibold">{t('settings.settings')}</h2>
-        <div className="w-12" />
+        <BaseButton
+          icon="info"
+          size="sm"
+          text
+          tooltip={t('about.title')}
+          tooltipPosition="left"
+          aria-label={t('about.title')}
+          onClick={() => setShowAboutModal(true)}
+        />
+      </div>
+
+      <div className="pb-4 px-4">
+        <BaseSegmentedControl
+          variant="rounded"
+          value={activeTab}
+          onChange={setActiveTab}
+          options={tabOptions}
+        />
       </div>
 
       <div className="flex-1 overflow-y-auto">
-        {/* Dark mode */}
-        <div className="px-4 pt-6 pb-3">
-          <label className="text-xs font-semibold tracking-wider block mb-2 text-gray-400 dark:text-gray-500">
-            {t('settings.appearance')}
-          </label>
-          <BaseSegmentedControl
-            variant="rounded"
-            value={settings.darkMode}
-            onChange={(v) => updateSetting('darkMode', v)}
-            options={[
-              { value: 'light', label: t('settings.light') },
-              { value: 'dark', label: t('settings.dark') },
-              { value: 'system', label: t('settings.system') },
-            ]}
-          />
-        </div>
-
-        {/* Language */}
-        <div className="px-4 pt-4 pb-3 border-t border-gray-200 dark:border-gray-800">
-          <label className="text-xs font-semibold tracking-wider block mb-2 text-gray-400 dark:text-gray-500">
-            {t('settings.languageLabel')}
-          </label>
-          <BaseSelectInput
-            selectedValue={settings.language}
-            onSelect={(v) => updateSetting('language', v)}
-            enableSearch={false}
-            disableSort
-            options={[
-              { value: 'system', label: t('settings.system') },
-              {
-                value: 'ar',
-                label: t('settings.arabic'),
-                icon: '/static/flags/sa.svg',
-              },
-              {
-                value: 'fa',
-                label: t('settings.persian'),
-                icon: '/static/flags/ir.svg',
-              },
-              {
-                value: 'en',
-                label: t('settings.english'),
-                icon: '/static/flags/gb.svg',
-              },
-              {
-                value: 'es',
-                label: t('settings.spanish'),
-                icon: '/static/flags/es.svg',
-              },
-              {
-                value: 'fr',
-                label: t('settings.french'),
-                icon: '/static/flags/fr.svg',
-              },
-              {
-                value: 'de',
-                label: t('settings.german'),
-                icon: '/static/flags/de.svg',
-              },
-            ]}
-          />
-          <p className="text-xs mt-2 text-gray-400 dark:text-gray-500">
-            {t('settings.languageHint')}
-          </p>
-        </div>
-
-        {/* Date shift */}
-        <div className="px-4 pt-4 pb-3 border-t border-gray-200 dark:border-gray-800">
-          <label className="text-xs font-semibold tracking-wider block mb-2 text-gray-400 dark:text-gray-500">
-            {t('settings.dateShiftLabel')}
-          </label>
-          <BaseSegmentedControl
-            variant="rounded"
-            value={settings.dateShift}
-            onChange={(v) => updateSetting('dateShift', v)}
-            options={[
-              {
-                value: 'sunset',
-                label: t('settings.localSunset'),
-              },
-              {
-                value: 'clock',
-                label: t('settings.theClock'),
-              },
-            ]}
-          />
-          <p className="text-xs mt-2 text-gray-400 dark:text-gray-500">
-            {t('settings.dateShiftHint')}
-          </p>
-        </div>
-
-        {/* Secondary date format */}
-        <div className="px-4 pt-4 pb-3 border-t border-gray-200 dark:border-gray-800">
-          <label className="text-xs font-semibold tracking-wider block mb-2 text-gray-400 dark:text-gray-500">
-            {t('settings.secondaryLabel')}
-          </label>
-          <BaseSegmentedControl
-            variant="rounded"
-            value={settings.secondaryFormat}
-            onChange={(v) => updateSetting('secondaryFormat', v)}
-            options={[
-              {
-                value: 'numbers',
-                label: t('settings.numbers'),
-              },
-              {
-                value: 'name',
-                label: t('settings.monthDay'),
-              },
-            ]}
-          />
-          <p className="text-xs mt-2 text-gray-400 dark:text-gray-500">
-            {t('settings.secondaryHint')}
-          </p>
-        </div>
-
-        {/* Week start */}
-        <div className="px-4 pt-4 pb-3 border-t border-gray-200 dark:border-gray-800">
-          <label className="text-xs font-semibold tracking-wider block mb-2 text-gray-400 dark:text-gray-500">
-            {t('settings.weekStartLabel')}
-          </label>
-          <BaseSegmentedControl
-            variant="rounded"
-            value={settings.weekStart}
-            onChange={(v) => updateSetting('weekStart', v)}
-            options={[
-              { value: 'jalal', label: 'Jalál (Glory)' },
-              { value: 'sunday', label: t('settings.sunday') },
-              { value: 'monday', label: t('settings.monday') },
-            ]}
-          />
-          <p className="text-xs mt-2 text-gray-400 dark:text-gray-500">
-            {t('settings.weekStartHint')}
-          </p>
-        </div>
-        {/* Week numbers */}
-        <div className="px-4 pt-4 pb-3 border-t border-gray-200 dark:border-gray-800">
-          <label className="text-xs font-semibold tracking-wider block mb-2 text-gray-400 dark:text-gray-500">
-            {t('settings.weekNumbersLabel')}
-          </label>
-          <BaseSegmentedControl
-            variant="rounded"
-            value={settings.showWeekNumbers ? 'on' : 'off'}
-            onChange={(v) => updateSetting('showWeekNumbers', v === 'on')}
-            options={[
-              { value: 'on', label: t('settings.show') },
-              { value: 'off', label: t('settings.hide') },
-            ]}
-          />
-        </div>
-        {/* Calendar view */}
-        <div className="px-4 pt-4 pb-3 border-t border-gray-200 dark:border-gray-800">
-          <label className="text-xs font-semibold tracking-wider block mb-2 text-gray-400 dark:text-gray-500">
-            {t('settings.calendarViewLabel')}
-          </label>
-          <BaseSegmentedControl
-            variant="rounded"
-            value={settings.calendarView}
-            onChange={(v) => updateSetting('calendarView', v)}
-            options={[
-              {
-                value: 'gregorian',
-                label: t('settings.gregorian'),
-              },
-              { value: 'badi', label: "Badí'" },
-              { value: 'mixed', label: t('settings.mixed') },
-            ]}
-          />
-        </div>
-
-        {/* Time format */}
-        <div className="px-4 pt-4 pb-3 border-t border-gray-200 dark:border-gray-800">
-          <label className="text-xs font-semibold tracking-wider block mb-2 text-gray-400 dark:text-gray-500">
-            {t('settings.timeFormatLabel')}
-          </label>
-          <BaseSegmentedControl
-            variant="rounded"
-            value={settings.timeFormat}
-            onChange={(v) => updateSetting('timeFormat', v)}
-            options={[
-              { value: '24', label: t('settings.timeFormat24') },
-              { value: '12', label: t('settings.timeFormat12') },
-              { value: 'system', label: t('settings.system') },
-            ]}
-          />
-        </div>
-
-        {/* Calendar density */}
-        <div className="px-4 pt-4 pb-3 border-t border-gray-200 dark:border-gray-800">
-          <label className="text-xs font-semibold tracking-wider block mb-2 text-gray-400 dark:text-gray-500">
-            {t('calendar.density')}
-          </label>
-          <BaseSegmentedControl
-            variant="rounded"
-            value={settings.calendarDensity}
-            onChange={(v) => updateSetting('calendarDensity', v)}
-            options={[
-              { value: 'compacta', label: t('calendar.compact') },
-              { value: 'detalles', label: t('calendar.details') },
-              { value: 'lista', label: t('calendar.list') },
-            ]}
-          />
-        </div>
-
-        {/* Haptic feedback */}
-        {isNativePlatform() && (
-          <div className="px-4 pt-4 pb-3 border-t border-gray-200 dark:border-gray-800">
-            <div className="flex items-center justify-between">
-              <label className="text-xs font-semibold tracking-wider text-gray-400 dark:text-gray-500">
-                {t('settings.hapticFeedbackLabel')}
+        {activeTab === 'general' && (
+          <>
+            {/* Dark mode */}
+            <div className="px-4 py-3">
+              <label className="text-xs font-semibold tracking-wider block mb-2 text-gray-400 dark:text-gray-500">
+                {t('settings.appearance')}
               </label>
-              <BaseToggleSwitch
-                value={settings.hapticFeedback}
-                onChange={(v) => updateSetting('hapticFeedback', v)}
+              <BaseSegmentedControl
+                variant="rounded"
+                value={settings.darkMode}
+                onChange={(v) => updateSetting('darkMode', v)}
+                options={[
+                  { value: 'light', label: t('settings.light') },
+                  { value: 'dark', label: t('settings.dark') },
+                  { value: 'system', label: t('settings.system') },
+                ]}
               />
             </div>
-            <p className="text-xs mt-2 text-gray-400 dark:text-gray-500">
-              {t('settings.hapticFeedbackHint')}
-            </p>
-          </div>
+
+            {/* Language */}
+            <div className="px-4 pt-4 pb-3">
+              <label className="text-xs font-semibold tracking-wider block mb-2 text-gray-400 dark:text-gray-500">
+                {t('settings.languageLabel')}
+              </label>
+              <BaseSelectInput
+                selectedValue={settings.language}
+                onSelect={(v) => updateSetting('language', v)}
+                enableSearch={false}
+                disableSort
+                label
+                options={[
+                  { value: 'system', label: t('settings.system') },
+                  {
+                    value: 'ar',
+                    label: t('settings.arabic'),
+                    icon: '/static/flags/sa.svg',
+                  },
+                  {
+                    value: 'fa',
+                    label: t('settings.persian'),
+                    icon: '/static/flags/ir.svg',
+                  },
+                  {
+                    value: 'en',
+                    label: t('settings.english'),
+                    icon: '/static/flags/gb.svg',
+                  },
+                  {
+                    value: 'es',
+                    label: t('settings.spanish'),
+                    icon: '/static/flags/es.svg',
+                  },
+                  {
+                    value: 'fr',
+                    label: t('settings.french'),
+                    icon: '/static/flags/fr.svg',
+                  },
+                  {
+                    value: 'de',
+                    label: t('settings.german'),
+                    icon: '/static/flags/de.svg',
+                  },
+                ]}
+              />
+              <p className="text-xs mt-2 text-gray-400 dark:text-gray-500">
+                {t('settings.languageHint')}
+              </p>
+            </div>
+            <div className="flex flex-col w-full md:mb-8">
+              {/* Date shift */}
+              <div className="px-4 pt-6 pb-3">
+                <label className="text-xs font-semibold tracking-wider block mb-2 text-gray-400 dark:text-gray-500">
+                  {t('settings.dateShiftLabel')}
+                </label>
+                <BaseSegmentedControl
+                  variant="rounded"
+                  value={settings.dateShift}
+                  onChange={(v) => updateSetting('dateShift', v)}
+                  options={[
+                    {
+                      value: 'sunset',
+                      label: t('settings.localSunset'),
+                    },
+                    {
+                      value: 'clock',
+                      label: t('settings.theClock'),
+                    },
+                  ]}
+                />
+                <p className="text-xs mt-2 text-gray-400 dark:text-gray-500">
+                  {t('settings.dateShiftHint')}
+                </p>
+              </div>
+
+              {/* Secondary date format */}
+              <div className="px-4 pt-4 pb-3">
+                <label className="text-xs font-semibold tracking-wider block mb-2 text-gray-400 dark:text-gray-500">
+                  {t('settings.secondaryLabel')}
+                </label>
+                <BaseSegmentedControl
+                  variant="rounded"
+                  value={settings.secondaryFormat}
+                  onChange={(v) => updateSetting('secondaryFormat', v)}
+                  options={[
+                    {
+                      value: 'numbers',
+                      label: t('settings.numbers'),
+                    },
+                    {
+                      value: 'name',
+                      label: t('settings.monthDay'),
+                    },
+                  ]}
+                />
+                <p className="text-xs mt-2 text-gray-400 dark:text-gray-500">
+                  {t('settings.secondaryHint')}
+                </p>
+              </div>
+
+              {/* Week start */}
+              <div className="px-4 pt-4 pb-3">
+                <label className="text-xs font-semibold tracking-wider block mb-2 text-gray-400 dark:text-gray-500">
+                  {t('settings.weekStartLabel')}
+                </label>
+                <BaseSegmentedControl
+                  variant="rounded"
+                  value={settings.weekStart}
+                  onChange={(v) => updateSetting('weekStart', v)}
+                  options={[
+                    { value: 'jalal', label: 'Jalál (Glory)' },
+                    { value: 'sunday', label: t('settings.sunday') },
+                    { value: 'monday', label: t('settings.monday') },
+                  ]}
+                />
+                <p className="text-xs mt-2 text-gray-400 dark:text-gray-500">
+                  {t('settings.weekStartHint')}
+                </p>
+              </div>
+              {/* Week numbers */}
+              <div className="px-4 pt-4 pb-3">
+                <label className="text-xs font-semibold tracking-wider block mb-2 text-gray-400 dark:text-gray-500">
+                  {t('settings.weekNumbersLabel')}
+                </label>
+                <BaseSegmentedControl
+                  variant="rounded"
+                  value={settings.showWeekNumbers ? 'on' : 'off'}
+                  onChange={(v) => updateSetting('showWeekNumbers', v === 'on')}
+                  options={[
+                    { value: 'on', label: t('settings.show') },
+                    { value: 'off', label: t('settings.hide') },
+                  ]}
+                />
+              </div>
+              {/* Calendar view */}
+              <div className="px-4 pt-4 pb-3">
+                <label className="text-xs font-semibold tracking-wider block mb-2 text-gray-400 dark:text-gray-500">
+                  {t('settings.calendarViewLabel')}
+                </label>
+                <BaseSegmentedControl
+                  variant="rounded"
+                  value={settings.calendarView}
+                  onChange={(v) => updateSetting('calendarView', v)}
+                  options={[
+                    {
+                      value: 'gregorian',
+                      label: t('settings.gregorian'),
+                    },
+                    { value: 'mixed', label: t('settings.mixed') },
+                    { value: 'badi', label: "Badí'" },
+                  ]}
+                />
+              </div>
+
+              {/* Time format */}
+              <div className="px-4 pt-4 pb-3">
+                <label className="text-xs font-semibold tracking-wider block mb-2 text-gray-400 dark:text-gray-500">
+                  {t('settings.timeFormatLabel')}
+                </label>
+                <BaseSegmentedControl
+                  variant="rounded"
+                  value={settings.timeFormat}
+                  onChange={(v) => updateSetting('timeFormat', v)}
+                  options={[
+                    { value: '24', label: t('settings.timeFormat24') },
+                    { value: '12', label: t('settings.timeFormat12') },
+                    { value: 'system', label: t('settings.system') },
+                  ]}
+                />
+              </div>
+
+              {/* Calendar density */}
+              <div className="px-4 pt-4 pb-3">
+                <label className="text-xs font-semibold tracking-wider block mb-2 text-gray-400 dark:text-gray-500">
+                  {t('calendar.visualization')}
+                </label>
+                <BaseSegmentedControl
+                  variant="rounded"
+                  value={settings.calendarDensity}
+                  onChange={(v) => updateSetting('calendarDensity', v)}
+                  options={[
+                    { value: 'compacta', label: t('calendar.compact') },
+                    { value: 'detalles', label: t('calendar.details') },
+                  ]}
+                />
+              </div>
+            </div>
+          </>
         )}
 
-        {/* Location */}
-        <div className="px-4 pt-4 pb-6 border-t border-gray-200 dark:border-gray-800">
-          <label className="text-xs font-semibold tracking-wider block mb-2 text-gray-400 dark:text-gray-500">
-            {t('settings.locationLabel')}
-          </label>
-
-          {savedLocation ? (
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-1">
-                <BaseIcon
-                  icon="locationOn"
-                  size="xs"
-                  className="fill-gray-400"
+        {/* Haptic feedback */}
+        {activeTab === 'general' &&
+          (isNativePlatform() || shouldPreviewNativeSettings()) && (
+            <div className="px-4 pt-4 pb-3 mb-8">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-semibold tracking-wider text-gray-400 dark:text-gray-500">
+                  {t('settings.hapticFeedbackLabel')}
+                </label>
+                <BaseToggleSwitch
+                  value={settings.hapticFeedback}
+                  onChange={(v) => updateSetting('hapticFeedback', v)}
                 />
-                <span className="text-sm text-primary-text">
-                  {savedLocation.name}
+              </div>
+              <p className="text-xs mt-2 text-gray-400 dark:text-gray-500">
+                {t('settings.hapticFeedbackHint')}
+              </p>
+            </div>
+          )}
+
+        {activeTab === 'calendar' && (
+          <>
+            <CalendarSourcesSection />
+          </>
+        )}
+        {activeTab === 'reminder' && remindersSupported && (
+          <>
+            <RemindersListSection />
+          </>
+        )}
+        {activeTab === 'notification' && (
+          <div className="px-4 pt-4 pb-3">
+            <label className="text-xs font-semibold tracking-wider uppercase text-gray-400 dark:text-gray-500">
+              {t('settings.notificationSettings')}
+            </label>
+            <div className="px-4 pt-4 pb-3">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-sm text-gray-900 dark:text-gray-100">
+                  {t('settings.notificationsEvents')}
                 </span>
-              </div>
-              <BaseIcon
-                icon="close"
-                size="xs"
-                className="fill-gray-400"
-                onClick={handleClearSettingsLocation}
-              />
-            </div>
-          ) : !showLocationSearch && !loadingLocationGPS ? (
-            <div className="flex gap-2">
-              {gpsAvailable && (
-                <BaseButton
-                  label={t('fasting.useMyLocation')}
-                  icon="locationOn"
-                  outlined
-                  onClick={handleLocationGPS}
-                  className="flex-1 text-xs"
+                <BaseToggleSwitch
+                  value={settings.notificationsEvents}
+                  onChange={(v) => updateSetting('notificationsEvents', v)}
                 />
-              )}
-              <BaseButton
-                label={t('fasting.searchCity')}
-                icon="search"
-                outlined
-                onClick={() => {
-                  setShowLocationSearch(true);
-                  setLocationError(null);
-                }}
-                className="flex-1 text-xs"
-              />
-            </div>
-          ) : null}
-
-          {loadingLocationGPS && (
-            <div className="flex justify-center py-2">
-              <BaseSpinner />
-            </div>
-          )}
-
-          {showLocationSearch && !savedLocation && (
-            <div>
-              <div className="relative">
-                <input
-                  value={locationQuery}
-                  onChange={(e) => setLocationQuery(e.target.value)}
-                  placeholder={t('fasting.cityPlaceholder')}
-                  className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-primary-text px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  autoFocus
-                />
-                {loadingLocationCities && (
-                  <div className="absolute right-2 top-2.5">
-                    <BaseSpinner />
-                  </div>
-                )}
               </div>
-              {locationSuggestions.length > 0 && (
-                <div className="mt-1 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 overflow-hidden">
-                  {locationSuggestions.map((city) => (
-                    <button
-                      key={city.id}
-                      type="button"
-                      onClick={() => handleSelectLocationCity(city)}
-                      className="w-full text-left px-3 py-2 text-sm text-primary-text hover:bg-gray-100 dark:hover:bg-gray-800 border-b border-gray-100 dark:border-gray-800 last:border-0"
-                    >
-                      {city.name}
-                      {city.admin1 ? `, ${city.admin1}` : ''}, {city.country}
-                    </button>
-                  ))}
-                </div>
-              )}
-              <button
-                type="button"
-                onClick={() => {
-                  setShowLocationSearch(false);
-                  setLocationQuery('');
-                  setLocationSuggestions([]);
-                }}
-                className="mt-2 text-xs text-gray-400 underline"
-              >
-                {t('fasting.cancel')}
-              </button>
+              <p className="text-xs mt-1 text-gray-400 dark:text-gray-500">
+                {t('settings.notificationsEventsHint')}
+              </p>
+              <div className="flex items-center justify-between gap-2 mt-3">
+                <span className="text-sm text-gray-900 dark:text-gray-100">
+                  {t('settings.notificationsBahaiEvents')}
+                </span>
+                <BaseToggleSwitch
+                  value={settings.notificationsBahaiEvents}
+                  onChange={(v) => updateSetting('notificationsBahaiEvents', v)}
+                />
+              </div>
+              <p className="text-xs mt-1 text-gray-400 dark:text-gray-500">
+                {t('settings.notificationsBahaiEventsHint')}
+              </p>
             </div>
-          )}
-
-          {locationError && (
-            <p className="text-red-400 text-xs mt-2">{locationError}</p>
-          )}
-          {!savedLocation && !showLocationSearch && !loadingLocationGPS && (
-            <p className="text-xs mt-2 text-gray-400 dark:text-gray-500">
-              {t('settings.locationHint')}
-            </p>
-          )}
-        </div>
-
-        <CalendarSourcesSection />
-        <RemindersListSection />
+          </div>
+        )}
+        {activeTab === 'notification' && <FastingAlarmsSection />}
       </div>
+
+      <BaseModal
+        visible={showAboutModal}
+        onClose={() => setShowAboutModal(false)}
+      >
+        <About />
+      </BaseModal>
     </div>
   );
 }

@@ -16,6 +16,8 @@ import {
 } from '../lib/badiDate';
 import BaseSpinner from './base/BaseSpinner';
 
+const MAX_DOTS = 6;
+
 function getDaysInMonth(year, month) {
   return new Date(year, month + 1, 0).getDate();
 }
@@ -194,7 +196,7 @@ export default function GregorianCalendar() {
       evs.push({
         color: 'bg-blue-400',
         name: t('calendar.feast', {
-          name: getMonthName(selectedInfo.badi.month, 'ar'),
+          name: getMonthName(selectedInfo.badi.month, lang, true),
         }),
         desc: monthEntry?.desc || '',
         time_note: monthEntry?.info || '',
@@ -296,13 +298,26 @@ export default function GregorianCalendar() {
                         cell.badi.month <= 19 && (
                           <span className="w-1.5 h-1.5 rounded-full bg-blue-400" />
                         )}
-                      {eventsForDate(cell.date).map((ev, pi) => (
-                        <span
-                          key={`p-${pi}`}
-                          className="w-1.5 h-1.5 rounded-full"
-                          style={{ backgroundColor: ev.color }}
-                        />
-                      ))}
+                      {eventsForDate(cell.date)
+                        .slice(
+                          0,
+                          MAX_DOTS -
+                            [
+                              cell.holyDay,
+                              cell.ridvan && !cell.holyDay,
+                              cell.badi &&
+                                cell.badi.day === 1 &&
+                                cell.badi.month >= 1 &&
+                                cell.badi.month <= 19,
+                            ].filter(Boolean).length,
+                        )
+                        .map((ev, pi) => (
+                          <span
+                            key={`p-${pi}`}
+                            className="w-1.5 h-1.5 rounded-full"
+                            style={{ backgroundColor: ev.color }}
+                          />
+                        ))}
                     </div>
                   )}
 
