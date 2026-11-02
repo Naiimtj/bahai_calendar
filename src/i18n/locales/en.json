@@ -304,16 +304,18 @@
   "privacy": {
     "title": "Privacy Policy",
     "dataCollectionTitle": "Data Collection",
-    "dataCollectionBody": "Bahá'í Calendar does not collect, store, or share any personal information. No user account is required.",
+    "dataCollectionBody": "Bahá'í Calendar has no user accounts and does not collect, sell, or share personal information with the developer. Your events, calendars, and reminders stay on your device.",
     "localStorageTitle": "Local Storage",
-    "localStorageBody": "Your preferences (language, theme, calendar view) are saved locally on your device using localStorage. This data never leaves your device.",
+    "localStorageBody": "Your preferences (language, theme, calendar view, saved location) and the data shown in home-screen widgets are stored only on your device.",
     "apiTitle": "API Calls",
-    "apiBody": "Bahá'í calendar dates are calculated entirely on your device. The app only contacts external services for sunrise/sunset times and location search; no personal data is sent in these requests.",
+    "apiBody": "Bahá'í dates are calculated entirely on your device. To show sunrise and sunset times, the app sends the coordinates of your chosen location to sunrise-sunset.org. When you search for a place, the text you type is sent to Open-Meteo, to Photon (OpenStreetMap) outside iOS, or to Apple Maps on iOS, and map images may be loaded from OpenStreetMap. These requests are not linked to any identity or account, although the providers may see your IP address.",
     "thirdPartyTitle": "Third Parties",
-    "thirdPartyBody": "No third-party analytics, advertising, or tracking services are used.",
+    "thirdPartyBody": "These services are used only to provide the features above. No analytics, advertising, or tracking services are used, and the app does not track you.",
+    "permissionsTitle": "Permissions",
+    "permissionsBody": "Location is requested only when you tap the location button, to find sunrise and sunset times. Calendar and Reminders access lets you see and create your own events next to Bahá'í dates; that data is read on your device and is never sent to the developer. Notifications are used for local alarms and reminders. You can revoke any permission in Settings at any time.",
     "contactTitle": "Contact",
-    "contactBody": "For questions about this privacy policy, contact the developer through the App Store listing.",
-    "lastUpdated": "Last updated: July 2026"
+    "contactBody": "For questions about this privacy policy, write to naiim.taefy.company@gmail.com.",
+    "lastUpdated": "Last updated: November 2026"
   },
   "bahaiQuotes": {
     "quote1": "The earth is but one country, and mankind its citizens.",

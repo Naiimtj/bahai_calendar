@@ -50,12 +50,25 @@ export default function Privacy() {
 
         <section>
           <h3 className="font-semibold text-base text-gray-900 dark:text-gray-100 mb-2">
+            {t('privacy.permissionsTitle')}
+          </h3>
+          <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
+            {t('privacy.permissionsBody')}
+          </p>
+        </section>
+
+        <section>
+          <h3 className="font-semibold text-base text-gray-900 dark:text-gray-100 mb-2">
             {t('privacy.contactTitle')}
           </h3>
           <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
             {t('privacy.contactBody')}
           </p>
         </section>
+
+        <p className="text-xs text-gray-400 dark:text-gray-500">
+          {t('privacy.lastUpdated')}
+        </p>
       </div>
     </div>
   );

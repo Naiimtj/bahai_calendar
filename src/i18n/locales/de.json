@@ -303,16 +303,18 @@
   "privacy": {
     "title": "Datenschutzrichtlinie",
     "dataCollectionTitle": "Datenerfassung",
-    "dataCollectionBody": "Bahá'í-Kalender erfasst, speichert oder teilt keine persönlichen Daten. Es ist kein Benutzerkonto erforderlich.",
+    "dataCollectionBody": "Bahá'í-Kalender hat keine Benutzerkonten und erfasst, verkauft oder teilt keine persönlichen Daten mit dem Entwickler. Ihre Termine, Kalender und Erinnerungen bleiben auf Ihrem Gerät.",
     "localStorageTitle": "Lokaler Speicher",
-    "localStorageBody": "Ihre Einstellungen werden lokal auf Ihrem Gerät gespeichert. Diese Daten verlassen Ihr Gerät nie.",
+    "localStorageBody": "Ihre Einstellungen (Sprache, Design, Kalenderansicht, gespeicherter Ort) und die Daten der Widgets auf dem Home-Bildschirm werden nur auf Ihrem Gerät gespeichert.",
     "apiTitle": "API-Aufrufe",
-    "apiBody": "Die Daten des Bahá'í-Kalenders werden vollständig auf Ihrem Gerät berechnet. Die App kontaktiert externe Dienste nur für Sonnenauf- und -untergangszeiten sowie die Ortssuche; dabei werden keine personenbezogenen Daten gesendet.",
+    "apiBody": "Bahá'í-Daten werden vollständig auf Ihrem Gerät berechnet. Für Sonnenauf- und -untergangszeiten sendet die App die Koordinaten des gewählten Ortes an sunrise-sunset.org. Bei der Ortssuche wird der eingegebene Text an Open-Meteo, außerhalb von iOS an Photon (OpenStreetMap) bzw. unter iOS an Apple Karten gesendet; Kartenbilder können von OpenStreetMap geladen werden. Diese Anfragen sind keiner Identität und keinem Konto zugeordnet, die Anbieter können jedoch Ihre IP-Adresse sehen.",
     "thirdPartyTitle": "Dritte",
-    "thirdPartyBody": "Es werden keine Analyse-, Werbe- oder Tracking-Dienste Dritter verwendet.",
+    "thirdPartyBody": "Diese Dienste werden nur für die beschriebenen Funktionen genutzt. Es werden keine Analyse-, Werbe- oder Tracking-Dienste verwendet, und die App verfolgt Sie nicht.",
+    "permissionsTitle": "Berechtigungen",
+    "permissionsBody": "Der Standort wird nur angefordert, wenn Sie die Standort-Schaltfläche tippen, um Sonnenauf- und -untergangszeiten zu ermitteln. Der Zugriff auf Kalender und Erinnerungen ermöglicht es, eigene Termine neben den Bahá'í-Daten anzuzeigen und zu erstellen; diese Daten werden auf Ihrem Gerät gelesen und nie an den Entwickler gesendet. Mitteilungen dienen lokalen Alarmen und Erinnerungen. Sie können jede Berechtigung jederzeit in den Einstellungen widerrufen.",
     "contactTitle": "Kontakt",
-    "contactBody": "Bei Fragen zur Datenschutzrichtlinie wenden Sie sich über den App Store an den Entwickler.",
-    "lastUpdated": "Letzte Aktualisierung: Juli 2026"
+    "contactBody": "Bei Fragen zu dieser Datenschutzrichtlinie schreiben Sie an naiim.taefy.company@gmail.com.",
+    "lastUpdated": "Letzte Aktualisierung: November 2026"
   },
   "bahaiQuotes": {
     "quote1": "Die Erde ist ein einziges Land, und die Menschheit seine Bürger.",

@@ -1,0 +1,61 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "NSCalendarsFullAccessUsageDescription" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : { "stringUnit" : { "state" : "translated", "value" : "يصل تقويم بهاءي إلى تقاويمك لعرض أحداثك الشخصية بجانب التواريخ البهائية وإضافة الأحداث التي تنشئها في التطبيقة." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Bahá'í-Kalender greift auf Ihre Kalender zu, um Ihre persönlichen Termine neben den Bahá'í-Daten anzuzeigen und in der App erstellte Termine hinzuzufügen." } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Bahá'í Calendar accesses your calendars to show your personal events next to Bahá'í dates and to add events you create in the app." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Calendario Bahá'í accede a tus calendarios para mostrar tus eventos personales junto a las fechas bahá'ís y añadir los eventos que creas en la app." } },
+        "fa" : { "stringUnit" : { "state" : "translated", "value" : "تقویم بهائی به تقویم‌های شما دسترسی دارد تا رویدادهای شخصی شما را کنار تاریخ‌های بهائی نشان دهد و رویدادهایی را که در برنامه می‌سازید اضافه کند." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Calendrier Bahá'í accède à vos calendriers pour afficher vos événements personnels à côté des dates bahá'íes et ajouter les événements que vous créez dans l'application." } }
+      }
+    },
+    "NSCalendarsUsageDescription" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : { "stringUnit" : { "state" : "translated", "value" : "يصل تقويم بهاءي إلى تقاويمك لعرض أحداثك الشخصية بجانب التواريخ البهائية وإضافة الأحداث التي تنشئها في التطبيقة." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Bahá'í-Kalender greift auf Ihre Kalender zu, um Ihre persönlichen Termine neben den Bahá'í-Daten anzuzeigen und in der App erstellte Termine hinzuzufügen." } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Bahá'í Calendar accesses your calendars to show your personal events next to Bahá'í dates and to add events you create in the app." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Calendario Bahá'í accede a tus calendarios para mostrar tus eventos personales junto a las fechas bahá'ís y añadir los eventos que creas en la app." } },
+        "fa" : { "stringUnit" : { "state" : "translated", "value" : "تقویم بهائی به تقویم‌های شما دسترسی دارد تا رویدادهای شخصی شما را کنار تاریخ‌های بهائی نشان دهد و رویدادهایی را که در برنامه می‌سازید اضافه کند." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Calendrier Bahá'í accède à vos calendriers pour afficher vos événements personnels à côté des dates bahá'íes et ajouter les événements que vous créez dans l'application." } }
+      }
+    },
+    "NSLocationWhenInUseUsageDescription" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : { "stringUnit" : { "state" : "translated", "value" : "يستخدم تقويم بهاءي موقعك لعرض مواقيت شروق الشمس وغروبها خلال فترة الصيام." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Bahá'í-Kalender verwendet Ihren Standort, um Sonnenauf- und -untergangszeiten während der Fastenzeit anzuzeigen." } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Bahá'í Calendar uses your location to show sunrise and sunset times during the Fast." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Calendario Bahá'í usa tu ubicación para mostrar las horas de salida y puesta del sol durante el Ayuno." } },
+        "fa" : { "stringUnit" : { "state" : "translated", "value" : "تقویم بهائی از مکان شما برای نمایش زمان طلوع و غروب آفتاب در دوره روزه استفاده می‌کند." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Calendrier Bahá'í utilise votre position pour afficher les heures de lever et de coucher du soleil pendant le Jeûne." } }
+      }
+    },
+    "NSRemindersFullAccessUsageDescription" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : { "stringUnit" : { "state" : "translated", "value" : "يصل تقويم بهاءي إلى تذكيراتك لإنشاء التذكيرات مباشرةً من التطبيقة." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Bahá'í-Kalender greift auf Ihre Erinnerungen zu, um Erinnerungen direkt aus der App zu erstellen." } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Bahá'í Calendar accesses your reminders to create reminders directly from the app." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Calendario Bahá'í accede a tus recordatorios para crear recordatorios directamente desde la app." } },
+        "fa" : { "stringUnit" : { "state" : "translated", "value" : "تقویم بهائی به یادآورهای شما دسترسی دارد تا یادآورها را مستقیماً از برنامه بسازد." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Calendrier Bahá'í accède à vos rappels pour créer des rappels directement depuis l'application." } }
+      }
+    },
+    "NSRemindersUsageDescription" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : { "stringUnit" : { "state" : "translated", "value" : "يصل تقويم بهاءي إلى تذكيراتك لإنشاء التذكيرات مباشرةً من التطبيقة." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Bahá'í-Kalender greift auf Ihre Erinnerungen zu, um Erinnerungen direkt aus der App zu erstellen." } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Bahá'í Calendar accesses your reminders to create reminders directly from the app." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Calendario Bahá'í accede a tus recordatorios para crear recordatorios directamente desde la app." } },
+        "fa" : { "stringUnit" : { "state" : "translated", "value" : "تقویم بهائی به یادآورهای شما دسترسی دارد تا یادآورها را مستقیماً از برنامه بسازد." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Calendrier Bahá'í accède à vos rappels pour créer des rappels directement depuis l'application." } }
+      }
+    }
+  },
+  "version" : "1.0"
+}

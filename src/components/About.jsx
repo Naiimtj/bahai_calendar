@@ -12,7 +12,6 @@ export default function About() {
         <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-200">
           {t('about.title')}
         </h2>
-        <p className="text-gray-500 text-sm mt-1">v1.0.7</p>
       </div>
 
       <div className="text-sm text-gray-800 dark:text-gray-200 leading-relaxed">

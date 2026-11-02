@@ -304,16 +304,18 @@
   "privacy": {
     "title": "Politique de confidentialité",
     "dataCollectionTitle": "Collecte de données",
-    "dataCollectionBody": "Calendrier Bahá'í ne collecte, ne stocke ni ne partage aucune information personnelle. Aucun compte utilisateur n'est requis.",
+    "dataCollectionBody": "Calendrier Bahá'í n'a pas de comptes utilisateur et ne collecte, ne vend ni ne partage aucune information personnelle avec le développeur. Vos événements, calendriers et rappels restent sur votre appareil.",
     "localStorageTitle": "Stockage local",
-    "localStorageBody": "Vos préférences sont enregistrées localement sur votre appareil. Ces données ne quittent jamais votre appareil.",
+    "localStorageBody": "Vos préférences (langue, thème, vue du calendrier, lieu enregistré) et les données des widgets de l'écran d'accueil sont enregistrées uniquement sur votre appareil.",
     "apiTitle": "Appels API",
-    "apiBody": "Les dates du calendrier bahá'í sont entièrement calculées sur votre appareil. L'application ne contacte des services externes que pour les heures de lever/coucher du soleil et la recherche de lieux ; aucune donnée personnelle n'est envoyée dans ces requêtes.",
+    "apiBody": "Les dates bahá'íes sont entièrement calculées sur votre appareil. Pour afficher les heures de lever et de coucher du soleil, l'application envoie les coordonnées du lieu choisi à sunrise-sunset.org. Lorsque vous recherchez un lieu, le texte saisi est envoyé à Open-Meteo, à Photon (OpenStreetMap) hors iOS, ou à Apple Plans sur iOS, et des images de carte peuvent être chargées depuis OpenStreetMap. Ces requêtes ne sont liées à aucune identité ni compte, mais les fournisseurs peuvent voir votre adresse IP.",
     "thirdPartyTitle": "Tiers",
-    "thirdPartyBody": "Aucun service d'analyse, de publicité ou de suivi tiers n'est utilisé.",
+    "thirdPartyBody": "Ces services servent uniquement aux fonctions décrites. Aucun service d'analyse, de publicité ou de suivi n'est utilisé et l'application ne vous suit pas.",
+    "permissionsTitle": "Autorisations",
+    "permissionsBody": "La localisation n'est demandée que lorsque vous appuyez sur le bouton de localisation, pour obtenir les heures de lever et de coucher du soleil. L'accès à Calendrier et Rappels vous permet de voir et de créer vos propres événements à côté des dates bahá'íes ; ces données sont lues sur votre appareil et ne sont jamais envoyées au développeur. Les notifications servent aux alarmes et rappels locaux. Vous pouvez révoquer toute autorisation dans Réglages à tout moment.",
     "contactTitle": "Contact",
-    "contactBody": "Pour toute question sur cette politique, contactez le développeur via la fiche App Store.",
-    "lastUpdated": "Dernière mise à jour : juillet 2026"
+    "contactBody": "Pour toute question sur cette politique, écrivez à naiim.taefy.company@gmail.com.",
+    "lastUpdated": "Dernière mise à jour : novembre 2026"
   },
   "bahaiQuotes": {
     "quote1": "La terre n'est qu'un seul pays, et l'humanité en est les citoyens.",
