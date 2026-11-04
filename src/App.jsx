@@ -136,7 +136,9 @@ function AppInner() {
           />
         )}
 
-        <main className="relative flex-1 overflow-y-auto pb-[var(--kb-height)]">
+        <main
+          className={`relative flex-1 overflow-y-auto pb-[var(--kb-height)] ${page === 'today' ? '' : 'md:pt-safe'}`}
+        >
           {renderPage()}
         </main>
       </div>

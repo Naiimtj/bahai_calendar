@@ -43,11 +43,4 @@ export default [
       'react/prop-types': 'off',
     },
   },
-  {
-    files: ['scripts/**/*.cjs'],
-    languageOptions: {
-      sourceType: 'commonjs',
-      globals: globals.node,
-    },
-  },
 ];

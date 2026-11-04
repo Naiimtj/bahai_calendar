@@ -822,7 +822,7 @@ export default function Settings() {
                   value={settings.weekStart}
                   onChange={(v) => updateSetting('weekStart', v)}
                   options={[
-                    { value: 'jalal', label: 'Jalál (Glory)' },
+                    { value: 'jalal', label: t('settings.weekStartJalal') },
                     { value: 'sunday', label: t('settings.sunday') },
                     { value: 'monday', label: t('settings.monday') },
                   ]}
@@ -886,7 +886,7 @@ export default function Settings() {
               {/* Calendar density */}
               <div className="px-4 pt-4 pb-3">
                 <label className="text-xs font-semibold tracking-wider block mb-2 text-gray-400 dark:text-gray-500">
-                  {t('calendar.visualization')}
+                  {t('settings.densityLabel')}
                 </label>
                 <BaseSegmentedControl
                   variant="rounded"
