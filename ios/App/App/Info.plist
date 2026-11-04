@@ -30,6 +30,8 @@
 	<string>Bahá'í Calendar accesses your calendars to show your personal events next to Bahá'í dates and to add events you create in the app.</string>
 	<key>NSCalendarsUsageDescription</key>
 	<string>Bahá'í Calendar accesses your calendars to show your personal events next to Bahá'í dates and to add events you create in the app.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>Bahá'í Calendar uses your location to show sunrise and sunset times during the Fast.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Bahá'í Calendar uses your location to show sunrise and sunset times during the Fast.</string>
 	<key>NSRemindersFullAccessUsageDescription</key>

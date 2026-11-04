@@ -107,6 +107,47 @@
         }
       }
     },
+    "NSLocationAlwaysAndWhenInUseUsageDescription" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يستخدم التقويم البهائي موقعك لعرض مواقيت شروق الشمس وغروبها خلال فترة الصيام."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bahá'í-Kalender verwendet Ihren Standort, um Sonnenauf- und -untergangszeiten während der Fastenzeit anzuzeigen."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bahá'í Calendar uses your location to show sunrise and sunset times during the Fast."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Calendario Bahá'í usa tu ubicación para mostrar las horas de salida y puesta del sol durante el Ayuno."
+          }
+        },
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تقویم بهائی از مکان شما برای نمایش زمان طلوع و غروب آفتاب در دوره روزه استفاده می‌کند."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Calendrier Bahá'í utilise votre position pour afficher les heures de lever et de coucher du soleil pendant le Jeûne."
+          }
+        }
+      }
+    },
     "NSLocationWhenInUseUsageDescription" : {
       "extractionState" : "manual",
       "localizations" : {
