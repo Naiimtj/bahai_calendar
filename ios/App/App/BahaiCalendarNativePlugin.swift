@@ -27,6 +27,7 @@ public class BahaiCalendarNativePlugin: CAPPlugin, CAPBridgedPlugin {
         CAPPluginMethod(name: "listEventsInRange", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "searchMapPlaces", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "appleMapsPreview", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "reverseGeocode", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "createEvent", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "modifyEvent", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "deleteEvent", returnType: CAPPluginReturnPromise),
@@ -246,6 +247,37 @@ public class BahaiCalendarNativePlugin: CAPPlugin, CAPBridgedPlugin {
             .components(separatedBy: .newlines)
             .filter { !$0.isEmpty }
             .joined(separator: ", ")
+    }
+
+    @objc func reverseGeocode(_ call: CAPPluginCall) {
+        guard let latitude = call.getDouble("latitude"),
+              let longitude = call.getDouble("longitude"),
+              CLLocationCoordinate2DIsValid(CLLocationCoordinate2D(latitude: latitude, longitude: longitude)) else {
+            call.reject("Missing or invalid coordinates")
+            return
+        }
+        let language = call.getString("language")?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        let locale = language.isEmpty ? nil : Locale(identifier: language)
+
+        CLGeocoder().reverseGeocodeLocation(
+            CLLocation(latitude: latitude, longitude: longitude),
+            preferredLocale: locale
+        ) { placemarks, error in
+            if let error {
+                call.reject("Failed to reverse geocode: \(error.localizedDescription)")
+                return
+            }
+            guard let placemark = placemarks?.first else {
+                call.reject("No place found")
+                return
+            }
+            let result: [String: Any] = [
+                "city": placemark.locality ?? placemark.subAdministrativeArea ?? "",
+                "region": placemark.administrativeArea ?? "",
+                "country": placemark.country ?? "",
+            ]
+            call.resolve(["result": result])
+        }
     }
 
     @objc func appleMapsPreview(_ call: CAPPluginCall) {

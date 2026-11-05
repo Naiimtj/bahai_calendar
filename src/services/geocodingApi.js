@@ -156,12 +156,34 @@ export async function searchEventLocations(
 
 /**
  * Reverse geocode coordinates into a human-readable "City, Country" label.
+ * On iOS this uses Apple's geocoder, so coordinates are never sent to BigDataCloud.
  * @param {number} lat
  * @param {number} lon
  * @param {string} [language]
  * @returns {Promise<string|null>} label, or null if it can't be resolved
  */
 export async function reverseGeocode(lat, lon, language = 'en') {
+  if (Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'ios') {
+    try {
+      const res = await CapacitorCalendar.reverseGeocode({
+        latitude: lat,
+        longitude: lon,
+        language,
+      });
+      const place = res?.result ?? {};
+      const parts = [
+        ...new Set(
+          [place.city, place.region, place.country]
+            .map(textValue)
+            .filter(Boolean),
+        ),
+      ];
+      return parts.length ? parts.join(', ') : null;
+    } catch {
+      return null;
+    }
+  }
+
   const url = `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=${language}`;
   try {
     const res = await fetch(url);

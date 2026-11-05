@@ -4,6 +4,7 @@ const mockState = vi.hoisted(() => ({
   isNativePlatform: vi.fn(),
   getPlatform: vi.fn(),
   searchMapPlaces: vi.fn(),
+  reverseGeocode: vi.fn(),
 }));
 
 vi.mock('@capacitor/core', () => ({
@@ -16,10 +17,11 @@ vi.mock('@capacitor/core', () => ({
 vi.mock('../native/bahaiCalendarNative', () => ({
   CapacitorCalendar: {
     searchMapPlaces: mockState.searchMapPlaces,
+    reverseGeocode: mockState.reverseGeocode,
   },
 }));
 
-import { searchEventLocations } from './geocodingApi';
+import { reverseGeocode, searchEventLocations } from './geocodingApi';
 
 function photonResponse(features) {
   return {
@@ -337,4 +339,92 @@ describe('searchEventLocations', () => {
       expect(mockState.searchMapPlaces).not.toHaveBeenCalled();
     },
   );
+});
+
+describe('reverseGeocode', () => {
+  beforeEach(() => {
+    vi.stubGlobal('fetch', vi.fn());
+    mockState.isNativePlatform.mockReset();
+    mockState.getPlatform.mockReset();
+    mockState.reverseGeocode.mockReset();
+    mockState.isNativePlatform.mockReturnValue(false);
+    mockState.getPlatform.mockReturnValue('web');
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.clearAllMocks();
+  });
+
+  it('uses Apple geocoding on iOS and never calls BigDataCloud', async () => {
+    mockState.isNativePlatform.mockReturnValue(true);
+    mockState.getPlatform.mockReturnValue('ios');
+    mockState.reverseGeocode.mockResolvedValueOnce({
+      result: {
+        city: 'Madrid',
+        region: 'Comunidad de Madrid',
+        country: 'España',
+      },
+    });
+
+    const result = await reverseGeocode(40.4168, -3.7038, 'es');
+
+    expect(result).toBe('Madrid, Comunidad de Madrid, España');
+    expect(mockState.reverseGeocode).toHaveBeenCalledWith({
+      latitude: 40.4168,
+      longitude: -3.7038,
+      language: 'es',
+    });
+    expect(fetch).not.toHaveBeenCalled();
+  });
+
+  it('drops empty and repeated names on iOS', async () => {
+    mockState.isNativePlatform.mockReturnValue(true);
+    mockState.getPlatform.mockReturnValue('ios');
+    mockState.reverseGeocode.mockResolvedValueOnce({
+      result: {
+        city: ' Madrid ',
+        region: 'Madrid',
+        country: '',
+      },
+    });
+
+    const result = await reverseGeocode(40.4168, -3.7038, 'es');
+
+    expect(result).toBe('Madrid');
+  });
+
+  it('returns null on iOS when Apple geocoding fails, without falling back to BigDataCloud', async () => {
+    mockState.isNativePlatform.mockReturnValue(true);
+    mockState.getPlatform.mockReturnValue('ios');
+    mockState.reverseGeocode.mockRejectedValueOnce(new Error('offline'));
+
+    const result = await reverseGeocode(40.4168, -3.7038, 'es');
+
+    expect(result).toBeNull();
+    expect(fetch).not.toHaveBeenCalled();
+  });
+
+  it('uses BigDataCloud outside iOS', async () => {
+    fetch.mockResolvedValueOnce({
+      json: vi.fn().mockResolvedValue({
+        city: 'Madrid',
+        principalSubdivision: 'Comunidad de Madrid',
+        countryName: 'España',
+      }),
+    });
+
+    const result = await reverseGeocode(40.4168, -3.7038, 'es');
+
+    expect(result).toBe('Madrid, Comunidad de Madrid, España');
+    expect(mockState.reverseGeocode).not.toHaveBeenCalled();
+
+    const requestUrl = new URL(fetch.mock.calls[0][0]);
+    expect(`${requestUrl.origin}${requestUrl.pathname}`).toBe(
+      'https://api.bigdatacloud.net/data/reverse-geocode-client',
+    );
+    expect(requestUrl.searchParams.get('latitude')).toBe('40.4168');
+    expect(requestUrl.searchParams.get('longitude')).toBe('-3.7038');
+    expect(requestUrl.searchParams.get('localityLanguage')).toBe('es');
+  });
 });

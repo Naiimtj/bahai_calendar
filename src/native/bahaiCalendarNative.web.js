@@ -39,6 +39,12 @@ export class BahaiCalendarNativeWeb extends WebPlugin {
     );
   }
 
+  async reverseGeocode() {
+    throw this.unimplemented(
+      'Apple reverse geocoding is only available on native iOS.',
+    );
+  }
+
   async createEvent() {
     throw this.unimplemented('Calendar access is not available on the web.');
   }

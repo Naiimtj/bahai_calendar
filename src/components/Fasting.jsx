@@ -3,12 +3,14 @@ import { useTranslation } from 'react-i18next';
 import { useSettings } from '../context/SettingsContext';
 import { formatGregorianDate } from '../lib/badiDate';
 import BaseSpinner from './base/BaseSpinner';
-import { BaseIcon } from './base';
+import { BaseAnchor, BaseIcon } from './base';
 import FastingAlarmsModal from './FastingAlarmsModal';
 import LocationPicker from './LocationPicker';
 import { useFastingAlarms } from '../hooks/useFastingAlarms';
 import { useFastingSunTimes } from '../hooks/useFastingSunTimes';
 import { shouldPreviewNativeSettings } from '../utils/devPreview';
+
+const SUNRISE_SUNSET_URL = 'https://sunrise-sunset.org';
 
 export default function Fasting() {
   const { lang } = useSettings();
@@ -266,6 +268,12 @@ export default function Fasting() {
                       })}
                     </tbody>
                   </table>
+                  <BaseAnchor
+                    href={SUNRISE_SUNSET_URL}
+                    size="xs"
+                    label={t('fasting.sunDataCredit')}
+                    className="mt-2 px-0 text-gray-500 dark:text-gray-400"
+                  />
                 </div>
               )
             )}
